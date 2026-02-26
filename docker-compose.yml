@@ -1,0 +1,129 @@
+services:
+  pig-mysql:
+    build:
+      context: ./db
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: root
+    restart: always
+    container_name: pig-mysql
+    image: pig-mysql
+    ports:
+      - 33306:3306
+    networks:
+      - spring_cloud_default
+
+  pig-redis:
+    image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
+    ports:
+      - 36379:6379
+    restart: always
+    container_name: pig-redis
+    hostname: pig-redis
+    networks:
+      - spring_cloud_default
+
+  pig-register:
+    build:
+      context: ./pig-register
+    restart: always
+    ports:
+      - 8848:8848
+      - 9848:9848
+      - 8080:8080
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+    container_name: pig-register
+    hostname: pig-register
+    image: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-gateway:
+    build:
+      context: ./pig-gateway
+    restart: always
+    ports:
+      - 9999:9999
+    container_name: pig-gateway
+    hostname: pig-gateway
+    image: pig-gateway
+    environment:
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-auth:
+    build:
+      context: ./pig-auth
+    restart: always
+    container_name: pig-auth
+    hostname: pig-auth
+    image: pig-auth
+    environment:
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-upms:
+    build:
+      context: ./pig-upms/pig-upms-biz
+    restart: always
+    container_name: pig-upms
+    hostname: pig-upms
+    image: pig-upms
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-monitor:
+    build:
+      context: ./pig-visual/pig-monitor
+    restart: always
+    ports:
+      - 5001:5001
+    container_name: pig-monitor
+    hostname: pig-monitor
+    image: pig-monitor
+    environment:
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-codegen:
+    build:
+      context: ./pig-visual/pig-codegen
+    restart: always
+    container_name: pig-codegen
+    hostname: pig-codegen
+    image: pig-codegen
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-quartz:
+    build:
+      context: ./pig-visual/pig-quartz
+    restart: always
+    image: pig-quartz
+    container_name: pig-quartz
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+networks:
+  spring_cloud_default:
+    name:  spring_cloud_default
+    driver: bridge
