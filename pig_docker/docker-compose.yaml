@@ -1,0 +1,126 @@
+version: '3'
+services:
+  pig-mysql:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-mysql:latest
+    environment:
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_ROOT_PASSWORD: root
+    restart: always
+    container_name: pig-mysql
+    ports:
+      - 33306:3306
+    networks:
+      - spring_cloud_default
+
+  pig-redis:
+    image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
+    ports:
+      - 36379:6379
+    restart: always
+    container_name: pig-redis
+    hostname: pig-redis
+    networks:
+      - spring_cloud_default
+
+  pig-register:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-register:latest
+    restart: always
+    ports:
+      - 8848:8848
+      - 9848:9848
+      - 8080:8080
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+    container_name: pig-register
+    hostname: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-gateway:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-gateway:latest
+    restart: always
+    ports:
+      - 9999:9999
+    container_name: pig-gateway
+    hostname: pig-gateway
+    environment:
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-auth:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-auth:latest
+    restart: always
+    container_name: pig-auth
+    hostname: pig-auth
+    environment:
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-upms:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-upms:latest
+    restart: always
+    container_name: pig-upms
+    hostname: pig-upms
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-monitor:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-monitor:latest
+    restart: always
+    ports:
+      - 5001:5001
+    container_name: pig-monitor
+    hostname: pig-monitor
+    environment:
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-codegen:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-codegen:latest
+    restart: always
+    container_name: pig-codegen
+    hostname: pig-codegen
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-quartz:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-quartz:latest
+    restart: always
+    container_name: pig-quartz
+    hostname: pig-quartz
+    environment:
+      MYSQL_HOST: pig-mysql
+      REDIS_HOST: pig-redis
+      NACOS_HOST: pig-register
+    networks:
+      - spring_cloud_default
+
+  pig-ui:
+    image: registry.cn-hangzhou.aliyuncs.com/pigx/pig-ui:latest
+    restart: always
+    ports:
+      - 8081:80
+    container_name: pig-ui
+    hostname: pig-ui
+    networks:
+      - spring_cloud_default
+
+networks:
+  spring_cloud_default:
+    name: spring_cloud_default
+    driver: bridge
+
