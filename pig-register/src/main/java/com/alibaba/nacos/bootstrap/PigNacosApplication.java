@@ -32,6 +32,9 @@ import com.alibaba.nacos.sys.env.Constants;
 import com.alibaba.nacos.sys.env.DeploymentType;
 import com.alibaba.nacos.sys.env.EnvUtil;
 
+// 依赖于pig自己封装实现的nacos服务
+// 自己使用nacos时，更建议使用docker-nacos
+
 /**
  * @author nacos
  * <p>

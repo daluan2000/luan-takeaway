@@ -1,0 +1,18 @@
+services:
+  pig-ui:
+    build:
+      context: .
+    restart: always
+    container_name: pig-ui
+    image: pig-ui
+    networks:
+      - spring_cloud_default
+    external_links:
+      - pig-gateway
+    ports:
+      - 80:80
+
+# 加入到后端网络， 默认为 spring_cloud_default  | docker network ls   查看
+networks:
+  spring_cloud_default:
+    external: true

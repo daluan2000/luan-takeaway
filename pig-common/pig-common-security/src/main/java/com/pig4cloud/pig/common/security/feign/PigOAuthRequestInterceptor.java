@@ -43,6 +43,7 @@ public class PigOAuthRequestInterceptor implements RequestInterceptor {
 	@Override
 	public void apply(RequestTemplate template) {
 		Collection<String> fromHeader = template.headers().get(SecurityConstants.FROM);
+		// 如果FeignClient的请求方法带有NoToken注解，则请求头会自动加上From_IN
 		// 带from 请求直接跳过
 		if (CollUtil.isNotEmpty(fromHeader) && fromHeader.contains(SecurityConstants.FROM_IN)) {
 			return;

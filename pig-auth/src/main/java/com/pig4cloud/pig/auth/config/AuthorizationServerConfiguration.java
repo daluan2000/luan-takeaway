@@ -58,6 +58,20 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+
+
+/*
+UsernamePasswordAuthenticationToken
+           ↓
+AuthenticationManager 校验成功
+           ↓
+生成 Authentication
+           ↓
+OAuth2TokenGenerator 读取 Authentication
+           ↓
+生成 Access Token (JWT)
+*/
+
 /**
  * 认证服务器配置类
  *
@@ -93,7 +107,9 @@ public class AuthorizationServerConfiguration {
 		http.addFilterBefore(validateCodeFilter, UsernamePasswordAuthenticationFilter.class);
 		// 增加密码解密过滤器
 		http.addFilterBefore(passwordDecoderFilter, UsernamePasswordAuthenticationFilter.class);
+		
 
+		// converter的作用是将HttpServletRequest转换为Authentication对象，也就是Token对象，token对象是Authentication的实现类
 		http.with(authorizationServerConfigurer.tokenEndpoint((tokenEndpoint) -> {// 个性化认证授权端点
 			tokenEndpoint.accessTokenRequestConverter(accessTokenRequestConverter()) // 注入自定义的授权认证Converter
 				.accessTokenResponseHandler(new PigAuthenticationSuccessEventHandler()) // 登录成功处理器
@@ -145,6 +161,7 @@ public class AuthorizationServerConfiguration {
 	 */
 	@Bean
 	public AuthenticationConverter accessTokenRequestConverter() {
+		// ResourceOwner是指用户用自己的信息进行登陆，比如用户密码，比如用户短信验证码，相对的是借助第三方授权登录，比如微信授权登录，QQ授权登录等
 		return new DelegatingAuthenticationConverter(Arrays.asList(
 				new OAuth2ResourceOwnerPasswordAuthenticationConverter(),
 				new OAuth2ResourceOwnerSmsAuthenticationConverter(), new OAuth2RefreshTokenAuthenticationConverter(),

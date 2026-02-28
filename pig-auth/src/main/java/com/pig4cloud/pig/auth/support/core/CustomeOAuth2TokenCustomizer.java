@@ -13,7 +13,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
  * @date 2025/05/30
  */
 public class CustomeOAuth2TokenCustomizer implements OAuth2TokenCustomizer<OAuth2TokenClaimsContext> {
-
+	// customize 方法会在生成 OAuth2 Token时被调用，可以在这个方法中对 Token 的属性进行自定义增强，比如添加一些自定义的 Claim，或者修改一些默认的 Claim。
 	/**
 	 * 自定义OAuth 2.0 Token属性
 	 * @param context 包含OAuth 2.0 Token属性的上下文

@@ -93,6 +93,9 @@ public class PigDaoAuthenticationProvider extends AbstractUserDetailsAuthenticat
 		}
 	}
 
+	// retrieveUser：负责“查用户”，并做时序攻击防护（即使用户不存在也做一次密码校验）。
+	// additionalAuthenticationChecks：负责“校验密码”，确保用户输入的密码正确。
+
 	/**
 	 * 根据用户名检索用户详情
 	 * @param username 用户名
@@ -172,6 +175,10 @@ public class PigDaoAuthenticationProvider extends AbstractUserDetailsAuthenticat
 		return super.createSuccessAuthentication(principal, authentication, user);
 	}
 
+	// 时序攻击（Timing Attack）和定时攻击（Timing Attack）其实是同一种攻击方式，
+	// 都是指攻击者通过分析系统处理某些操作所花费的时间，来推测敏感信息（如密码、密钥等）。
+	// 用户未找到时，依然执行一次密码校验（matches），使用一个固定的“userNotFoundPassword”加密值。
+	// 这样无论用户名是否存在，处理时间都类似，避免通过响应时间判断用户名是否存在。
 	/**
 	 * 准备定时攻击保护，如果未找到用户编码密码为空则进行编码
 	 */
