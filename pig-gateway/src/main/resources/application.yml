@@ -5,6 +5,9 @@ spring:
   application:
     name: @artifactId@
   cloud:
+    loadbalancer:
+      cache:
+        ttl: 5s
     nacos:
       username: @nacos.username@
       password: @nacos.password@

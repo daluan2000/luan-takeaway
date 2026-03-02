@@ -7,7 +7,8 @@
 	"type": "module",
 	"scripts": {
 		"predev": "node ./scripts/wait-gateway.mjs",
-		"dev": "vite --force",
+		"dev": "node ./scripts/dev.mjs",
+		"dev:mono": "cross-env npm_config_micro=false node ./scripts/dev.mjs",
 		"build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
 		"build:docker": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --outDir ./docker/dist/",
 		"lint:eslint": "eslint --fix --ext .js,.cjs,.mjs,.ts,.vue ./src",

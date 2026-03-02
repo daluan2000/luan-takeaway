@@ -5,6 +5,20 @@ const DEFAULT_GATEWAY = 'http://127.0.0.1:9999';
 const DEFAULT_TIMEOUT_MS = 180000;
 const INTERVAL_MS = 2000;
 
+function isMicroEnabled() {
+  const hasNpmMicro = Object.prototype.hasOwnProperty.call(process.env, 'npm_config_micro');
+  if (hasNpmMicro) {
+    const raw = (process.env.npm_config_micro ?? '').trim().toLowerCase();
+    if (raw === '' || raw === 'false' || raw === '0' || raw === 'no' || raw === 'off') {
+      return false;
+    }
+    return true;
+  }
+
+  const micro = (process.env.VITE_IS_MICRO ?? 'true').trim().toLowerCase();
+  return !(micro === 'false' || micro === '0' || micro === 'no' || micro === 'off');
+}
+
 function readEnvProxyPath() {
   const envPath = resolve(process.cwd(), '.env.development');
   if (!existsSync(envPath)) {
@@ -31,6 +45,11 @@ async function checkGateway(url) {
 }
 
 async function main() {
+  if (!isMicroEnabled()) {
+    console.log('[wait-gateway] 检测到 --micro=false，跳过网关探活。');
+    return;
+  }
+
   const gatewayBase = process.env.VITE_ADMIN_PROXY_PATH || readEnvProxyPath() || DEFAULT_GATEWAY;
   const timeoutMs = Number(process.env.WAIT_GATEWAY_TIMEOUT_MS || DEFAULT_TIMEOUT_MS);
   const start = Date.now();

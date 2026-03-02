@@ -36,6 +36,11 @@ PIG 提供了详尽的部署文档 👉 [wiki.pig4cloud.com](https://wiki.pig4cl
 - 🔥 [ 配套文档 wiki.pig4cloud.com](https://wiki.pig4cloud.com)
 - 🔥 [ 配套文档 wiki.pig4cloud.com](https://wiki.pig4cloud.com)
 
+### 前端启动模式
+
+- 微服务模式（默认，会执行网关探活）：`npm run dev`
+- 单体模式（跳过网关探活，`VITE_IS_MICRO=false`）：`npm run dev:mono`
+
 
 ## 浏览器支持
 
