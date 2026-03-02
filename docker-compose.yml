@@ -24,19 +24,30 @@ services:
       - spring_cloud_default
 
   pig-register:
-    build:
-      context: ./pig-register
+    image: nacos/nacos-server:v2.4.3
     restart: always
     ports:
       - 8848:8848
       - 9848:9848
       - 8080:8080
     environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: pig-mysql
+      MYSQL_SERVICE_PORT: 3306
+      MYSQL_SERVICE_DB_NAME: pig_config
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: root
+      MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      NACOS_AUTH_ENABLE: true
+      NACOS_AUTH_IDENTITY_KEY: serverIdentity
+      NACOS_AUTH_IDENTITY_VALUE: security
+      NACOS_AUTH_TOKEN: VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=
     container_name: pig-register
     hostname: pig-register
-    image: pig-register
+    depends_on:
+      pig-mysql:
+        condition: service_healthy
     networks:
       - spring_cloud_default
 
@@ -52,6 +63,11 @@ services:
     environment:
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
+    depends_on:
+      pig-redis:
+        condition: service_started
+      pig-register:
+        condition: service_started
     networks:
       - spring_cloud_default
 
@@ -65,6 +81,11 @@ services:
     environment:
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
+    depends_on:
+      pig-redis:
+        condition: service_started
+      pig-register:
+        condition: service_started
     networks:
       - spring_cloud_default
 
@@ -79,6 +100,13 @@ services:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
+    depends_on:
+      pig-mysql:
+        condition: service_healthy
+      pig-redis:
+        condition: service_started
+      pig-register:
+        condition: service_started
     networks:
       - spring_cloud_default
 
@@ -93,6 +121,9 @@ services:
     image: pig-monitor
     environment:
       NACOS_HOST: pig-register
+    depends_on:
+      pig-register:
+        condition: service_started
     networks:
       - spring_cloud_default
 
@@ -107,6 +138,13 @@ services:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
+    depends_on:
+      pig-mysql:
+        condition: service_healthy
+      pig-redis:
+        condition: service_started
+      pig-register:
+        condition: service_started
     networks:
       - spring_cloud_default
 
@@ -120,6 +158,13 @@ services:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
       NACOS_HOST: pig-register
+    depends_on:
+      pig-mysql:
+        condition: service_healthy
+      pig-redis:
+        condition: service_started
+      pig-register:
+        condition: service_started
     networks:
       - spring_cloud_default
 

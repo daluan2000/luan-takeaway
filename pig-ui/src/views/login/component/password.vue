@@ -63,6 +63,21 @@ import {useUserInfo} from '/@/stores/userInfo';
 import {useI18n} from 'vue-i18n';
 import {generateUUID} from "/@/utils/other";
 import {rule} from '/@/utils/validate';
+
+const props = withDefaults(
+  defineProps<{
+    prefill?: {
+      username?: string;
+      password?: string;
+    };
+  }>(),
+  {
+    prefill: () => ({
+      username: '',
+      password: '',
+    }),
+  }
+);
 // 使用国际化插件
 const {t} = useI18n();
 
@@ -116,5 +131,23 @@ const onSignIn = async () => {
 onMounted(() => {
   getVerifyCode()
 })
+
+watch(
+  () => props.prefill,
+  (value) => {
+    if (!value) {
+      return;
+    }
+
+    if (value.username) {
+      state.ruleForm.username = value.username;
+    }
+
+    if (value.password) {
+      state.ruleForm.password = value.password;
+    }
+  },
+  { deep: true, immediate: true }
+);
 
 </script>

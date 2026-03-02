@@ -12,7 +12,7 @@
 					<el-tabs v-model="tabsActiveName">
 						<!-- 用户名密码登录 -->
 						<el-tab-pane :label="$t('label.one1')" name="account">
-							<Password @signInSuccess="signInSuccess" />
+							<Password :prefill="registerPrefill" @signInSuccess="signInSuccess" />
 						</el-tab-pane>
 						<!-- 手机号登录 -->
 						<el-tab-pane :label="$t('label.two2')" name="mobile">
@@ -20,7 +20,7 @@
 						</el-tab-pane>
 						<!-- 注册 -->
 						<el-tab-pane :label="$t('label.register')" name="register" v-if="registerEnable">
-							<Register @afterSuccess="tabsActiveName = 'account'" />
+							<Register @afterSuccess="onRegisterSuccess" />
 						</el-tab-pane>
 					</el-tabs>
 				</div>
@@ -59,6 +59,11 @@ const registerEnable = ref(import.meta.env.VITE_REGISTER_ENABLE === 'true');
 // 默认选择账号密码登录方式
 const tabsActiveName = ref('account');
 
+const registerPrefill = ref({
+	username: '',
+	password: '',
+});
+
 // 获取布局配置信息
 const getThemeConfig = computed(() => {
 	return themeConfig.value;
@@ -87,6 +92,14 @@ const signInSuccess = async () => {
 		// 添加 loading，防止第一次进入界面时出现短暂空白
 		NextLoading.start();
 	}
+};
+
+const onRegisterSuccess = (payload: { username: string; password: string }) => {
+	registerPrefill.value = {
+		username: payload.username,
+		password: payload.password,
+	};
+	tabsActiveName.value = 'account';
 };
 
 // 页面加载时

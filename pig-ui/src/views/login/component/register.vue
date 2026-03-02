@@ -56,7 +56,9 @@ import { useI18n } from 'vue-i18n';
 import { rule } from '/@/utils/validate';
 
 // 注册生命周期事件
-const emit = defineEmits(['afterSuccess']);
+const emit = defineEmits<{
+	afterSuccess: [payload: { username: string; password: string }];
+}>();
 
 // 按需加载组件
 const StrengthMeter = defineAsyncComponent(() => import('/@/components/StrengthMeter/index.vue'));
@@ -164,7 +166,10 @@ const handleRegister = async () => {
 		// 注册成功提示
 		useMessage().success(t('common.optSuccessText'));
 		// 触发注册成功后的钩子函数
-		emit('afterSuccess');
+		emit('afterSuccess', {
+			username: state.ruleForm.username,
+			password: state.ruleForm.password,
+		});
 	} catch (err: any) {
 		// 提示错误信息
 		useMessage().error(err.msg);

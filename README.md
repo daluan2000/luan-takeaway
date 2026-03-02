@@ -43,6 +43,8 @@ PIG 提供了详尽的部署文档 👉 [wiki.pig4cloud.com](https://wiki.pig4cl
 
 #### Docker 快速体验
 
+当前仓库内置的 `docker-compose.yml` 已将 `pig-register` 切换为官方 `nacos/nacos-server` 容器运行（服务名保持 `pig-register` 以兼容其他模块的 `NACOS_HOST` 配置）。
+
 ```shell
 # 可用内存大于4G
 curl -o docker-compose.yaml https://try.pig4cloud.com

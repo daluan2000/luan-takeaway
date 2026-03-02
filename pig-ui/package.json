@@ -6,6 +6,7 @@
 	"license": "Apache-2.0",
 	"type": "module",
 	"scripts": {
+		"predev": "node ./scripts/wait-gateway.mjs",
 		"dev": "vite --force",
 		"build": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build",
 		"build:docker": "cross-env NODE_OPTIONS=--max-old-space-size=4096 vite build --outDir ./docker/dist/",

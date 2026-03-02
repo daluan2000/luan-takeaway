@@ -1,6 +1,7 @@
 package com.pig4cloud.pig.common.security.service;
 
 import cn.hutool.core.util.StrUtil;
+import com.pig4cloud.pig.admin.api.entity.SysRole;
 import com.pig4cloud.pig.admin.api.dto.UserInfo;
 import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.constant.SecurityConstants;
@@ -13,8 +14,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.Collections;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -51,17 +54,21 @@ public interface PigUserDetailsService extends UserDetailsService, Ordered {
 	default UserDetails getUserDetails(R<UserInfo> result) {
 		UserInfo info = RetOps.of(result).getData().orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 		Set<String> dbAuthsSet = new HashSet<>();
+		List<SysRole> roleList = info.getRoleList() == null ? Collections.emptyList() : info.getRoleList();
+		Collection<String> permissions = info.getPermissions() == null ? Collections.emptyList() : info.getPermissions();
 
 		// 维护角色列表
-		info.getRoleList().forEach(role -> dbAuthsSet.add(SecurityConstants.ROLE + role.getRoleId()));
+		roleList.forEach(role -> dbAuthsSet.add(SecurityConstants.ROLE + role.getRoleId()));
 
 		// 维护权限列表
-		dbAuthsSet.addAll(info.getPermissions());
+		dbAuthsSet.addAll(permissions);
 		Collection<GrantedAuthority> authorities = AuthorityUtils
 			.createAuthorityList(dbAuthsSet.toArray(new String[0]));
 
+		Long deptId = info.getDept() == null ? null : info.getDept().getDeptId();
+
 		// 构造security用户
-		return new PigUser(info.getUserId(), info.getDept().getDeptId(), info.getUsername(),
+		return new PigUser(info.getUserId(), deptId, info.getUsername(),
 				SecurityConstants.BCRYPT + info.getPassword(), info.getPhone(), true, true, true,
 				StrUtil.equals(info.getLockFlag(), CommonConstants.STATUS_NORMAL), authorities);
 	}

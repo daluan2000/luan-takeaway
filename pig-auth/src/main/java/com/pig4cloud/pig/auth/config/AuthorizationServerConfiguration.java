@@ -108,23 +108,22 @@ public class AuthorizationServerConfiguration {
 		// 增加密码解密过滤器
 		http.addFilterBefore(passwordDecoderFilter, UsernamePasswordAuthenticationFilter.class);
 		
-
+		// authorizationServerConfigurer的某些配置可能依赖securityBuilder，必须在 http.with(...) 绑定之后执行
+		// 所以最稳妥的写法是把authorizationServerConfigurer关键配置放在 with 的 customizer 内
 		// converter的作用是将HttpServletRequest转换为Authentication对象，也就是Token对象，token对象是Authentication的实现类
-		http.with(authorizationServerConfigurer.tokenEndpoint((tokenEndpoint) -> {// 个性化认证授权端点
-			tokenEndpoint.accessTokenRequestConverter(accessTokenRequestConverter()) // 注入自定义的授权认证Converter
-				.accessTokenResponseHandler(new PigAuthenticationSuccessEventHandler()) // 登录成功处理器
-				.errorResponseHandler(new PigAuthenticationFailureEventHandler());// 登录失败处理器
-		}).clientAuthentication(oAuth2ClientAuthenticationConfigurer -> // 个性化客户端认证
-		oAuth2ClientAuthenticationConfigurer.errorResponseHandler(new PigAuthenticationFailureEventHandler()))// 处理客户端认证异常
+		http.with(authorizationServerConfigurer, configurer -> configurer
+			.tokenEndpoint((tokenEndpoint) -> {// 个性化认证授权端点
+				tokenEndpoint.accessTokenRequestConverter(accessTokenRequestConverter()) // 注入自定义的授权认证Converter
+					.accessTokenResponseHandler(new PigAuthenticationSuccessEventHandler()) // 登录成功处理器
+					.errorResponseHandler(new PigAuthenticationFailureEventHandler());// 登录失败处理器
+			}).clientAuthentication(oAuth2ClientAuthenticationConfigurer -> // 个性化客户端认证
+				oAuth2ClientAuthenticationConfigurer.errorResponseHandler(new PigAuthenticationFailureEventHandler()))// 处理客户端认证异常
 			.authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint// 授权码端点个性化confirm页面
-				.consentPage(SecurityConstants.CUSTOM_CONSENT_PAGE_URI)), Customizer.withDefaults())
-			.authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated());
-
-		// 设置 Token 存储的策略
-		http.with(authorizationServerConfigurer.authorizationService(authorizationService)// redis存储token的实现
+				.consentPage(SecurityConstants.CUSTOM_CONSENT_PAGE_URI))
+			.authorizationService(authorizationService)// redis存储token的实现
 			.authorizationServerSettings(
-					AuthorizationServerSettings.builder().issuer(SecurityConstants.PROJECT_LICENSE).build()),
-				Customizer.withDefaults());
+				AuthorizationServerSettings.builder().issuer(SecurityConstants.PROJECT_LICENSE).build()))
+			.authorizeHttpRequests(authorizeRequests -> authorizeRequests.anyRequest().authenticated());
 
 		// 设置授权码模式登录页面
 		http.with(new FormIdentityLoginConfigurer(), Customizer.withDefaults());
