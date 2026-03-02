@@ -20,13 +20,13 @@ MODULES=(
 )
 
 JARS=(
-  "pig-gateway/target/pig-gateway.jar"
-  "pig-auth/target/pig-auth.jar"
-  "pig-upms/pig-upms-biz/target/pig-upms-biz.jar"
-  "pig-media/pig-media-biz/target/pig-media-biz.jar"
-  "pig-visual/pig-monitor/target/pig-monitor.jar"
-  "pig-visual/pig-codegen/target/pig-codegen.jar"
-  "pig-visual/pig-quartz/target/pig-quartz.jar"
+  "pig-gateway/target/pig-gateway-exec.jar"
+  "pig-auth/target/pig-auth-exec.jar"
+  "pig-upms/pig-upms-biz/target/pig-upms-biz-exec.jar"
+  "pig-media/pig-media-biz/target/pig-media-biz-exec.jar"
+  "pig-visual/pig-monitor/target/pig-monitor-exec.jar"
+  "pig-visual/pig-codegen/target/pig-codegen-exec.jar"
+  "pig-visual/pig-quartz/target/pig-quartz-exec.jar"
 )
 
 PL="$(IFS=,; echo "${MODULES[*]}")"

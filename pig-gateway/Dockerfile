@@ -2,7 +2,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/java:21-anolis
 
 WORKDIR /pig-gateway
 
-ARG JAR_FILE=target/pig-gateway.jar
+ARG JAR_FILE=target/pig-gateway-exec.jar
 
 COPY ${JAR_FILE} app.jar
 

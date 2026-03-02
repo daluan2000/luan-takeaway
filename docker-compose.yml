@@ -13,6 +13,24 @@ services:
     networks:
       - spring_cloud_default
 
+  pig-phpmyadmin:
+    image: phpmyadmin:latest
+    restart: always
+    container_name: pig-phpmyadmin
+    hostname: pig-phpmyadmin
+    ports:
+      - 8082:80
+    environment:
+      PMA_HOST: pig-mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      pig-mysql:
+        condition: service_healthy
+    networks:
+      - spring_cloud_default
+
   pig-redis:
     image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
     ports:

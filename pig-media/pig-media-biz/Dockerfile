@@ -2,7 +2,7 @@ FROM registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/java:21-anolis
 
 WORKDIR /pig-media-biz
 
-ARG JAR_FILE=target/pig-media-biz.jar
+ARG JAR_FILE=target/pig-media-biz-exec.jar
 
 COPY ${JAR_FILE} app.jar
 

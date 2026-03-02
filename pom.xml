@@ -179,6 +179,7 @@
 					<version>${spring-boot.version}</version>
 					<configuration>
 						<finalName>${project.build.finalName}</finalName>
+						<classifier>exec</classifier>
 						<layers>
 							<enabled>true</enabled>
 						</layers>
