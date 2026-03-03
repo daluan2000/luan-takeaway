@@ -1,0 +1,15 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.defaultPackageManager": "ms-python.python:conda",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.cwd": "${workspaceFolder}/py_test",
+    "python.testing.pytestArgs": [
+        "--mode",
+        "microservice",
+        "tests"
+    ],
+    "python.testing.autoTestDiscoverOnSaveEnabled": true
+}

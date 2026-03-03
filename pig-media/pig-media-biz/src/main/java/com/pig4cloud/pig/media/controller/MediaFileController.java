@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.file.core.FileProperties;
 import com.pig4cloud.pig.common.file.core.FileTemplate;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.common.security.annotation.HasPermission;
@@ -20,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -44,15 +44,21 @@ public class MediaFileController {
 
 	private final FileTemplate fileTemplate;
 
-	private final FileProperties fileProperties;
-
 	@PostMapping("/upload")
 	@SysLog("上传图片")
 	@HasPermission("media_file_upload")
 	@Operation(summary = "上传图片", description = "上传图片")
-	public R<Map<String, Object>> upload(@RequestPart("file") MultipartFile file) {
+	public R<Map<String, Object>> upload(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+		System.out.println("上传文件: " + file.getOriginalFilename() + ", 大小: " + file.getSize());
 		Long userId = MediaAuthUtils.currentUserId();
-		return R.ok(mediaFileService.upload(file, userId));
+		Map<String, Object> result = mediaFileService.upload(file, userId);
+		Object bucketName = result.get("bucketName");
+		Object objectKey = result.get("objectKey");
+		if (bucketName != null && objectKey != null) {
+			result.put("viewUrl", buildContextPathUrl(request,
+					String.format("/media/files/object/%s/%s", bucketName, objectKey)));
+		}
+		return R.ok(result);
 	}
 
 	@PostMapping("/presign")
@@ -108,12 +114,41 @@ public class MediaFileController {
 	@Inner(false)
 	@GetMapping("/{id}/download-url")
 	@Operation(summary = "获取下载地址", description = "获取下载地址")
-	public R<String> getDownloadUrl(@PathVariable Long id) {
+	public R<String> getDownloadUrl(@PathVariable Long id, HttpServletRequest request) {
 		MediaFile file = mediaFileService.getById(id);
 		if (file == null) {
 			return R.failed("图片不存在");
 		}
-		return R.ok(String.format("/media/files/object/%s/%s", fileProperties.getBucketName(), file.getObjectKey()));
+		return R.ok(buildContextPathUrl(request, String.format("/media/files/%s/download", id)));
+	}
+
+	@Inner(false)
+	@GetMapping("/{id}/download")
+	@Operation(summary = "按ID下载图片", description = "按ID下载图片")
+	public void download(@PathVariable Long id, HttpServletResponse response) {
+		MediaFile file = mediaFileService.getById(id);
+		if (file == null) {
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			return;
+		}
+
+		try (InputStream inputStream = (InputStream) fileTemplate.getObject(file.getBucketName(), file.getObjectKey())) {
+			response.setContentType(StrUtil.blankToDefault(file.getContentType(), "application/octet-stream"));
+			response.addHeader(HttpHeaders.CONTENT_DISPOSITION,
+					"attachment; filename=" + StrUtil.blankToDefault(file.getOriginName(), String.valueOf(id)));
+			IoUtil.copy(inputStream, response.getOutputStream());
+		}
+		catch (Exception ignored) {
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+		}
+	}
+
+	private String buildContextPathUrl(HttpServletRequest request, String path) {
+		String contextPath = request.getContextPath();
+		if (StrUtil.isBlank(contextPath) || "/".equals(contextPath)) {
+			return path;
+		}
+		return contextPath + path;
 	}
 
 }

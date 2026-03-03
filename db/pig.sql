@@ -268,6 +268,9 @@ CREATE TABLE `sys_log` (
 -- ----------------------------
 -- Table structure for sys_menu
 -- ----------------------------
+-- 目录项（menu_type=0）：用于分组，通常有 path，permission 可空。
+-- 菜单项（menu_type=1）：对应一个页面路由，控制“能否看到并访问页面”。
+-- 按钮项（menu_type=2）：对应页面上的操作权限（增删改查按钮），核心是 permission。
 DROP TABLE IF EXISTS `sys_menu`;
 CREATE TABLE `sys_menu` (
   `menu_id` bigint NOT NULL COMMENT '菜单ID',
@@ -635,6 +638,8 @@ CREATE TABLE `sys_user` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `sys_user` VALUES (1, 'admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '17034642999', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '管理员', '管理员', 'pig4cloud@qq.com', 4, ' ', 'admin', '2018-04-20 07:15:18', '2023-07-07 14:55:40', '0', '0', NULL, 'oBxPy5E-v82xWGsfzZVzkD3wEX64', NULL, 'log4j', NULL);
+INSERT INTO `sys_user` VALUES (2000000000000000001, 'test_admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '18800000001', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '测试管理员', '测试管理员', 'test_admin@example.com', 4, 'admin', 'admin', '2026-03-03 00:00:00', '2026-03-03 00:00:00', '0', '0', NULL, NULL, NULL, NULL, NULL);
+INSERT INTO `sys_user` VALUES (2000000000000000002, 'test_user', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '18800000002', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '测试普通用户', '测试普通用户', 'test_user@example.com', 4, 'admin', 'admin', '2026-03-03 00:00:00', '2026-03-03 00:00:00', '0', '0', NULL, NULL, NULL, NULL, NULL);
 COMMIT;
 
 -- ----------------------------
@@ -652,6 +657,8 @@ CREATE TABLE `sys_user_post` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `sys_user_post` VALUES (1, 1);
+INSERT INTO `sys_user_post` VALUES (2000000000000000001, 1);
+INSERT INTO `sys_user_post` VALUES (2000000000000000002, 1);
 COMMIT;
 
 -- ----------------------------
@@ -669,7 +676,8 @@ CREATE TABLE `sys_user_role` (
 -- ----------------------------
 BEGIN;
 INSERT INTO `sys_user_role` VALUES (1, 1);
-INSERT INTO `sys_user_role` VALUES (1676492190299299842, 2);
+INSERT INTO `sys_user_role` VALUES (2000000000000000001, 1);
+INSERT INTO `sys_user_role` VALUES (2000000000000000002, 2);
 COMMIT;
 
 -- ----------------------------

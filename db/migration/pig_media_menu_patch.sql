@@ -19,3 +19,24 @@ ON DUPLICATE KEY UPDATE
 `parent_id` = VALUES(`parent_id`),
 `update_time` = NOW(),
 `del_flag` = '0';
+
+INSERT INTO `sys_role_menu` (`role_id`, `menu_id`)
+VALUES
+(1, 1700),
+(1, 1701),
+(1, 1702),
+(1, 1703),
+(1, 1704),
+(1, 1705),
+(1, 1706),
+(1, 1707),
+(2, 1700),
+(2, 1701),
+(2, 1702),
+(2, 1703),
+(2, 1704),
+(2, 1705),
+(2, 1706),
+(2, 1707),
+ON DUPLICATE KEY UPDATE
+`menu_id` = VALUES(`menu_id`);

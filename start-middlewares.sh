@@ -15,7 +15,7 @@ if ! docker compose version >/dev/null 2>&1; then
 fi
 
 echo "启动中间件服务(复用已有容器): pig-mysql, pig-redis, pig-register"
-docker compose up -d --no-recreate pig-mysql pig-redis pig-register
+docker compose up -d --force-recreate pig-mysql pig-redis pig-register
 
 echo
 echo "中间件已启动，查看状态:"

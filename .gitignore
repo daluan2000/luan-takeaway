@@ -16,7 +16,8 @@ bin/
 
 ### IntelliJ IDEA ###
 !.idea/icon.png
-.idea
+.idea/*
+!.idea/vcs.xml
 *.iws
 *.iml
 *.ipr
@@ -39,7 +40,9 @@ target/
 *.versionsBackup
 
 ### vscode ###
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
 
 ### logs ###
 /logs/

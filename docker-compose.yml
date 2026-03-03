@@ -1,21 +1,25 @@
 services:
   pig-mysql:
-    build:
-      context: ./db
+    image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/mysql-server:8.0.32
+    pull_policy: if_not_present
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: root
-    restart: always
+    restart: "no"
     container_name: pig-mysql
-    image: pig-mysql
     ports:
       - 33306:3306
+    volumes:
+      - ./db/pig.sql:/docker-entrypoint-initdb.d/01-pig.sql:ro
+      - ./db/pig_config.sql:/docker-entrypoint-initdb.d/02-pig_config.sql:ro
+      - ./db/migration/pig_media_init.sql:/docker-entrypoint-initdb.d/03-pig_media_init.sql:ro
+      - ./db/migration/pig_media_menu_patch.sql:/docker-entrypoint-initdb.d/04-pig_media_menu_patch.sql:ro
     networks:
       - spring_cloud_default
 
   pig-phpmyadmin:
     image: phpmyadmin:latest
-    restart: always
+    restart: "no"
     container_name: pig-phpmyadmin
     hostname: pig-phpmyadmin
     ports:
@@ -35,7 +39,7 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
     ports:
       - 36379:6379
-    restart: always
+    restart: "no"
     container_name: pig-redis
     hostname: pig-redis
     networks:
@@ -43,7 +47,7 @@ services:
 
   pig-register:
     image: nacos/nacos-server:v2.4.3
-    restart: always
+    restart: "no"
     ports:
       - 8848:8848
       - 9848:9848
@@ -72,7 +76,7 @@ services:
   pig-gateway:
     build:
       context: ./pig-gateway
-    restart: always
+    restart: "no"
     ports:
       - 9999:9999
     container_name: pig-gateway
@@ -92,7 +96,7 @@ services:
   pig-auth:
     build:
       context: ./pig-auth
-    restart: always
+    restart: "no"
     container_name: pig-auth
     hostname: pig-auth
     image: pig-auth
@@ -110,7 +114,7 @@ services:
   pig-upms:
     build:
       context: ./pig-upms/pig-upms-biz
-    restart: always
+    restart: "no"
     container_name: pig-upms
     hostname: pig-upms
     image: pig-upms
@@ -131,7 +135,7 @@ services:
   pig-media:
     build:
       context: ./pig-media/pig-media-biz
-    restart: always
+    restart: "no"
     container_name: pig-media
     hostname: pig-media
     image: pig-media
@@ -152,7 +156,7 @@ services:
   pig-monitor:
     build:
       context: ./pig-visual/pig-monitor
-    restart: always
+    restart: "no"
     ports:
       - 5001:5001
     container_name: pig-monitor
@@ -169,7 +173,7 @@ services:
   pig-codegen:
     build:
       context: ./pig-visual/pig-codegen
-    restart: always
+    restart: "no"
     container_name: pig-codegen
     hostname: pig-codegen
     image: pig-codegen
@@ -190,7 +194,7 @@ services:
   pig-quartz:
     build:
       context: ./pig-visual/pig-quartz
-    restart: always
+    restart: "no"
     image: pig-quartz
     container_name: pig-quartz
     environment:
