@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-SERVICES=("pig-gateway" "pig-auth" "pig-upms" "pig-monitor" "pig-codegen" "pig-quartz")
+SERVICES=("pig-gateway" "pig-auth" "pig-upms" "pig-monitor" "pig-codegen" "pig-quartz" "pig-takeaway-merchant" "pig-takeaway-dish" "pig-takeaway-order" "pig-takeaway-pay" "pig-takeaway-delivery")
 
 echo "查看 Java 微服务日志: ${SERVICES[*]}"
 if [[ "$FOLLOW" == true ]]; then

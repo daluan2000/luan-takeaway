@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.pig4cloud</groupId>
+        <artifactId>pig-takeaway</artifactId>
+        <version>${revision}</version>
+    </parent>
+
+    <artifactId>pig-takeaway-dish</artifactId>
+    <packaging>pom</packaging>
+    <description>外卖菜品服务</description>
+
+    <modules>
+        <module>pig-takeaway-dish-api</module>
+        <module>pig-takeaway-dish-biz</module>
+    </modules>
+</project>
