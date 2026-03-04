@@ -1,0 +1,10 @@
+package com.pig4cloud.pig.takeaway.order.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.pig4cloud.pig.takeaway.common.entity.WmOrder;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface WmOrderMapper extends BaseMapper<WmOrder> {
+
+}

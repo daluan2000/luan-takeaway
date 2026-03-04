@@ -38,6 +38,7 @@ services:
     image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
     ports:
       - 36379:6379
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
     restart: "no"
     container_name: pig-redis
     hostname: pig-redis

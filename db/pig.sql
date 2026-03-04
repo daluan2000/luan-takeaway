@@ -269,8 +269,8 @@ CREATE TABLE `sys_log` (
 -- Table structure for sys_menu
 -- ----------------------------
 -- 目录项（menu_type=0）：用于分组，通常有 path，permission 可空。
--- 菜单项（menu_type=1）：对应一个页面路由，控制“能否看到并访问页面”。
--- 按钮项（menu_type=2）：对应页面上的操作权限（增删改查按钮），核心是 permission。
+-- 菜单项（menu_type=2）：对应一个页面路由，控制“能否看到并访问页面”。
+-- 按钮项（menu_type=1）：对应页面上的操作权限（增删改查按钮），核心是 permission。
 DROP TABLE IF EXISTS `sys_menu`;
 CREATE TABLE `sys_menu` (
   `menu_id` bigint NOT NULL COMMENT '菜单ID',
@@ -284,7 +284,7 @@ CREATE TABLE `sys_menu` (
   `sort_order` int DEFAULT '1' COMMENT '排序值，越小越靠前',
   `keep_alive` char(1)  DEFAULT '0' COMMENT '是否缓存，0否，1是',
   `embedded` char(1)  DEFAULT NULL COMMENT '是否内嵌，0否，1是',
-  `menu_type` char(1)  DEFAULT '0' COMMENT '菜单类型，0目录，1菜单，2按钮',
+  `menu_type` char(1)  DEFAULT '0' COMMENT '菜单类型，0目录，2菜单，1按钮',
   `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_by` varchar(64) DEFAULT NULL COMMENT '修改人',

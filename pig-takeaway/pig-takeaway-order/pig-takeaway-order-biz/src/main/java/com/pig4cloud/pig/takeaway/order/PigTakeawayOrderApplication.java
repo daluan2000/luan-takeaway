@@ -1,9 +1,13 @@
 package com.pig4cloud.pig.takeaway.order;
 
+import com.pig4cloud.pig.common.feign.annotation.EnablePigFeignClients;
+import com.pig4cloud.pig.common.swagger.annotation.EnablePigDoc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
+@EnablePigDoc("takeaway-order")
+@EnablePigFeignClients
 @EnableDiscoveryClient
 @SpringBootApplication
 public class PigTakeawayOrderApplication {

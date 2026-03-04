@@ -11,4 +11,19 @@
     <artifactId>pig-takeaway-common</artifactId>
     <packaging>jar</packaging>
     <description>外卖服务公共实体与API定义</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-mybatis</artifactId>
+        </dependency>
+    </dependencies>
 </project>

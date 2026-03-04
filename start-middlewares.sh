@@ -14,7 +14,10 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "启动中间件服务(复用已有容器): pig-mysql, pig-redis, pig-register"
+echo "清理中间件容器及卷(不复用卷): pig-mysql, pig-redis, pig-register"
+docker compose rm -fsv pig-mysql pig-redis pig-register >/dev/null 2>&1 || true
+
+echo "启动中间件服务(复用已有镜像，不复用卷): pig-mysql, pig-redis, pig-register"
 docker compose up -d --force-recreate pig-mysql pig-redis pig-register
 
 echo
