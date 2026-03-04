@@ -2,19 +2,19 @@ package com.pig4cloud.pig.takeaway.common.api;
 
 public interface TakeawayApiConstants {
 
-	String API_PREFIX = "/api/takeaway";
+	String API_PREFIX = "";
 
-	String INTERNAL_PREFIX = API_PREFIX + "/internal";
+	String INTERNAL_PREFIX = "/internal";
 
-	String MERCHANT_PATH = API_PREFIX + "/merchant";
+	String MERCHANT_PATH = "/merchant";
 
-	String DISH_PATH = API_PREFIX + "/dish";
+	String DISH_PATH = "/dish";
 
-	String ORDER_PATH = API_PREFIX + "/order";
+	String ORDER_PATH = "/order";
 
-	String PAY_PATH = API_PREFIX + "/pay";
+	String PAY_PATH = "/pay";
 
-	String DELIVERY_PATH = API_PREFIX + "/delivery";
+	String DELIVERY_PATH = "/delivery";
 
 	String INTERNAL_DISH_PATH = INTERNAL_PREFIX + "/dish";
 
