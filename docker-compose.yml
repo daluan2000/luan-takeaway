@@ -12,8 +12,6 @@ services:
     volumes:
       - ./db/pig.sql:/docker-entrypoint-initdb.d/01-pig.sql:ro
       - ./db/pig_config.sql:/docker-entrypoint-initdb.d/02-pig_config.sql:ro
-      - ./db/migration/pig_media_init.sql:/docker-entrypoint-initdb.d/03-pig_media_init.sql:ro
-      - ./db/migration/pig_media_menu_patch.sql:/docker-entrypoint-initdb.d/04-pig_media_menu_patch.sql:ro
     networks:
       - spring_cloud_default
 
@@ -118,27 +116,8 @@ services:
     container_name: pig-upms
     hostname: pig-upms
     image: pig-upms
-    environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
-    depends_on:
-      pig-mysql:
-        condition: service_healthy
-      pig-redis:
-        condition: service_started
-      pig-register:
-        condition: service_started
-    networks:
-      - spring_cloud_default
-
-  pig-media:
-    build:
-      context: ./pig-media/pig-media-biz
-    restart: "no"
-    container_name: pig-media
-    hostname: pig-media
-    image: pig-media
+    volumes:
+      - /home/luan/data/pig/files:/home/luan/data/pig/files
     environment:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis

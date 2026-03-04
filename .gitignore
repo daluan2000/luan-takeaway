@@ -63,3 +63,6 @@ Thumbs.db
 Servers
 .metadata
 .flattened-pom.xml
+
+**/__pycache__/
+**/logs/

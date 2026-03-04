@@ -14,9 +14,9 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "停止 Java 微服务: pig-gateway, pig-auth, pig-upms, pig-media, pig-monitor, pig-codegen, pig-quartz"
-docker compose stop pig-gateway pig-auth pig-upms pig-media pig-monitor pig-codegen pig-quartz
+echo "停止 Java 微服务: pig-gateway, pig-auth, pig-upms, pig-monitor, pig-codegen, pig-quartz"
+docker compose stop pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz
 
 echo
 echo "Java 微服务已停止，查看状态:"
-echo "docker compose ps pig-gateway pig-auth pig-upms pig-media pig-monitor pig-codegen pig-quartz"
+echo "docker compose ps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz"

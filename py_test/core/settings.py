@@ -13,7 +13,6 @@ class ModeConfig:
     base_url: str
     login_path: str
     user_info_path: str
-    media_upload_path: str
 
 
 @dataclass(frozen=True)
@@ -38,10 +37,6 @@ class TestSettings:
     @property
     def user_info_path(self) -> str:
         return self.mode_config.user_info_path
-
-    @property
-    def media_upload_path(self) -> str:
-        return self.mode_config.media_upload_path
 
     @property
     def auth_ready(self) -> bool:
@@ -92,7 +87,6 @@ def load_settings(mode_override: str | None = None) -> TestSettings:
             base_url=str(mode_cfg.get("base_url", "")).rstrip("/"),
             login_path=str(mode_cfg.get("login_path", "")),
             user_info_path=str(mode_cfg.get("user_info_path", "")),
-            media_upload_path=str(mode_cfg.get("media_upload_path", "")),
         ),
         username=os.getenv("API_USERNAME", "test_admin").strip(),
         password=os.getenv("API_PASSWORD", "123456").strip(),

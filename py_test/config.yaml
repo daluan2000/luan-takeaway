@@ -3,10 +3,8 @@ modes:
     base_url: "http://127.0.0.1:9999"
     login_path: "/auth/oauth2/token"
     user_info_path: "/admin/user/info"
-    media_upload_path: "/media/files/upload"
 
   monolith:
     base_url: "http://127.0.0.1:9999"
     login_path: "/admin/oauth2/token"
     user_info_path: "/admin/user/info"
-    media_upload_path: "/admin/media/files/upload"

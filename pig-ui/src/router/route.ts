@@ -56,51 +56,6 @@ export const dynamicRoutes: Array<RouteRecordRaw> = [
 			isHide: true,
 		},
 	},
-	{
-		path: '/media/files',
-		name: 'router.mediaFiles',
-		component: () => import('/@/views/media/files/index.vue'),
-		meta: {
-			title: '图床上传',
-			enName: 'Media Files',
-			isLink: '',
-			isHide: false,
-			isKeepAlive: true,
-			isAffix: false,
-			isIframe: false,
-			icon: 'ele-Picture',
-		},
-	},
-	{
-		path: '/media/albums',
-		name: 'router.mediaAlbums',
-		component: () => import('/@/views/media/albums/index.vue'),
-		meta: {
-			title: '相册管理',
-			enName: 'Media Albums',
-			isLink: '',
-			isHide: false,
-			isKeepAlive: true,
-			isAffix: false,
-			isIframe: false,
-			icon: 'ele-FolderOpened',
-		},
-	},
-	{
-		path: '/media/shares',
-		name: 'router.mediaShares',
-		component: () => import('/@/views/media/shares/index.vue'),
-		meta: {
-			title: '分享管理',
-			enName: 'Media Shares',
-			isLink: '',
-			isHide: false,
-			isKeepAlive: true,
-			isAffix: false,
-			isIframe: false,
-			icon: 'ele-Link',
-		},
-	},
 ];
 
 /**

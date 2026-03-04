@@ -42,9 +42,9 @@ for ((attempt = 1; attempt <= MAX_RETRIES; attempt++)); do
 done
 
 echo
-echo "启动 Java 微服务(每次强制重建容器): pig-gateway, pig-auth, pig-upms, pig-media, pig-monitor, pig-codegen, pig-quartz"
-docker compose up -d --build --force-recreate --no-deps pig-gateway pig-auth pig-upms pig-media pig-monitor pig-codegen pig-quartz
+echo "启动 Java 微服务(每次强制重建容器): pig-gateway, pig-auth, pig-upms, pig-monitor, pig-codegen, pig-quartz"
+docker compose up -d --build --force-recreate --no-deps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz
 
 echo
 echo "Java 微服务已启动，查看状态:"
-echo "docker compose ps pig-gateway pig-auth pig-upms pig-media pig-monitor pig-codegen pig-quartz"
+echo "docker compose ps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz"
