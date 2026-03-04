@@ -294,6 +294,7 @@ CREATE TABLE `tenant_capacity` (
 -- Records of tenant_capacity
 -- ----------------------------
 BEGIN;
+INSERT INTO `tenant_capacity` (`tenant_id`) VALUES ('public');
 COMMIT;
 
 -- ----------------------------
@@ -318,6 +319,8 @@ CREATE TABLE `tenant_info` (
 -- Records of tenant_info
 -- ----------------------------
 BEGIN;
+INSERT INTO `tenant_info` (`kp`, `tenant_id`, `tenant_name`, `tenant_desc`, `create_source`, `gmt_create`, `gmt_modified`)
+VALUES ('1', 'public', 'public', 'public namespace', 'nacos-init', UNIX_TIMESTAMP(NOW(3)) * 1000, UNIX_TIMESTAMP(NOW(3)) * 1000);
 COMMIT;
 
 -- ----------------------------
