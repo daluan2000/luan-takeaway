@@ -3,11 +3,13 @@ package com.pig4cloud.pig.takeaway.delivery.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.takeaway.common.dto.CreateDeliveryOrderRequest;
 import com.pig4cloud.pig.takeaway.common.entity.WmDeliveryOrder;
-import com.pig4cloud.pig.takeaway.common.entity.WmDeliveryUserExt;
+import com.pig4cloud.pig.takeaway.delivery.dto.WmDeliveryDTO;
 
 public interface WmDeliveryService {
 
-	boolean registerRider(WmDeliveryUserExt rider);
+	WmDeliveryDTO createRider(WmDeliveryDTO riderDTO);
+
+	boolean updateRider(WmDeliveryDTO riderDTO);
 
 	boolean createDeliveryOrder(CreateDeliveryOrderRequest request);
 

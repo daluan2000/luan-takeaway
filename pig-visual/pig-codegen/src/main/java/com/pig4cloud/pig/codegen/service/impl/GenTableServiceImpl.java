@@ -50,9 +50,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 代码生成表服务实现类
@@ -81,7 +81,7 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	public String queryTableDdl(String dsName, String tableName) throws Exception {
 		// 手动切换数据源
 		DynamicDataSourceContextHolder.push(dsName);
-		Table table = ServiceProxy.metadata().table(tableName); // 获取表结构
+		Table<?> table = ServiceProxy.metadata().table(tableName); // 获取表结构
 		table.execute(false);// 不执行SQL
 		ServiceProxy.ddl().create(table);
 		return table.getDdl();// 返回创建表的DDL
@@ -108,19 +108,19 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	 * @return 表
 	 */
 	@Override
-	public IPage queryTablePage(Page<Table> page, GenTable table) {
+	public IPage<?> queryTablePage(Page<Table<?>> page, GenTable table) {
 		// 手动切换数据源
 		DynamicDataSourceContextHolder.push(table.getDsName());
 		CacheProxy.clear();
-		List<Table> tableList = ServiceProxy.metadata().tables().values().stream().filter(t -> {
+		List<Table<?>> tableList = ServiceProxy.metadata().tables().values().stream().<Table<?>>map(t -> (Table<?>) t).filter(t -> {
 			if (StrUtil.isBlank(table.getTableName())) {
 				return true;
 			}
 			return StrUtil.containsIgnoreCase(t.getName(false), table.getTableName());
-		}).toList();
+		}).collect(Collectors.toList());
 
 		// 根据 page 进行分页
-		List<Table> records = CollUtil.page((int) page.getCurrent() - 1, (int) page.getSize(), tableList);
+		List<Table<?>> records = CollUtil.page((int) page.getCurrent() - 1, (int) page.getSize(), tableList);
 		page.setTotal(tableList.size());
 		page.setRecords(records);
 		return page;
@@ -183,8 +183,8 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 		GenTable table = new GenTable();
 		// 从数据库获取表信息
 		CacheProxy.clear();
-		AnylineService service = ServiceProxy.service();
-		Table tableMetadata = service.metadata().table(tableName);
+		AnylineService<?> service = ServiceProxy.service();
+		Table<?> tableMetadata = service.metadata().table(tableName);
 		Database database = service.metadata().database();
 		// 获取默认表配置信息 （）
 
@@ -231,10 +231,10 @@ public class GenTableServiceImpl extends ServiceImpl<GenTableMapper, GenTable> i
 	 * @return list
 	 */
 	private static @NotNull List<GenTableColumnEntity> getGenTableColumnEntities(String dsName, String tableName,
-			Table tableMetadata) {
+			Table<?> tableMetadata) {
 		List<GenTableColumnEntity> tableFieldList = new ArrayList<>();
-		LinkedHashMap<String, Column> columns = tableMetadata.getColumns();
-		columns.forEach((columnName, column) -> {
+		tableMetadata.getColumns().forEach((columnName, rawColumn) -> {
+			Column column = (Column) rawColumn;
 			GenTableColumnEntity genTableColumnEntity = new GenTableColumnEntity();
 			genTableColumnEntity.setTableName(tableName);
 			genTableColumnEntity.setDsName(dsName);

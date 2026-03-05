@@ -42,7 +42,7 @@ public interface SysLogService extends IService<SysLog> {
 	 * @param sysLog 系统日志
 	 * @return 系统日志分页数据
 	 */
-	Page getLogPage(Page page, SysLogDTO sysLog);
+	Page<SysLog> getLogPage(Page<SysLog> page, SysLogDTO sysLog);
 
 	/**
 	 * 保存日志

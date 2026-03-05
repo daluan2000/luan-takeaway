@@ -58,7 +58,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, allEntries = true)
-	public R removeDictByIds(Long[] ids) {
+	public R<?> removeDictByIds(Long[] ids) {
 
 		List<Long> dictIdList = baseMapper.selectByIds(CollUtil.toList(ids))
 			.stream()
@@ -80,7 +80,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 	 */
 	@Override
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, key = "#dict.dictType")
-	public R updateDict(SysDict dict) {
+	public R<SysDict> updateDict(SysDict dict) {
 		SysDict sysDict = this.getById(dict.getId());
 		// 系统内置
 		if (DictTypeEnum.SYSTEM.getType().equals(sysDict.getSystemFlag())) {
@@ -96,7 +96,7 @@ public class SysDictServiceImpl extends ServiceImpl<SysDictMapper, SysDict> impl
 	 */
 	@Override
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, allEntries = true)
-	public R syncDictCache() {
+	public R<?> syncDictCache() {
 		return R.ok();
 	}
 

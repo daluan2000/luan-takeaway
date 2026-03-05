@@ -68,7 +68,7 @@ public class SysRoleController {
 	 */
 	@GetMapping("/details/{id}")
 	@Operation(summary = "通过ID查询角色信息", description = "通过ID查询角色信息")
-	public R getById(@PathVariable Long id) {
+	public R<SysRole> getById(@PathVariable Long id) {
 		return R.ok(sysRoleService.getById(id));
 	}
 
@@ -79,7 +79,7 @@ public class SysRoleController {
 	 */
 	@GetMapping("/details")
 	@Operation(summary = "查询角色详细信息", description = "查询角色详细信息")
-	public R getDetails(@ParameterObject SysRole query) {
+	public R<SysRole> getDetails(@ParameterObject SysRole query) {
 		return R.ok(sysRoleService.getOne(Wrappers.query(query), false));
 	}
 
@@ -93,7 +93,7 @@ public class SysRoleController {
 	@HasPermission("sys_role_add")
 	@Operation(summary = "添加角色", description = "添加角色")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
-	public R saveRole(@Valid @RequestBody SysRole sysRole) {
+	public R<Boolean> saveRole(@Valid @RequestBody SysRole sysRole) {
 		return R.ok(sysRoleService.save(sysRole));
 	}
 
@@ -107,7 +107,7 @@ public class SysRoleController {
 	@HasPermission("sys_role_edit")
 	@Operation(summary = "修改角色信息", description = "修改角色信息")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
-	public R updateRole(@Valid @RequestBody SysRole sysRole) {
+	public R<Boolean> updateRole(@Valid @RequestBody SysRole sysRole) {
 		return R.ok(sysRoleService.updateById(sysRole));
 	}
 
@@ -121,7 +121,7 @@ public class SysRoleController {
 	@HasPermission("sys_role_del")
 	@Operation(summary = "根据ID数组删除角色", description = "根据ID数组删除角色")
 	@CacheEvict(value = CacheConstants.ROLE_DETAILS, allEntries = true)
-	public R removeById(@RequestBody Long[] ids) {
+	public R<Boolean> removeById(@RequestBody Long[] ids) {
 		return R.ok(sysRoleService.removeRoleByIds(ids));
 	}
 
@@ -131,7 +131,7 @@ public class SysRoleController {
 	 */
 	@GetMapping("/list")
 	@Operation(summary = "获取角色列表", description = "获取角色列表")
-	public R listRoles() {
+	public R<List<SysRole>> listRoles() {
 		return R.ok(sysRoleService.list(Wrappers.emptyWrapper()));
 	}
 
@@ -143,7 +143,7 @@ public class SysRoleController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询角色信息", description = "分页查询角色信息")
-	public R getRolePage(Page page, SysRole role) {
+	public R<Page<SysRole>> getRolePage(@ParameterObject Page<SysRole> page, @ParameterObject SysRole role) {
 		return R.ok(sysRoleService.page(page, Wrappers.<SysRole>lambdaQuery()
 			.like(StrUtil.isNotBlank(role.getRoleName()), SysRole::getRoleName, role.getRoleName())));
 	}
@@ -157,7 +157,7 @@ public class SysRoleController {
 	@PutMapping("/menu")
 	@HasPermission("sys_role_perm")
 	@Operation(summary = "更新角色菜单", description = "更新角色菜单")
-	public R saveRoleMenus(@RequestBody RoleVO roleVo) {
+	public R<Boolean> saveRoleMenus(@RequestBody RoleVO roleVo) {
 		return R.ok(sysRoleService.updateRoleMenus(roleVo));
 	}
 
@@ -168,7 +168,7 @@ public class SysRoleController {
 	 */
 	@PostMapping("/getRoleList")
 	@Operation(summary = "通过角色ID列表查询角色信息", description = "通过角色ID列表查询角色信息")
-	public R getRoleList(@RequestBody List<Long> roleIdList) {
+	public R<List<SysRole>> getRoleList(@RequestBody List<Long> roleIdList) {
 		return R.ok(sysRoleService.listRolesByRoleIds(roleIdList, CollUtil.join(roleIdList, StrUtil.UNDERLINE)));
 	}
 
@@ -193,7 +193,7 @@ public class SysRoleController {
 	@PostMapping("/import")
 	@HasPermission("sys_role_export")
 	@Operation(summary = "导入角色数据", description = "导入角色数据")
-	public R importRole(@RequestExcel List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
+	public R<?> importRole(@RequestExcel List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
 		return sysRoleService.importRole(excelVOList, bindingResult);
 	}
 

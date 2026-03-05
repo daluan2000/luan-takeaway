@@ -65,7 +65,7 @@ public class SysClientController {
 	 */
 	@GetMapping("/{clientId}")
 	@Operation(summary = "通过客户端ID查询客户端详情", description = "通过客户端ID查询客户端详情")
-	public R getByClientId(@PathVariable String clientId) {
+	public R<SysOauthClientDetails> getByClientId(@PathVariable String clientId) {
 		SysOauthClientDetails details = clientDetailsService
 			.getOne(Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId));
 		return R.ok(details);
@@ -79,7 +79,7 @@ public class SysClientController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询系统终端信息", description = "分页查询系统终端信息")
-	public R getClientPage(@ParameterObject Page page, @ParameterObject SysOauthClientDetails sysOauthClientDetails) {
+	public R<Page<SysOauthClientDetails>> getClientPage(@ParameterObject Page<SysOauthClientDetails> page, @ParameterObject SysOauthClientDetails sysOauthClientDetails) {
 		LambdaQueryWrapper<SysOauthClientDetails> wrapper = Wrappers.<SysOauthClientDetails>lambdaQuery()
 			.like(StrUtil.isNotBlank(sysOauthClientDetails.getClientId()), SysOauthClientDetails::getClientId,
 					sysOauthClientDetails.getClientId())
@@ -97,7 +97,7 @@ public class SysClientController {
 	@PostMapping
 	@HasPermission("sys_client_add")
 	@Operation(summary = "添加客户端终端", description = "添加客户端终端")
-	public R saveClient(@Valid @RequestBody SysOauthClientDetails clientDetails) {
+	public R<Boolean> saveClient(@Valid @RequestBody SysOauthClientDetails clientDetails) {
 		return R.ok(clientDetailsService.saveClient(clientDetails));
 	}
 
@@ -110,7 +110,7 @@ public class SysClientController {
 	@DeleteMapping
 	@HasPermission("sys_client_del")
 	@Operation(summary = "根据ID列表批量删除终端", description = "根据ID列表批量删除终端")
-	public R removeById(@RequestBody Long[] ids) {
+	public R<?> removeById(@RequestBody Long[] ids) {
 		clientDetailsService.removeBatchByIds(CollUtil.toList(ids));
 		return R.ok();
 	}
@@ -124,7 +124,7 @@ public class SysClientController {
 	@PutMapping
 	@HasPermission("sys_client_edit")
 	@Operation(summary = "编辑终端信息", description = "编辑终端信息")
-	public R updateClient(@Valid @RequestBody SysOauthClientDetails clientDetails) {
+	public R<Boolean> updateClient(@Valid @RequestBody SysOauthClientDetails clientDetails) {
 		return R.ok(clientDetailsService.updateClientById(clientDetails));
 	}
 
@@ -136,7 +136,7 @@ public class SysClientController {
 	@Inner
 	@GetMapping("/getClientDetailsById/{clientId}")
 	@Operation(summary = "根据客户端ID获取客户端详情", description = "根据客户端ID获取客户端详情")
-	public R getClientDetailsById(@PathVariable String clientId) {
+	public R<SysOauthClientDetails> getClientDetailsById(@PathVariable String clientId) {
 		return R.ok(clientDetailsService.getOne(
 				Wrappers.<SysOauthClientDetails>lambdaQuery().eq(SysOauthClientDetails::getClientId, clientId), false));
 	}
@@ -148,7 +148,7 @@ public class SysClientController {
 	@SysLog("同步终端")
 	@PutMapping("/sync")
 	@Operation(summary = "同步缓存字典", description = "同步缓存字典")
-	public R syncClient() {
+	public R<?> syncClient() {
 		return clientDetailsService.syncClientCache();
 	}
 

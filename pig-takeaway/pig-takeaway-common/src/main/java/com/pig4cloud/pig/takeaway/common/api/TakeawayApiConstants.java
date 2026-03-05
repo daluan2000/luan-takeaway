@@ -6,7 +6,11 @@ public interface TakeawayApiConstants {
 
 	String INTERNAL_PREFIX = "/internal";
 
+	String ROLE_PATH = "/takeaway_role";
+
 	String MERCHANT_PATH = "/merchant";
+
+	String CUSTOMER_PATH = "/customer";
 
 	String DISH_PATH = "/dish";
 

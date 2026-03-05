@@ -78,6 +78,12 @@
 			<artifactId>pig-takeaway-delivery-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
+		 <!--可选：外卖客户服务模块 -->
+		<dependency>
+			<groupId>com.pig4cloud</groupId>
+			<artifactId>pig-takeaway-customer-biz</artifactId>
+			<version>${revision}</version>
+		</dependency>
 		<!--安全模块 -->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>

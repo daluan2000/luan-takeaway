@@ -62,7 +62,7 @@ public class SysLogController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询系统日志", description = "分页查询系统日志")
-	public R getLogPage(@ParameterObject Page page, @ParameterObject SysLogDTO sysLog) {
+	public R<Page<SysLog>> getLogPage(@ParameterObject Page<SysLog> page, @ParameterObject SysLogDTO sysLog) {
 		return R.ok(sysLogService.getLogPage(page, sysLog));
 	}
 
@@ -74,7 +74,7 @@ public class SysLogController {
 	@DeleteMapping
 	@HasPermission("sys_log_del")
 	@Operation(summary = "批量删除日志", description = "批量删除日志")
-	public R removeByIds(@RequestBody Long[] ids) {
+	public R<Boolean> removeByIds(@RequestBody Long[] ids) {
 		return R.ok(sysLogService.removeBatchByIds(CollUtil.toList(ids)));
 	}
 
@@ -86,7 +86,7 @@ public class SysLogController {
 	@Inner
 	@PostMapping("/save")
 	@Operation(summary = "保存日志", description = "保存日志")
-	public R saveLog(@Valid @RequestBody SysLog sysLog) {
+	public R<Boolean> saveLog(@Valid @RequestBody SysLog sysLog) {
 		return R.ok(sysLogService.saveLog(sysLog));
 	}
 

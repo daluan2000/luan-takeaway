@@ -17,6 +17,7 @@
 
 package com.pig4cloud.pig.codegen.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.codegen.entity.GenTable;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.anyline.metadata.Table;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,7 +65,7 @@ public class GenTableController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询", description = "分页查询")
-	public R getTablePage(Page page, GenTable table) {
+	public R<IPage<?>> getTablePage(Page<Table<?>> page, GenTable table) {
 		return R.ok(tableService.queryTablePage(page, table));
 	}
 
@@ -74,7 +76,7 @@ public class GenTableController {
 	 */
 	@GetMapping("/{id}")
 	@Operation(summary = "通过id查询", description = "通过id查询")
-	public R getTableById(@PathVariable("id") Long id) {
+	public R<GenTable> getTableById(@PathVariable("id") Long id) {
 		return R.ok(tableService.getById(id));
 	}
 
@@ -85,7 +87,7 @@ public class GenTableController {
 	 */
 	@GetMapping("/list/{dsName}")
 	@Operation(summary = "查询数据源所有表", description = "查询数据源所有表")
-	public R listTables(@PathVariable("dsName") String dsName) {
+	public R<List<String>> listTables(@PathVariable("dsName") String dsName) {
 		return R.ok(tableService.queryTableList(dsName));
 	}
 
@@ -107,7 +109,8 @@ public class GenTableController {
 	 */
 	@GetMapping("/column/{dsName}/{tableName}")
 	@Operation(summary = "查询表Column的DDL语句", description = "查询表Column的DDL语句")
-	public R getTableColumn(@PathVariable("dsName") String dsName, @PathVariable String tableName) throws Exception {
+	public R<List<String>> getTableColumn(@PathVariable("dsName") String dsName, @PathVariable String tableName)
+			throws Exception {
 		return R.ok(tableService.queryTableColumn(dsName, tableName));
 	}
 
@@ -118,7 +121,8 @@ public class GenTableController {
 	 */
 	@GetMapping("/ddl/{dsName}/{tableName}")
 	@Operation(summary = "查询表DDL语句", description = "查询表DDL语句")
-	public R getTableDdl(@PathVariable("dsName") String dsName, @PathVariable String tableName) throws Exception {
+	public R<String> getTableDdl(@PathVariable("dsName") String dsName, @PathVariable String tableName)
+			throws Exception {
 		return R.ok(tableService.queryTableDdl(dsName, tableName));
 	}
 
@@ -148,7 +152,7 @@ public class GenTableController {
 	@PutMapping
 	@SysLog("修改列属性")
 	@Operation(summary = "修改列属性", description = "修改列属性")
-	public R updateTable(@RequestBody GenTable table) {
+	public R<Boolean> updateTable(@RequestBody GenTable table) {
 		return R.ok(tableService.updateById(table));
 	}
 
@@ -160,7 +164,7 @@ public class GenTableController {
 	 */
 	@PutMapping("/field/{dsName}/{tableName}")
 	@Operation(summary = "修改表字段数据", description = "修改表字段数据")
-	public R<String> updateTableField(@PathVariable("dsName") String dsName, @PathVariable String tableName,
+	public R<?> updateTableField(@PathVariable("dsName") String dsName, @PathVariable String tableName,
 			@RequestBody List<GenTableColumnEntity> tableFieldList) {
 		tableColumnService.updateTableField(dsName, tableName, tableFieldList);
 		return R.ok();

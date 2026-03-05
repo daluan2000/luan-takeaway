@@ -53,7 +53,7 @@ public class SysMobileController {
 	@Inner(value = false)
 	@GetMapping("/{mobile}")
 	@Operation(summary = "发送短信验证码", description = "发送短信验证码")
-	public R sendSmsCode(@PathVariable String mobile) {
+	public R<Boolean> sendSmsCode(@PathVariable String mobile) {
 		return mobileService.sendSmsCode(mobile);
 	}
 

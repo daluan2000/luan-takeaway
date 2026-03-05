@@ -150,7 +150,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDept> impl
 	 * @return 导入结果，包含错误信息或成功信息
 	 */
 	@Override
-	public R importDept(List<DeptExcelVo> excelVOList, BindingResult bindingResult) {
+	public R<?> importDept(List<DeptExcelVo> excelVOList, BindingResult bindingResult) {
 		List<ErrorMessage> errorMessageList = (List<ErrorMessage>) bindingResult.getTarget();
 
 		List<SysDept> deptList = this.list();

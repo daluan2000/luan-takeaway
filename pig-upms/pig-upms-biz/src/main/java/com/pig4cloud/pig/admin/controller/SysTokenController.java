@@ -53,7 +53,7 @@ public class SysTokenController {
 	@PostMapping("/page")
 	@HasPermission("sys_token_del")
 	@Operation(summary = "获取分页token信息", description = "获取分页token信息")
-	public R getTokenPage(@RequestBody Map<String, Object> params) {
+	public R<?> getTokenPage(@RequestBody Map<String, Object> params) {
 		return remoteTokenService.getTokenPage(params);
 	}
 
@@ -66,7 +66,7 @@ public class SysTokenController {
 	@DeleteMapping("/delete")
 	@HasPermission("sys_token_del")
 	@Operation(summary = "删除用户token", description = "删除用户token")
-	public R removeById(@RequestBody String[] tokens) {
+	public R<?> removeById(@RequestBody String[] tokens) {
 		for (String token : tokens) {
 			remoteTokenService.removeTokenById(token);
 		}

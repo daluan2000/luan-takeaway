@@ -86,7 +86,7 @@ public class SysOauthClientDetailsServiceImpl extends ServiceImpl<SysOauthClient
 	 * @return 分页查询结果
 	 */
 	@Override
-	public Page getClientPage(Page page, SysOauthClientDetails query) {
+	public Page<SysOauthClientDetails> getClientPage(Page<SysOauthClientDetails> page, SysOauthClientDetails query) {
 		return baseMapper.selectPage(page, Wrappers.query(query));
 	}
 
@@ -96,7 +96,7 @@ public class SysOauthClientDetailsServiceImpl extends ServiceImpl<SysOauthClient
 	 */
 	@Override
 	@CacheEvict(value = CacheConstants.CLIENT_DETAILS_KEY, allEntries = true)
-	public R syncClientCache() {
+	public R<?> syncClientCache() {
 		return R.ok();
 	}
 

@@ -9,9 +9,19 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+/**
+ * 配送服务 Feign 接口
+ *
+ * @author pig
+ */
 @FeignClient(contextId = "deliveryApi", value = TakeawayServiceNameConstants.TAKEAWAY_DELIVERY_SERVICE)
 public interface DeliveryApi {
 
+	/**
+	 * 创建配送单
+	 * @param request 创建配送单请求
+	 * @return 是否成功
+	 */
 	@NoToken
 	@PostMapping(TakeawayApiConstants.INTERNAL_DELIVERY_PATH + "/create")
 	R<Boolean> createDeliveryOrder(@RequestBody CreateDeliveryOrderRequest request);

@@ -6,7 +6,7 @@ import com.pig4cloud.pig.takeaway.common.constant.TakeawayStatusConstants;
 import com.pig4cloud.pig.takeaway.common.dto.DeductStockRequest;
 import com.pig4cloud.pig.takeaway.common.dto.DishPurchaseItemDTO;
 import com.pig4cloud.pig.takeaway.common.entity.WmDish;
-import com.pig4cloud.pig.takeaway.dish.mapper.WmDishMapper;
+import com.pig4cloud.pig.takeaway.common.mapper.WmDishMapper;
 import com.pig4cloud.pig.takeaway.dish.service.WmDishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

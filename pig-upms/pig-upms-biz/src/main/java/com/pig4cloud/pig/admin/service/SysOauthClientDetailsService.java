@@ -52,12 +52,12 @@ public interface SysOauthClientDetailsService extends IService<SysOauthClientDet
 	 * @param query 查询条件
 	 * @return 分页查询结果
 	 */
-	Page getClientPage(Page page, SysOauthClientDetails query);
+	Page<SysOauthClientDetails> getClientPage(Page<SysOauthClientDetails> page, SysOauthClientDetails query);
 
 	/**
 	 * 同步客户端缓存
 	 * @return 操作结果
 	 */
-	R syncClientCache();
+	R<?> syncClientCache();
 
 }

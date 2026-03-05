@@ -65,7 +65,7 @@ public class SysFileController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询", description = "分页查询")
-	public R getFilePage(@ParameterObject Page page, @ParameterObject SysFile sysFile) {
+	public R<Page<SysFile>> getFilePage(@ParameterObject Page<SysFile> page, @ParameterObject SysFile sysFile) {
 		LambdaQueryWrapper<SysFile> wrapper = Wrappers.<SysFile>lambdaQuery()
 			.like(StrUtil.isNotBlank(sysFile.getOriginal()), SysFile::getOriginal, sysFile.getOriginal());
 		return R.ok(sysFileService.page(page, wrapper));
@@ -80,7 +80,7 @@ public class SysFileController {
 	@DeleteMapping
 	@HasPermission("sys_file_del")
 	@Operation(summary = "通过id删除文件管理", description = "通过id删除文件管理")
-	public R removeById(@RequestBody Long[] ids) {
+	public R<?> removeById(@RequestBody Long[] ids) {
 		for (Long id : ids) {
 			sysFileService.removeFile(id);
 		}
@@ -94,7 +94,7 @@ public class SysFileController {
 	 */
 	@PostMapping(value = "/upload")
 	@Operation(summary = "上传文件", description = "上传文件")
-	public R upload(@RequestPart("file") MultipartFile file) {
+	public R<?> upload(@RequestPart("file") MultipartFile file) {
 		return sysFileService.uploadFile(file);
 	}
 

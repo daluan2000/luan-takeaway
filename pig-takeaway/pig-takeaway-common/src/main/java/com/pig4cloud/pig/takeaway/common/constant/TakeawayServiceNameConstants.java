@@ -4,6 +4,8 @@ public interface TakeawayServiceNameConstants {
 
 	String TAKEAWAY_MERCHANT_SERVICE = "pig-takeaway-merchant";
 
+	String TAKEAWAY_CUSTOMER_SERVICE = "pig-takeaway-customer";
+
 	String TAKEAWAY_DISH_SERVICE = "pig-takeaway-dish";
 
 	String TAKEAWAY_ORDER_SERVICE = "pig-takeaway-order";

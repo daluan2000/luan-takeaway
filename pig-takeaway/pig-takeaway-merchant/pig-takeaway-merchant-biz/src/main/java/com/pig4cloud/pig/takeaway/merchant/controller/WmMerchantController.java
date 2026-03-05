@@ -5,6 +5,7 @@ import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
 import com.pig4cloud.pig.takeaway.common.entity.WmMerchantUserExt;
+import com.pig4cloud.pig.takeaway.merchant.dto.WmMerchantDTO;
 import com.pig4cloud.pig.takeaway.merchant.service.WmMerchantService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,12 +13,24 @@ import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 商家管理控制器
+ *
+ * @author pig
+ */
 @RestController
 @AllArgsConstructor
 @Tag(name = "商家服务")
 public class WmMerchantController {
 
 	private final WmMerchantService wmMerchantService;
+
+	@PostMapping(TakeawayApiConstants.MERCHANT_PATH)
+	@Operation(summary = "新增商家信息")
+	@SysLog("新增商家信息")
+	public R<WmMerchantDTO> create(@RequestBody WmMerchantDTO merchantDTO) {
+		return R.ok(wmMerchantService.createMerchant(merchantDTO));
+	}
 
 	@PostMapping(TakeawayApiConstants.MERCHANT_PATH + "/apply")
 	@Operation(summary = "商家入驻申请")
@@ -36,8 +49,8 @@ public class WmMerchantController {
 	@PutMapping(TakeawayApiConstants.MERCHANT_PATH)
 	@Operation(summary = "商家信息更新")
 	@SysLog("商家信息更新")
-	public R<Boolean> update(@RequestBody WmMerchantUserExt merchant) {
-		return R.ok(wmMerchantService.updateMerchant(merchant));
+	public R<Boolean> update(@RequestBody WmMerchantDTO merchantDTO) {
+		return R.ok(wmMerchantService.updateMerchant(merchantDTO));
 	}
 
 	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/page")

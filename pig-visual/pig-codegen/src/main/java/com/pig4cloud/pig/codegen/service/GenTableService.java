@@ -39,7 +39,7 @@ public interface GenTableService extends IService<GenTable> {
 	 * @param table 查询条件
 	 * @return 表
 	 */
-	IPage queryTablePage(Page<Table> page, GenTable table);
+	IPage<?> queryTablePage(Page<Table<?>> page, GenTable table);
 
 	/**
 	 * 查询表信息（列），然后插入到中间表中

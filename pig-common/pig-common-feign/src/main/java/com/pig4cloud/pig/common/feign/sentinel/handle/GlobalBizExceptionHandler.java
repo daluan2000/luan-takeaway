@@ -57,7 +57,7 @@ public class GlobalBizExceptionHandler {
 	 */
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public R handleGlobalException(Exception e) {
+	public R<?> handleGlobalException(Exception e) {
 		log.error("全局异常信息 ex={}", e.getMessage(), e);
 
 		// 业务异常交由 sentinel 记录
@@ -77,7 +77,7 @@ public class GlobalBizExceptionHandler {
 	 */
 	@ExceptionHandler(IllegalArgumentException.class)
 	@ResponseStatus(HttpStatus.OK)
-	public R handleIllegalArgumentException(IllegalArgumentException exception) {
+	public R<?> handleIllegalArgumentException(IllegalArgumentException exception) {
 		log.error("非法参数,ex = {}", exception.getMessage(), exception);
 		return R.failed(exception.getMessage());
 	}
@@ -89,7 +89,7 @@ public class GlobalBizExceptionHandler {
 	 */
 	@ExceptionHandler(AccessDeniedException.class)
 	@ResponseStatus(HttpStatus.FORBIDDEN)
-	public R handleAccessDeniedException(AccessDeniedException e) {
+	public R<?> handleAccessDeniedException(AccessDeniedException e) {
 		String msg = SpringSecurityMessageSource.getAccessor()
 			.getMessage("AbstractAccessDecisionManager.accessDenied", e.getMessage());
 		log.warn("拒绝授权异常信息 ex={}", msg);
@@ -103,7 +103,7 @@ public class GlobalBizExceptionHandler {
 	 */
 	@ExceptionHandler({ MethodArgumentNotValidException.class })
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public R handleBodyValidException(MethodArgumentNotValidException exception) {
+	public R<?> handleBodyValidException(MethodArgumentNotValidException exception) {
 		List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors();
 		log.warn("参数绑定异常,ex = {}", fieldErrors.get(0).getDefaultMessage());
 		return R.failed(String.format("%s %s", fieldErrors.get(0).getField(), fieldErrors.get(0).getDefaultMessage()));
@@ -116,7 +116,7 @@ public class GlobalBizExceptionHandler {
 	 */
 	@ExceptionHandler({ BindException.class })
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public R bindExceptionHandler(BindException exception) {
+	public R<?> bindExceptionHandler(BindException exception) {
 		List<FieldError> fieldErrors = exception.getBindingResult().getFieldErrors();
 		log.warn("参数绑定异常,ex = {}", fieldErrors.get(0).getDefaultMessage());
 		return R.failed(fieldErrors.get(0).getDefaultMessage());
@@ -132,7 +132,7 @@ public class GlobalBizExceptionHandler {
 	 */
 	@ExceptionHandler({ NoResourceFoundException.class })
 	@ResponseStatus(HttpStatus.NOT_FOUND)
-	public R notFoundExceptionHandler(NoResourceFoundException exception) {
+	public R<?> notFoundExceptionHandler(NoResourceFoundException exception) {
 		log.debug("请求路径 404 {}", exception.getMessage());
 		return R.failed(exception.getMessage());
 	}

@@ -74,7 +74,7 @@ public class SysPostController {
 	@GetMapping("/page")
 	@HasPermission("sys_post_view")
 	@Operation(description = "分页查询岗位信息", summary = "分页查询岗位信息")
-	public R getPostPage(@ParameterObject Page page, @ParameterObject SysPost sysPost) {
+	public R<Page<SysPost>> getPostPage(@ParameterObject Page<SysPost> page, @ParameterObject SysPost sysPost) {
 		return R.ok(sysPostService.page(page, Wrappers.<SysPost>lambdaQuery()
 			.like(StrUtil.isNotBlank(sysPost.getPostName()), SysPost::getPostName, sysPost.getPostName())));
 	}
@@ -87,7 +87,7 @@ public class SysPostController {
 	@HasPermission("sys_post_view")
 	@GetMapping("/details/{postId}")
 	@Operation(description = "通过id查询岗位信息", summary = "通过id查询岗位信息")
-	public R getById(@PathVariable("postId") Long postId) {
+	public R<SysPost> getById(@PathVariable("postId") Long postId) {
 		return R.ok(sysPostService.getById(postId));
 	}
 
@@ -99,7 +99,7 @@ public class SysPostController {
 	@GetMapping("/details")
 	@HasPermission("sys_post_view")
 	@Operation(description = "查询角色信息", summary = "查询角色信息")
-	public R getDetails(SysPost query) {
+	public R<SysPost> getDetails(SysPost query) {
 		return R.ok(sysPostService.getOne(Wrappers.query(query), false));
 	}
 
@@ -112,7 +112,7 @@ public class SysPostController {
 	@SysLog("新增岗位信息表")
 	@HasPermission("sys_post_add")
 	@Operation(description = "新增岗位信息表", summary = "新增岗位信息表")
-	public R savePost(@RequestBody SysPost sysPost) {
+	public R<Boolean> savePost(@RequestBody SysPost sysPost) {
 		return R.ok(sysPostService.save(sysPost));
 	}
 
@@ -125,7 +125,7 @@ public class SysPostController {
 	@SysLog("修改岗位信息表")
 	@HasPermission("sys_post_edit")
 	@Operation(description = "修改岗位信息表", summary = "修改岗位信息表")
-	public R updatePost(@RequestBody SysPost sysPost) {
+	public R<Boolean> updatePost(@RequestBody SysPost sysPost) {
 		return R.ok(sysPostService.updateById(sysPost));
 	}
 
@@ -138,7 +138,7 @@ public class SysPostController {
 	@SysLog("通过id删除岗位信息表")
 	@HasPermission("sys_post_del")
 	@Operation(description = "通过id删除岗位信息表", summary = "通过id删除岗位信息表")
-	public R removeById(@RequestBody Long[] ids) {
+	public R<Boolean> removeById(@RequestBody Long[] ids) {
 		return R.ok(sysPostService.removeBatchByIds(CollUtil.toList(ids)));
 	}
 
@@ -163,7 +163,7 @@ public class SysPostController {
 	@PostMapping("/import")
 	@HasPermission("sys_post_export")
 	@Operation(description = "导入岗位信息", summary = "导入岗位信息")
-	public R importRole(@RequestExcel List<PostExcelVO> excelVOList, BindingResult bindingResult) {
+	public R<?> importRole(@RequestExcel List<PostExcelVO> excelVOList, BindingResult bindingResult) {
 		return sysPostService.importPost(excelVOList, bindingResult);
 	}
 

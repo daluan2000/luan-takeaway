@@ -36,7 +36,7 @@ public class SysSystemInfoController {
 	 */
 	@GetMapping("/cache")
 	@Operation(summary = "获取Redis缓存监控信息", description = "获取Redis缓存监控信息")
-	public R cache() {
+	public R<Map<String, Object>> cache() {
 		Properties info = RedisUtils.execute(RedisServerCommands::info);
 		Properties commandStats = RedisUtils.execute(connection -> connection.serverCommands().info("commandstats"));
 		Object dbSize = RedisUtils.execute((RedisCallback<Object>) RedisServerCommands::dbSize);

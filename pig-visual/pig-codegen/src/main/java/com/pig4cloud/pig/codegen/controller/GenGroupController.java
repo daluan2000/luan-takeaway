@@ -62,7 +62,7 @@ public class GenGroupController {
 	@GetMapping("/page")
 	@HasPermission("codegen_group_view")
 	@Operation(summary = "分页查询模板分组", description = "分页查询模板分组")
-	public R getGroupPage(Page page, GenGroupEntity genGroup) {
+	public R<Page<GenGroupEntity>> getGroupPage(Page<GenGroupEntity> page, GenGroupEntity genGroup) {
 		LambdaQueryWrapper<GenGroupEntity> wrapper = Wrappers.<GenGroupEntity>lambdaQuery()
 			.like(genGroup.getId() != null, GenGroupEntity::getId, genGroup.getId())
 			.like(StrUtil.isNotEmpty(genGroup.getGroupName()), GenGroupEntity::getGroupName, genGroup.getGroupName());
@@ -77,7 +77,7 @@ public class GenGroupController {
 	@GetMapping("/{id}")
 	@HasPermission("codegen_group_view")
 	@Operation(summary = "通过id查询模板分组", description = "通过id查询模板分组")
-	public R getGroupById(@PathVariable("id") Long id) {
+	public R<GroupVO> getGroupById(@PathVariable("id") Long id) {
 		return R.ok(genGroupService.getGroupVoById(id));
 	}
 
@@ -90,7 +90,7 @@ public class GenGroupController {
 	@SysLog("新增模板分组")
 	@HasPermission("codegen_group_add")
 	@Operation(summary = "新增模板分组", description = "新增模板分组")
-	public R saveGroup(@RequestBody TemplateGroupDTO genTemplateGroup) {
+	public R<?> saveGroup(@RequestBody TemplateGroupDTO genTemplateGroup) {
 		genGroupService.saveGenGroup(genTemplateGroup);
 		return R.ok();
 	}
@@ -104,7 +104,7 @@ public class GenGroupController {
 	@SysLog("修改模板分组")
 	@HasPermission("codegen_group_edit")
 	@Operation(summary = "修改模板分组", description = "修改模板分组")
-	public R updateGroup(@RequestBody GroupVO groupVo) {
+	public R<?> updateGroup(@RequestBody GroupVO groupVo) {
 		genGroupService.updateGroupAndTemplateById(groupVo);
 		return R.ok();
 	}
@@ -118,7 +118,7 @@ public class GenGroupController {
 	@SysLog("通过id删除模板分组")
 	@HasPermission("codegen_group_del")
 	@Operation(summary = "通过id删除模板分组", description = "通过id删除模板分组")
-	public R removeGroupByIds(@RequestBody Long[] ids) {
+	public R<?> removeGroupByIds(@RequestBody Long[] ids) {
 		genGroupService.delGroupAndTemplate(ids);
 		return R.ok();
 	}
@@ -142,7 +142,7 @@ public class GenGroupController {
 	 */
 	@GetMapping("/list")
 	@Operation(summary = "查询列表", description = "查询列表")
-	public R listGroups() {
+	public R<List<GenGroupEntity>> listGroups() {
 		List<GenGroupEntity> list = genGroupService
 			.list(Wrappers.<GenGroupEntity>lambdaQuery().orderByDesc(GenGroupEntity::getCreateTime));
 		return R.ok(list);

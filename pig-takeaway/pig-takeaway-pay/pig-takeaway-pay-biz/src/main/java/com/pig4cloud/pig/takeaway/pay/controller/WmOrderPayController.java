@@ -13,6 +13,11 @@ import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 支付管理控制器
+ *
+ * @author pig
+ */
 @RestController
 @AllArgsConstructor
 @Tag(name = "支付服务")

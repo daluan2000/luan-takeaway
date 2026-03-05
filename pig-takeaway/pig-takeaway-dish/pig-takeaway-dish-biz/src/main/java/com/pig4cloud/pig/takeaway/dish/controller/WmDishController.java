@@ -17,6 +17,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * 菜品管理控制器
+ *
+ * @author pig
+ */
 @RestController
 @AllArgsConstructor
 @Tag(name = "菜品服务")

@@ -1,4 +1,4 @@
-package com.pig4cloud.pig.takeaway.merchant.mapper;
+package com.pig4cloud.pig.takeaway.common.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.pig4cloud.pig.takeaway.common.entity.WmMerchantUserExt;

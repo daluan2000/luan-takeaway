@@ -51,7 +51,7 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
 	 */
 	@Override
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, allEntries = true)
-	public R removeDictItem(Long id) {
+	public R<Boolean> removeDictItem(Long id) {
 		// 根据ID查询字典ID
 		SysDictItem dictItem = this.getById(id);
 		SysDict dict = dictService.getById(dictItem.getDictId());
@@ -70,7 +70,7 @@ public class SysDictItemServiceImpl extends ServiceImpl<SysDictItemMapper, SysDi
 	 */
 	@Override
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, key = "#item.dictType")
-	public R updateDictItem(SysDictItem item) {
+	public R<Boolean> updateDictItem(SysDictItem item) {
 		// 查询字典
 		SysDict dict = dictService.getById(item.getDictId());
 		// 系统内置

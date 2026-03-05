@@ -51,7 +51,7 @@ public class SysLogServiceImpl extends ServiceImpl<SysLogMapper, SysLog> impleme
 	 * @return 分页结果
 	 */
 	@Override
-	public Page getLogPage(Page page, SysLogDTO sysLog) {
+	public Page<SysLog> getLogPage(Page<SysLog> page, SysLogDTO sysLog) {
 		return baseMapper.selectPage(page, buildQuery(sysLog));
 	}
 
@@ -82,7 +82,7 @@ public class SysLogServiceImpl extends ServiceImpl<SysLogMapper, SysLog> impleme
 	 * @param sysLog 前端查询条件DTO
 	 * @return 构建好的LambdaQueryWrapper对象
 	 */
-	private LambdaQueryWrapper buildQuery(SysLogDTO sysLog) {
+	private LambdaQueryWrapper<SysLog> buildQuery(SysLogDTO sysLog) {
 		LambdaQueryWrapper<SysLog> wrapper = Wrappers.lambdaQuery();
 		if (StrUtil.isNotBlank(sysLog.getLogType())) {
 			wrapper.eq(SysLog::getLogType, sysLog.getLogType());

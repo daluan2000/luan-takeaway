@@ -54,7 +54,7 @@ public class SysJobLogController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页定时任务日志查询", description = "分页定时任务日志查询")
-	public R getJobLogPage(Page page, SysJobLog sysJobLog) {
+	public R<Page<SysJobLog>> getJobLogPage(Page<SysJobLog> page, SysJobLog sysJobLog) {
 		return R.ok(sysJobLogService.page(page, Wrappers.query(sysJobLog)));
 	}
 
@@ -65,7 +65,7 @@ public class SysJobLogController {
 	 */
 	@DeleteMapping
 	@Operation(summary = "批量删除日志", description = "批量删除日志")
-	public R removeBatchByIds(@RequestBody Long[] ids) {
+	public R<Boolean> removeBatchByIds(@RequestBody Long[] ids) {
 		return R.ok(sysJobLogService.removeBatchByIds(CollUtil.toList(ids)));
 	}
 

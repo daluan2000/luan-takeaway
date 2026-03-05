@@ -15,6 +15,7 @@
     <modules>
         <module>pig-takeaway-common</module>
         <module>pig-takeaway-merchant</module>
+        <module>pig-takeaway-customer</module>
         <module>pig-takeaway-dish</module>
         <module>pig-takeaway-order</module>
         <module>pig-takeaway-pay</module>
@@ -31,6 +32,11 @@
             <dependency>
                 <groupId>com.pig4cloud</groupId>
                 <artifactId>pig-takeaway-merchant-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pig4cloud</groupId>
+                <artifactId>pig-takeaway-customer-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

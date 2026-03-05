@@ -71,7 +71,7 @@ public class SysDictController {
 	 */
 	@GetMapping("/details/{id}")
 	@Operation(summary = "通过ID查询字典信息", description = "通过ID查询字典信息")
-	public R getById(@PathVariable Long id) {
+	public R<SysDict> getById(@PathVariable Long id) {
 		return R.ok(sysDictService.getById(id));
 	}
 
@@ -82,7 +82,7 @@ public class SysDictController {
 	 */
 	@GetMapping("/details")
 	@Operation(summary = "查询字典详细信息", description = "查询字典详细信息")
-	public R getDetails(@ParameterObject SysDict query) {
+	public R<SysDict> getDetails(@ParameterObject SysDict query) {
 		return R.ok(sysDictService.getOne(Wrappers.query(query), false));
 	}
 
@@ -94,7 +94,7 @@ public class SysDictController {
 	 */
 	@GetMapping("/page")
 	@Operation(summary = "分页查询字典信息", description = "分页查询字典信息")
-	public R<IPage> getDictPage(@ParameterObject Page page, @ParameterObject SysDict sysDict) {
+	public R<IPage<SysDict>> getDictPage(@ParameterObject Page<SysDict> page, @ParameterObject SysDict sysDict) {
 		return R.ok(sysDictService.page(page,
 				Wrappers.<SysDict>lambdaQuery()
 					.eq(StrUtil.isNotBlank(sysDict.getSystemFlag()), SysDict::getSystemFlag, sysDict.getSystemFlag())
@@ -110,7 +110,7 @@ public class SysDictController {
 	@PostMapping
 	@Operation(summary = "保存字典信息", description = "保存字典信息")
 	@PreAuthorize("@pms.hasPermission('sys_dict_add')")
-	public R saveDict(@Valid @RequestBody SysDict sysDict) {
+	public R<SysDict> saveDict(@Valid @RequestBody SysDict sysDict) {
 		sysDictService.save(sysDict);
 		return R.ok(sysDict);
 	}
@@ -125,7 +125,7 @@ public class SysDictController {
 	@PreAuthorize("@pms.hasPermission('sys_dict_del')")
 	@Operation(summary = "删除字典并清除字典缓存", description = "删除字典并清除字典缓存")
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, allEntries = true)
-	public R removeById(@RequestBody Long[] ids) {
+	public R<?> removeById(@RequestBody Long[] ids) {
 		return R.ok(sysDictService.removeDictByIds(ids));
 	}
 
@@ -138,7 +138,7 @@ public class SysDictController {
 	@SysLog("修改字典")
 	@PreAuthorize("@pms.hasPermission('sys_dict_edit')")
 	@Operation(summary = "修改字典信息", description = "修改字典信息")
-	public R updateDict(@Valid @RequestBody SysDict sysDict) {
+	public R<SysDict> updateDict(@Valid @RequestBody SysDict sysDict) {
 		return sysDictService.updateDict(sysDict);
 	}
 
@@ -149,7 +149,7 @@ public class SysDictController {
 	 */
 	@GetMapping("/list")
 	@Operation(summary = "分页查询字典列表", description = "分页查询字典列表")
-	public R listDicts(String name) {
+	public R<List<SysDict>> listDicts(String name) {
 		return R.ok(sysDictService.list(Wrappers.<SysDict>lambdaQuery()
 			.like(StrUtil.isNotBlank(name), SysDict::getDictType, name)
 			.or()
@@ -164,7 +164,8 @@ public class SysDictController {
 	 */
 	@GetMapping("/item/page")
 	@Operation(summary = "分页查询字典项", description = "分页查询字典项")
-	public R getDictItemPage(Page page, SysDictItem sysDictItem) {
+	public R<IPage<SysDictItem>> getDictItemPage(@ParameterObject Page<SysDictItem> page,
+			@ParameterObject SysDictItem sysDictItem) {
 		return R.ok(sysDictItemService.page(page, Wrappers.query(sysDictItem)));
 	}
 
@@ -175,7 +176,7 @@ public class SysDictController {
 	 */
 	@GetMapping("/item/details/{id}")
 	@Operation(summary = "通过id查询字典项详情", description = "通过id查询字典项详情")
-	public R getDictItemById(@PathVariable("id") Long id) {
+	public R<SysDictItem> getDictItemById(@PathVariable("id") Long id) {
 		return R.ok(sysDictItemService.getById(id));
 	}
 
@@ -186,7 +187,7 @@ public class SysDictController {
 	 */
 	@GetMapping("/item/details")
 	@Operation(summary = "获取字典项详情", description = "获取字典项详情")
-	public R getDictItemDetails(SysDictItem query) {
+	public R<SysDictItem> getDictItemDetails(SysDictItem query) {
 		return R.ok(sysDictItemService.getOne(Wrappers.query(query), false));
 	}
 
@@ -199,7 +200,7 @@ public class SysDictController {
 	@PostMapping("/item")
 	@Operation(summary = "新增字典项", description = "新增字典项")
 	@CacheEvict(value = CacheConstants.DICT_DETAILS, allEntries = true)
-	public R saveDictItem(@RequestBody SysDictItem sysDictItem) {
+	public R<Boolean> saveDictItem(@RequestBody SysDictItem sysDictItem) {
 		return R.ok(sysDictItemService.save(sysDictItem));
 	}
 
@@ -211,7 +212,7 @@ public class SysDictController {
 	@SysLog("修改字典项")
 	@PutMapping("/item")
 	@Operation(summary = "修改字典项", description = "修改字典项")
-	public R updateDictItem(@RequestBody SysDictItem sysDictItem) {
+	public R<Boolean> updateDictItem(@RequestBody SysDictItem sysDictItem) {
 		return sysDictItemService.updateDictItem(sysDictItem);
 	}
 
@@ -223,7 +224,7 @@ public class SysDictController {
 	@SysLog("通过id删除字典项")
 	@DeleteMapping("/item/{id}")
 	@Operation(summary = "通过id删除字典项", description = "通过id删除字典项")
-	public R removeDictItemById(@PathVariable Long id) {
+	public R<Boolean> removeDictItemById(@PathVariable Long id) {
 		return sysDictItemService.removeDictItem(id);
 	}
 
@@ -234,7 +235,7 @@ public class SysDictController {
 	@SysLog("同步字典缓存")
 	@PutMapping("/sync")
 	@Operation(summary = "同步字典缓存", description = "同步字典缓存")
-	public R syncDict() {
+	public R<?> syncDict() {
 		return sysDictService.syncDictCache();
 	}
 

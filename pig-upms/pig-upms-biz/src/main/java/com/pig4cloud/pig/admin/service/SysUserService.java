@@ -56,7 +56,7 @@ public interface SysUserService extends IService<SysUser> {
 	 * @param userDTO 查询参数
 	 * @return 分页结果
 	 */
-	IPage getUsersWithRolePage(Page page, UserDTO userDTO);
+	IPage<?> getUsersWithRolePage(Page<?> page, UserDTO userDTO);
 
 	/**
 	 * 删除用户
@@ -106,7 +106,7 @@ public interface SysUserService extends IService<SysUser> {
 	 * @param bindingResult 错误数据
 	 * @return ok fail
 	 */
-	R importUsers(List<UserExcelVO> excelVOList, BindingResult bindingResult);
+	R<?> importUsers(List<UserExcelVO> excelVOList, BindingResult bindingResult);
 
 	/**
 	 * 注册用户
@@ -127,13 +127,21 @@ public interface SysUserService extends IService<SysUser> {
 	 * @param userDto 包含用户信息的DTO对象
 	 * @return 操作结果
 	 */
-	R changePassword(UserDTO userDto);
+	R<?> changePassword(UserDTO userDto);
 
 	/**
 	 * 校验密码
 	 * @param password 待校验的密码明文
 	 * @return 校验结果
 	 */
-	R checkPassword(String password);
+	R<?> checkPassword(String password);
+
+	/**
+	 * 按角色编码切换用户角色
+	 * @param userId 用户ID
+	 * @param roleCode 角色编码
+	 * @return 切换是否成功
+	 */
+	Boolean switchUserRoleByCode(Long userId, String roleCode);
 
 }

@@ -10,26 +10,57 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
+/**
+ * 订单服务 Feign 接口
+ *
+ * @author pig
+ */
 @FeignClient(contextId = "orderApi", value = TakeawayServiceNameConstants.TAKEAWAY_ORDER_SERVICE)
 public interface OrderApi {
 
+	/**
+	 * 按ID查询订单
+	 * @param orderId 订单ID
+	 * @return 订单信息
+	 */
 	@NoToken
 	@GetMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}")
 	R<WmOrder> getById(@PathVariable("orderId") Long orderId);
 
+	/**
+	 * 标记订单已支付
+	 * @param orderId 订单ID
+	 * @return 是否成功
+	 */
 	@NoToken
 	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/pay-success")
 	R<Boolean> markPaid(@PathVariable("orderId") Long orderId);
 
+	/**
+	 * 商家接单
+	 * @param orderId 订单ID
+	 * @return 是否成功
+	 */
 	@NoToken
 	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/merchant-accept")
 	R<Boolean> merchantAccept(@PathVariable("orderId") Long orderId);
 
+	/**
+	 * 开始配送
+	 * @param orderId 订单ID
+	 * @param deliveryUserId 配送员用户ID
+	 * @return 是否成功
+	 */
 	@NoToken
 	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/delivery-start/{deliveryUserId}")
 	R<Boolean> deliveryStart(@PathVariable("orderId") Long orderId,
 			@PathVariable("deliveryUserId") Long deliveryUserId);
 
+	/**
+	 * 完成订单
+	 * @param orderId 订单ID
+	 * @return 是否成功
+	 */
 	@NoToken
 	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/finish")
 	R<Boolean> finish(@PathVariable("orderId") Long orderId);

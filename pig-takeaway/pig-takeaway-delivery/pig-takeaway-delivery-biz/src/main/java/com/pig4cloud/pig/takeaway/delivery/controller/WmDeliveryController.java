@@ -6,7 +6,7 @@ import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
 import com.pig4cloud.pig.takeaway.common.dto.CreateDeliveryOrderRequest;
 import com.pig4cloud.pig.takeaway.common.entity.WmDeliveryOrder;
-import com.pig4cloud.pig.takeaway.common.entity.WmDeliveryUserExt;
+import com.pig4cloud.pig.takeaway.delivery.dto.WmDeliveryDTO;
 import com.pig4cloud.pig.takeaway.delivery.service.WmDeliveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +14,11 @@ import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * 配送管理控制器
+ *
+ * @author pig
+ */
 @RestController
 @AllArgsConstructor
 @Tag(name = "配送服务")
@@ -22,10 +27,17 @@ public class WmDeliveryController {
 	private final WmDeliveryService wmDeliveryService;
 
 	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/rider")
-	@Operation(summary = "骑手注册/更新")
-	@SysLog("骑手注册")
-	public R<Boolean> rider(@RequestBody WmDeliveryUserExt rider) {
-		return R.ok(wmDeliveryService.registerRider(rider));
+	@Operation(summary = "骑手新增")
+	@SysLog("骑手新增")
+	public R<WmDeliveryDTO> createRider(@RequestBody WmDeliveryDTO riderDTO) {
+		return R.ok(wmDeliveryService.createRider(riderDTO));
+	}
+
+	@PutMapping(TakeawayApiConstants.DELIVERY_PATH + "/rider")
+	@Operation(summary = "骑手更新")
+	@SysLog("骑手更新")
+	public R<Boolean> updateRider(@RequestBody WmDeliveryDTO riderDTO) {
+		return R.ok(wmDeliveryService.updateRider(riderDTO));
 	}
 
 	@GetMapping(TakeawayApiConstants.DELIVERY_PATH + "/order/page")

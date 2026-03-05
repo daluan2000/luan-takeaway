@@ -20,6 +20,7 @@
 package com.pig4cloud.pig.admin.controller;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,6 +45,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import cn.hutool.core.lang.tree.Tree;
 
 /**
  * 菜单管理控制器
@@ -68,7 +70,7 @@ public class SysMenuController {
 	 */
 	@GetMapping
 	@Operation(summary = "获取当前用户的树形菜单集合", description = "获取当前用户的树形菜单集合")
-	public R getUserMenu(String type, Long parentId) {
+	public R<List<Tree<Long>>> getUserMenu(String type, Long parentId) {
 		// 获取符合条件的菜单
 		Set<SysMenu> all = new HashSet<>();
 		SecurityUtils.getRoles().forEach(roleId -> all.addAll(sysMenuService.findMenuByRoleId(roleId)));
@@ -84,7 +86,7 @@ public class SysMenuController {
 	 */
 	@GetMapping(value = "/tree")
 	@Operation(summary = "获取树形菜单集合", description = "获取树形菜单集合")
-	public R getMenuTree(Long parentId, String menuName, String type) {
+	public R<List<Tree<Long>>> getMenuTree(Long parentId, String menuName, String type) {
 		return R.ok(sysMenuService.getMenuTree(parentId, menuName, type));
 	}
 
@@ -95,7 +97,7 @@ public class SysMenuController {
 	 */
 	@GetMapping("/tree/{roleId}")
 	@Operation(summary = "根据角色ID获取菜单树", description = "根据角色ID获取菜单树")
-	public R getRoleTree(@PathVariable Long roleId) {
+	public R<List<Long>> getRoleTree(@PathVariable Long roleId) {
 		return R.ok(sysMenuService.findMenuByRoleId(roleId).stream().map(SysMenu::getMenuId).toList());
 	}
 
@@ -106,7 +108,7 @@ public class SysMenuController {
 	 */
 	@GetMapping("/{id}")
 	@Operation(summary = "通过ID查询菜单的详细信息", description = "通过ID查询菜单的详细信息")
-	public R getById(@PathVariable Long id) {
+	public R<SysMenu> getById(@PathVariable Long id) {
 		return R.ok(sysMenuService.getById(id));
 	}
 
@@ -119,7 +121,7 @@ public class SysMenuController {
 	@PostMapping
 	@HasPermission("sys_menu_add")
 	@Operation(summary = "新增菜单", description = "新增菜单")
-	public R saveMenu(@Valid @RequestBody SysMenu sysMenu) {
+	public R<SysMenu> saveMenu(@Valid @RequestBody SysMenu sysMenu) {
 		sysMenuService.save(sysMenu);
 		return R.ok(sysMenu);
 	}
@@ -133,7 +135,7 @@ public class SysMenuController {
 	@DeleteMapping("/{id}")
 	@HasPermission("sys_menu_del")
 	@Operation(summary = "根据菜单ID删除菜单", description = "根据菜单ID删除菜单")
-	public R removeById(@PathVariable Long id) {
+	public R<?> removeById(@PathVariable Long id) {
 		return sysMenuService.removeMenuById(id);
 	}
 
@@ -146,7 +148,7 @@ public class SysMenuController {
 	@PutMapping
 	@HasPermission("sys_menu_edit")
 	@Operation(summary = "更新菜单", description = "更新菜单")
-	public R updateMenu(@Valid @RequestBody SysMenu sysMenu) {
+	public R<Boolean> updateMenu(@Valid @RequestBody SysMenu sysMenu) {
 		return R.ok(sysMenuService.updateMenuById(sysMenu));
 	}
 

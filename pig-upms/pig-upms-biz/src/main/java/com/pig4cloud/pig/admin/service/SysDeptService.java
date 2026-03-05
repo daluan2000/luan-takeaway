@@ -62,7 +62,7 @@ public interface SysDeptService extends IService<SysDept> {
 	 * @param bindingResult 数据校验结果
 	 * @return 导入结果
 	 */
-	R importDept(List<DeptExcelVo> excelVOList, BindingResult bindingResult);
+	R<?> importDept(List<DeptExcelVo> excelVOList, BindingResult bindingResult);
 
 	/**
 	 * 获取指定部门的所有后代部门列表

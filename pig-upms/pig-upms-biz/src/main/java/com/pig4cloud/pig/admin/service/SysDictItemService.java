@@ -33,13 +33,13 @@ public interface SysDictItemService extends IService<SysDictItem> {
 	 * @param id 字典项ID
 	 * @return 操作结果
 	 */
-	R removeDictItem(Long id);
+	R<Boolean> removeDictItem(Long id);
 
 	/**
 	 * 更新字典项
 	 * @param item 需要更新的字典项
 	 * @return 操作结果
 	 */
-	R updateDictItem(SysDictItem item);
+	R<Boolean> updateDictItem(SysDictItem item);
 
 }
