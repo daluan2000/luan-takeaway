@@ -51,3 +51,11 @@ export function acceptMerchantOrder(orderId: string | number) {
 		method: 'post',
 	});
 }
+
+export function listMerchantByRegion(params?: { province?: string; city?: string; district?: string }) {
+	return request({
+		url: '/takeaway/user/merchant/list',
+		method: 'get',
+		params,
+	});
+}

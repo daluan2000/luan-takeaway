@@ -32,6 +32,7 @@ public interface TakeawayStatusConstants {
 
 	}
 
+	// '订单状态 0待支付 1已支付（未接单） 2已接单（未配送） 3配送中 4已完成 5已取消',
 	interface Order {
 
 		String WAIT_PAY = "0";

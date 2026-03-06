@@ -16,6 +16,14 @@ export function saveRider(data?: object) {
 	});
 }
 
+export function updateRider(data?: object) {
+	return request({
+		url: '/takeaway/user/delivery/rider',
+		method: 'put',
+		data,
+	});
+}
+
 export function currentRider() {
 	return request({
 		url: '/takeaway/user/delivery/rider/current',

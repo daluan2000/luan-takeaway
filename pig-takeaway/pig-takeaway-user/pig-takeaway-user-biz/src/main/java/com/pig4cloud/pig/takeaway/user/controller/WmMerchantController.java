@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
-import com.pig4cloud.pig.takeaway.common.entity.WmMerchantUserExt;
 import com.pig4cloud.pig.takeaway.user.dto.WmMerchantDTO;
 import com.pig4cloud.pig.takeaway.user.service.WmMerchantService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 商家管理控制器
@@ -61,10 +62,17 @@ public class WmMerchantController {
 
 	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/page")
 	@Operation(summary = "商家分页查询")
-	public R<Page<WmMerchantUserExt>> page(@ParameterObject Page<WmMerchantUserExt> page,
+	public R<Page<WmMerchantDTO>> page(@ParameterObject Page<WmMerchantDTO> page,
 			@RequestParam(required = false) Long userId, @RequestParam(required = false) String auditStatus,
 			@RequestParam(required = false) String businessStatus) {
 		return R.ok(wmMerchantService.page(page, userId, auditStatus, businessStatus));
+	}
+
+	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/list")
+	@Operation(summary = "按省市区查询商店列表")
+	public R<List<WmMerchantDTO>> list(@RequestParam(required = false) String province,
+			@RequestParam(required = false) String city, @RequestParam(required = false) String district) {
+		return R.ok(wmMerchantService.listByRegion(province, city, district));
 	}
 
 	@PostMapping(TakeawayApiConstants.MERCHANT_PATH + "/{id}/business/{businessStatus}")
@@ -73,13 +81,6 @@ public class WmMerchantController {
 	public R<Boolean> updateBusinessStatus(@PathVariable("id") Long id,
 			@PathVariable("businessStatus") String businessStatus) {
 		return R.ok(wmMerchantService.updateBusinessStatus(id, businessStatus));
-	}
-
-	@PostMapping(TakeawayApiConstants.MERCHANT_PATH + "/order/{orderId}/accept")
-	@Operation(summary = "商家接单")
-	@SysLog("商家接单")
-	public R<Boolean> acceptOrder(@PathVariable("orderId") Long orderId) {
-		return R.ok(wmMerchantService.acceptOrder(orderId));
 	}
 
 }

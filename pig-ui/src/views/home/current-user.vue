@@ -140,9 +140,17 @@ const checkRoleExtInfo = async (roleList: any[]) => {
 	try {
 		const results = await Promise.allSettled(checks.map((item) => item.checker()));
 		extMissingWarnings.value = results
-			.map((result, index) => ({ result, roleName: checks[index].roleName }))
-			.filter(({ result }) => result.status === 'rejected' || !result.value?.data)
-			.map(({ roleName }) => `当前用户拥有【${roleName}】角色，但未找到对应扩展表信息，请先完善扩展资料`);
+			.map((result, index) => {
+				if (result.status === 'rejected') {
+					return { missing: true, roleName: checks[index].roleName };
+				}
+
+				const data = result.value?.data;
+				const missing = data?.noExist === true || !data;
+				return { missing, roleName: checks[index].roleName };
+			})
+			.filter(({ missing }) => missing)
+			.map(({ roleName }) => `当前用户拥有【${roleName}】角色，但未找到对应扩展表信息，请先完善【${roleName}】信息`);
 	} finally {
 		extChecking.value = false;
 	}

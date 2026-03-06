@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主机： pig-mysql:3306
--- 生成日期： 2026-03-06 05:21:58
+-- 生成日期： 2026-03-06 13:31:34
 -- 服务器版本： 8.0.32
 -- PHP 版本： 8.3.30
 
@@ -356,7 +356,7 @@ CREATE TABLE `QRTZ_SCHEDULER_STATE` (
 --
 
 INSERT INTO `QRTZ_SCHEDULER_STATE` (`SCHED_NAME`, `INSTANCE_NAME`, `LAST_CHECKIN_TIME`, `CHECKIN_INTERVAL`) VALUES
-('clusteredScheduler', 'luan-MS-7D991772770825353', 1772774518637, 30000);
+('clusteredScheduler', 'luan-MS-7D991772803776843', 1772803869721, 30000);
 
 -- --------------------------------------------------------
 
@@ -827,7 +827,7 @@ INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `par
 (4000, '系统监控', 'monitor', NULL, '/daemon', -1, 'iconfont icon-shuju', '1', 3, '0', '0', '0', 'admin', '2023-02-06 20:20:47', 'admin', '2023-02-23 20:01:07', '0'),
 (4001, '文档扩展', 'doc', NULL, 'http://pig-gateway:9999/swagger-ui.html', 4000, 'iconfont icon-biaodan', '1', 2, '0', '1', '0', '', '2018-06-26 10:50:32', 'admin', '2023-02-23 20:01:29', '0'),
 (4002, '缓存监控', 'cache', NULL, '/ext/cache', 4000, 'iconfont icon-shuju', '1', 1, '0', '0', '0', 'admin', '2023-05-29 15:12:59', 'admin', '2023-06-06 11:58:41', '0'),
-(9000, '开发平台', 'develop', NULL, '/gen', -1, 'iconfont icon-shuxingtu', '1', 9, '0', '0', '0', '', '2019-08-12 09:35:16', 'admin', '2023-07-05 10:25:27', '0'),
+(9000, '开发平台', 'develop', NULL, '/gen', -1, 'iconfont icon-shuxingtu', '1', 5, '0', '0', '0', '', '2019-08-12 09:35:16', 'admin', '2026-03-06 19:31:27', '0'),
 (9005, '数据源管理', 'datasource', NULL, '/gen/datasource/index', 9000, 'ele-Coin', '1', 0, '0', NULL, '0', '', '2019-08-12 09:42:11', 'admin', '2023-07-05 10:26:56', '0'),
 (9006, '表单设计', 'Form Design', NULL, '/gen/design/index', 9000, 'iconfont icon-AIshiyanshi', '0', 2, '0', '0', '0', '', '2019-08-16 10:08:56', 'admin', '2023-02-23 14:06:50', '0'),
 (9007, '生成页面', 'generation', NULL, '/gen/gener/index', 9000, 'iconfont icon-tongzhi4', '0', 0, '0', '0', '0', 'admin', '2023-02-20 09:58:23', 'admin', '2023-07-05 10:27:06', '0'),
@@ -847,16 +847,17 @@ INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `par
 (9064, '导出', NULL, 'codegen_group_export', NULL, 9059, NULL, '0', 0, '0', '0', '1', 'admin', '2023-02-21 15:09:22', ' ', NULL, '0'),
 (9065, '字段管理', 'field', NULL, '/gen/field-type/index', 9050, 'iconfont icon-fuwenben', '1', 0, '0', '0', '0', 'admin', '2023-02-23 20:05:09', 'admin', '2023-07-05 10:27:31', '0'),
 (2029765248645763074, '商家中心', 'merchant_center', NULL, '/merchant', -1, 'ele-Briefcase', '1', 10, '0', NULL, '0', 'admin', '2026-03-06 11:45:21', 'admin', '2026-03-06 11:46:00', '0'),
-(2029765757146402817, '商店管理', 'merchant_info_manage', NULL, '/merchant/info/index', 2029765248645763074, 'ele-Coin', '1', 0, '0', NULL, '0', 'admin', '2026-03-06 11:47:22', 'admin', '2026-03-06 11:50:35', '0'),
-(2029766347125592065, '订单管理', 'merchant_order_manage', NULL, '/merchant/order/index', 2029765248645763074, 'iconfont icon-biaodan', '1', 1, '0', NULL, '0', 'admin', '2026-03-06 11:49:43', 'admin', '2026-03-06 11:50:41', '0'),
-(2029766829457969154, '菜品管理', NULL, NULL, '/merchant/dish/index', 2029765248645763074, 'iconfont icon-biaodan', '1', 2, '0', NULL, '0', 'admin', '2026-03-06 11:51:38', 'admin', '2026-03-06 11:51:38', '0'),
+(2029765757146402817, '商店信息', '', NULL, '/merchant/info/index', 2029765248645763074, 'ele-Coin', '1', 0, '0', NULL, '0', 'admin', '2026-03-06 11:47:22', 'admin', '2026-03-06 20:07:32', '0'),
+(2029766347125592065, '订单管理', 'merchant_order_manage', NULL, '/merchant/order/index', 2029765248645763074, 'iconfont icon-bolangnengshiyanchang', '1', 1, '0', NULL, '0', 'admin', '2026-03-06 11:49:43', 'admin', '2026-03-06 19:38:22', '0'),
+(2029766829457969154, '菜品管理', NULL, NULL, '/merchant/dish/index', 2029765248645763074, 'ele-Bowl', '1', 2, '0', NULL, '0', 'admin', '2026-03-06 11:51:38', 'admin', '2026-03-06 19:56:33', '0'),
 (2029767283445239809, '客户中心', 'customer_center', NULL, '/customer', -1, 'ele-Avatar', '1', 11, '0', '0', '0', 'admin', '2026-03-06 11:53:26', 'admin', '2026-03-06 13:18:57', '0'),
-(2029767684160655361, '客户信息', NULL, NULL, '/customer/info/index', 2029767283445239809, 'iconfont icon-shuaxin', '1', 0, '0', '0', '0', 'admin', '2026-03-06 11:55:02', NULL, NULL, '0'),
-(2029768204761862146, '订单管理', NULL, NULL, '/customer/order/index', 2029767283445239809, 'iconfont icon-quanjushezhi_o', '1', 0, '0', '0', '0', 'admin', '2026-03-06 11:57:06', 'admin', '2026-03-06 11:57:15', '0'),
-(2029768804014657538, '菜品选取', NULL, NULL, '/customer/select/index', 2029767283445239809, 'iconfont icon-quanjushezhi_o', '1', 0, '0', '0', '0', 'admin', '2026-03-06 11:59:29', NULL, NULL, '0'),
+(2029767684160655361, '客户信息', NULL, NULL, '/customer/info/index', 2029767283445239809, 'iconfont icon-zhongduancanshuchaxun', '1', 0, '0', '0', '0', 'admin', '2026-03-06 11:55:02', 'admin', '2026-03-06 19:37:17', '0'),
+(2029768204761862146, '订单管理', NULL, NULL, '/customer/order/index', 2029767283445239809, 'iconfont icon-bolangneng', '1', 2, '0', '0', '0', 'admin', '2026-03-06 11:57:06', 'admin', '2026-03-06 19:38:00', '0'),
+(2029768804014657538, '菜品选取', NULL, NULL, '/customer/select/index', 2029767283445239809, 'iconfont icon-jiliandongxuanzeqi', '1', 1, '0', '0', '0', 'admin', '2026-03-06 11:59:29', 'admin', '2026-03-06 19:37:29', '0'),
 (2029769996618862594, '骑手中心', NULL, NULL, '/delivery', -1, 'ele-Van', '1', 12, '0', '0', '0', 'admin', '2026-03-06 12:04:13', 'admin', '2026-03-06 13:19:56', '0'),
-(2029770150633705474, '骑手信息', NULL, NULL, '/delivery/info/index', 2029769996618862594, 'iconfont icon-shuaxin', '1', 0, '0', '0', '0', 'admin', '2026-03-06 12:04:50', NULL, NULL, '0'),
-(2029770661516709889, '订单管理', NULL, NULL, '/delivery/order/index', 2029769996618862594, 'iconfont icon-shuaxin', '1', 0, '0', '0', '0', 'admin', '2026-03-06 12:06:52', 'admin', '2026-03-06 12:07:00', '0'),
+(2029770150633705474, '骑手信息', NULL, NULL, '/delivery/info/index', 2029769996618862594, 'ele-Bicycle', '1', 0, '0', '0', '0', 'admin', '2026-03-06 12:04:50', 'admin', '2026-03-06 19:56:00', '0'),
+(2029770661516709889, '订单管理', NULL, NULL, '/delivery/order/index', 2029769996618862594, 'ele-Checked', '1', 1, '0', '0', '0', 'admin', '2026-03-06 12:06:52', 'admin', '2026-03-06 19:56:14', '0'),
+(2029882213729284097, '地址管理', NULL, NULL, '/address/index', -1, 'ele-AddLocation', '1', 8, '0', '0', '0', 'admin', '2026-03-06 19:30:08', 'admin', '2026-03-06 19:55:46', '0'),
 (3000000000000010000, '外卖平台', 'takeaway', NULL, '/takeaway', -1, 'iconfont icon-gongju', '1', 100, '0', '0', '0', 'admin', '2026-03-05 03:49:34', 'admin', '2026-03-06 13:18:02', '1'),
 (3000000000000010100, '商家信息', 'merchant', NULL, '/takeaway/merchant/index', 3000000000000010000, 'ele-Shop', '1', 1, '0', '0', '0', 'admin', '2026-03-05 03:49:34', 'admin', '2026-03-06 13:16:59', '1'),
 (3000000000000010101, '商家查询', NULL, 'wm_merchant_view', NULL, 3000000000000010100, NULL, '1', 1, '0', NULL, '1', 'admin', '2026-03-05 03:49:34', 'admin', '2026-03-06 13:16:34', '1'),
@@ -1117,20 +1118,23 @@ INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
 (1, 9063),
 (1, 9064),
 (1, 9065),
-(1, 2029765248645763074),
-(1, 2029765757146402817),
-(1, 2029766347125592065),
-(1, 2029766829457969154),
-(1, 2029767283445239809),
-(1, 2029767684160655361),
-(1, 2029768204761862146),
-(1, 2029768804014657538),
-(1, 2029769996618862594),
-(1, 2029770150633705474),
-(1, 2029770661516709889),
 (2, 4000),
 (2, 4001),
-(2, 4002);
+(2, 4002),
+(3000000000000000101, 2029765248645763074),
+(3000000000000000101, 2029765757146402817),
+(3000000000000000101, 2029766347125592065),
+(3000000000000000101, 2029766829457969154),
+(3000000000000000101, 2029882213729284097),
+(3000000000000000102, 2029767283445239809),
+(3000000000000000102, 2029767684160655361),
+(3000000000000000102, 2029768204761862146),
+(3000000000000000102, 2029768804014657538),
+(3000000000000000102, 2029882213729284097),
+(3000000000000000103, 2029769996618862594),
+(3000000000000000103, 2029770150633705474),
+(3000000000000000103, 2029770661516709889),
+(3000000000000000103, 2029882213729284097);
 
 -- --------------------------------------------------------
 
@@ -1168,9 +1172,9 @@ CREATE TABLE `sys_user` (
 --
 
 INSERT INTO `sys_user` (`user_id`, `username`, `password`, `salt`, `phone`, `avatar`, `nickname`, `name`, `email`, `dept_id`, `create_by`, `update_by`, `create_time`, `update_time`, `lock_flag`, `del_flag`, `wx_openid`, `mini_openid`, `qq_openid`, `gitee_login`, `osc_id`) VALUES
-(1, 'admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '17034642999', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '管理员', '管理员', 'pig4cloud1@qq.com', 4, ' ', 'admin', '2018-04-20 07:15:18', '2026-03-06 11:24:47', '0', '0', NULL, 'oBxPy5E-v82xWGsfzZVzkD3wEX64', NULL, 'log4j', NULL),
+(1, 'admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '17034642999', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '管理员', '管理员', 'pig4cloud1@qq.com', 4, ' ', 'admin', '2018-04-20 07:15:18', '2026-03-06 21:30:24', '0', '0', NULL, 'oBxPy5E-v82xWGsfzZVzkD3wEX64', NULL, 'log4j', NULL),
 (2000000000000000001, 'test_admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '18800000001', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '测试管理员', '测试管理员', 'test_admin@example.com', 4, 'admin', 'admin', '2026-03-03 00:00:00', '2026-03-03 00:00:00', '0', '0', NULL, NULL, NULL, NULL, NULL),
-(2000000000000000002, 'test_user', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '18800000002', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '测试普通用户', '测试普通用户', 'test_user1@example.com', 4, 'admin', 'admin', '2026-03-03 00:00:00', '2026-03-06 11:06:24', '9', '0', NULL, NULL, NULL, NULL, NULL);
+(2000000000000000002, 'test_user', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '18800000002', '/admin/sys-file/s3demo/7ff4ca6b7bf446f3a5a13ac016dc21af.png', '测试普通用户', '测试普通用户', 'test_user1@example.com', 4, 'admin', 'admin', '2026-03-03 00:00:00', '2026-03-06 19:30:26', '0', '0', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -1212,6 +1216,9 @@ CREATE TABLE `sys_user_role` (
 INSERT INTO `sys_user_role` (`user_id`, `role_id`) VALUES
 (1, 1),
 (1, 2),
+(1, 3000000000000000101),
+(1, 3000000000000000102),
+(1, 3000000000000000103),
 (2000000000000000001, 1),
 (2000000000000000002, 1),
 (2000000000000000002, 2);
@@ -1239,6 +1246,15 @@ CREATE TABLE `wm_address` (
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-地址表';
 
+--
+-- 转存表中的数据 `wm_address`
+--
+
+INSERT INTO `wm_address` (`id`, `user_id`, `province`, `city`, `district`, `detail_address`, `longitude`, `latitude`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2029883422825492482, 1, '北京市', '朝阳区', '未知区', '文化新大街, 三间房乡, 朝阳区, 北京市, 100024, 中国', 116.563171, 39.896919, 'admin', NULL, '2026-03-06 19:34:56', NULL, '0'),
+(2029895876007579649, 2000000000000000002, '北京市', '朝阳区', '未知区', '高碑店乡, 朝阳区, 北京市, 100123, 中国', 116.537774, 39.898499, 'test_user', NULL, '2026-03-06 20:24:25', NULL, '0'),
+(2029912365079097346, 1, '北京市', '西城区', '西长安街街道', '南长街, 北新华街社区, 西长安街街道, 首都功能核心区, 西城区, 北京市, 100032, 中国', 116.386078, 39.908507, 'admin', NULL, '2026-03-06 21:29:56', NULL, '0');
+
 -- --------------------------------------------------------
 
 --
@@ -1257,6 +1273,14 @@ CREATE TABLE `wm_customer_user_ext` (
   `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-客户用户扩展表';
+
+--
+-- 转存表中的数据 `wm_customer_user_ext`
+--
+
+INSERT INTO `wm_customer_user_ext` (`id`, `user_id`, `real_name`, `default_address_id`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2029886871327715329, 1, '栾', 2029883422825492482, 'admin', NULL, '2026-03-06 19:48:38', NULL, '0'),
+(2029895905493536769, 2000000000000000002, '力量来', 2029895876007579649, 'test_user', NULL, '2026-03-06 20:24:32', NULL, '0');
 
 -- --------------------------------------------------------
 
@@ -1304,6 +1328,14 @@ CREATE TABLE `wm_delivery_user_ext` (
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-配送员用户扩展表';
 
+--
+-- 转存表中的数据 `wm_delivery_user_ext`
+--
+
+INSERT INTO `wm_delivery_user_ext` (`id`, `user_id`, `real_name`, `delivery_scope_km`, `online_status`, `employment_status`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2029890251265650689, 1, '栾11', 30.00, '1', '1', 'admin', NULL, '2026-03-06 20:02:04', NULL, '0'),
+(2029904154917842946, 2000000000000000002, '张', 4.00, '1', '1', 'test_user', NULL, '2026-03-06 20:57:19', NULL, '0');
+
 -- --------------------------------------------------------
 
 --
@@ -1325,6 +1357,14 @@ CREATE TABLE `wm_dish` (
   `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-菜品表';
+
+--
+-- 转存表中的数据 `wm_dish`
+--
+
+INSERT INTO `wm_dish` (`id`, `merchant_user_id`, `dish_name`, `dish_desc`, `price`, `stock`, `sale_status`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2029883716233834498, 1, '鱼香肉丝', NULL, 10.00, 100, '1', 'admin', NULL, '2026-03-06 19:36:06', NULL, '0'),
+(2029899317291405313, 2000000000000000002, '大汉报', NULL, 20.00, 100, '1', 'test_user', NULL, '2026-03-06 20:38:06', NULL, '0');
 
 -- --------------------------------------------------------
 
@@ -1348,6 +1388,14 @@ CREATE TABLE `wm_merchant_user_ext` (
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-商家用户扩展表';
 
+--
+-- 转存表中的数据 `wm_merchant_user_ext`
+--
+
+INSERT INTO `wm_merchant_user_ext` (`id`, `user_id`, `merchant_name`, `contact_name`, `store_address_id`, `business_status`, `audit_status`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2029883489284239362, 1, '汉堡', '15290082224', 2029883422825492482, '1', '1', 'admin', NULL, '2026-03-06 19:35:12', '2026-03-06 11:35:16', '0'),
+(2029895965941846018, 2000000000000000002, '11', '111', 2029895876007579649, '1', '1', 'test_user', NULL, '2026-03-06 20:24:47', '2026-03-06 12:24:54', '0');
+
 -- --------------------------------------------------------
 
 --
@@ -1364,7 +1412,7 @@ CREATE TABLE `wm_order` (
   `delivery_address_id` bigint NOT NULL COMMENT '收货地址ID(wm_address.id)',
   `total_amount` decimal(10,2) NOT NULL COMMENT '订单总金额',
   `pay_amount` decimal(10,2) NOT NULL COMMENT '实付金额',
-  `order_status` char(1) NOT NULL COMMENT '订单状态 0待支付 1已支付 2已接单 3配送中 4已完成 5已取消',
+  `order_status` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '订单状态 0待支付 1已支付（未接单） 2已接单（未配送） 3配送中 4已完成 5已取消',
   `remark` varchar(255) DEFAULT NULL COMMENT '备注',
   `pay_time` datetime DEFAULT NULL COMMENT '支付时间',
   `accept_time` datetime DEFAULT NULL COMMENT '商家接单时间',

@@ -17,8 +17,4 @@ public interface WmDeliveryService {
 
 	Page<WmDeliveryOrder> pageOrders(Page<WmDeliveryOrder> page, Long deliveryUserId, String status);
 
-	boolean acceptOrder(Long orderId, Long deliveryUserId);
-
-	boolean completeOrder(Long orderId, Long deliveryUserId);
-
 }

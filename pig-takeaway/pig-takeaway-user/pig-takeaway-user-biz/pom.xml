@@ -22,10 +22,6 @@
         </dependency>
         <dependency>
             <groupId>com.pig4cloud</groupId>
-            <artifactId>pig-takeaway-order-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.pig4cloud</groupId>
             <artifactId>pig-common-feign</artifactId>
         </dependency>
         <dependency>

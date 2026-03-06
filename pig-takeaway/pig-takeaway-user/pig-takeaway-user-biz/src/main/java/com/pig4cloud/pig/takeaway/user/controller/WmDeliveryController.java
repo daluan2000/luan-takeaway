@@ -53,22 +53,6 @@ public class WmDeliveryController {
 		return R.ok(wmDeliveryService.pageOrders(page, deliveryUserId, status));
 	}
 
-	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/order/{orderId}/accept/{deliveryUserId}")
-	@Operation(summary = "骑手接单")
-	@SysLog("骑手接单")
-	public R<Boolean> accept(@PathVariable("orderId") Long orderId,
-			@PathVariable("deliveryUserId") Long deliveryUserId) {
-		return R.ok(wmDeliveryService.acceptOrder(orderId, deliveryUserId));
-	}
-
-	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/order/{orderId}/complete/{deliveryUserId}")
-	@Operation(summary = "配送完成")
-	@SysLog("配送完成")
-	public R<Boolean> complete(@PathVariable("orderId") Long orderId,
-			@PathVariable("deliveryUserId") Long deliveryUserId) {
-		return R.ok(wmDeliveryService.completeOrder(orderId, deliveryUserId));
-	}
-
 	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/service/create")
 	@Operation(summary = "创建配送单")
 	public R<Boolean> create(@RequestBody CreateDeliveryOrderRequest request) {
