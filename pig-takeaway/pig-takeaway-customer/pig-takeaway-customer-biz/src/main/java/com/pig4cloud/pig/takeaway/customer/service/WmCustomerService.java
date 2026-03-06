@@ -8,4 +8,6 @@ public interface WmCustomerService {
 
 	boolean updateCustomer(WmCustomerDTO customerDTO);
 
+	WmCustomerDTO current();
+
 }

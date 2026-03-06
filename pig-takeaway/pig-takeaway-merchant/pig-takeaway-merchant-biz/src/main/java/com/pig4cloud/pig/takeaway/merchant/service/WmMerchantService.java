@@ -14,6 +14,8 @@ public interface WmMerchantService {
 
 	boolean updateMerchant(WmMerchantDTO merchantDTO);
 
+	WmMerchantDTO current();
+
 	Page<WmMerchantUserExt> page(Page<WmMerchantUserExt> page, Long userId, String auditStatus, String businessStatus);
 
 	boolean updateBusinessStatus(Long id, String businessStatus);

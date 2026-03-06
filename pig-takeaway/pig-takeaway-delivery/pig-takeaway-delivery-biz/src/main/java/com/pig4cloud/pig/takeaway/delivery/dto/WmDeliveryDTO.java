@@ -2,10 +2,11 @@ package com.pig4cloud.pig.takeaway.delivery.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
-import java.math.BigDecimal;
+
+import com.pig4cloud.pig.takeaway.common.entity.WmDeliveryUserExt;
 
 /**
  * 骑手传输对象
@@ -13,28 +14,16 @@ import java.math.BigDecimal;
  * @author pig
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(description = "骑手传输对象")
-public class WmDeliveryDTO implements Serializable {
+public class WmDeliveryDTO extends WmDeliveryUserExt {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "主键ID")
-	private Long id;
+	@Schema(description = "扩展信息是否不存在")
+	private Boolean noExist;
 
-	@Schema(description = "用户ID")
-	private Long userId;
-
-	@Schema(description = "真实姓名")
-	private String realName;
-
-	@Schema(description = "配送范围(公里)")
-	private BigDecimal deliveryScopeKm;
-
-	@Schema(description = "在线状态")
-	private String onlineStatus;
-
-	@Schema(description = "在职状态")
-	private String employmentStatus;
+	// 保留，后续可扩展数据传输对象字段
 
 }

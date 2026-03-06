@@ -80,6 +80,13 @@ public interface SysUserService extends IService<SysUser> {
 	Boolean updateUser(UserDTO userDto);
 
 	/**
+	 * 仅更新用户角色信息
+	 * @param userDto 用户信息DTO对象（需包含 userId、role）
+	 * @return 操作结果，true 表示更新成功
+	 */
+	R<Boolean> updateUserRole(UserDTO userDto);
+
+	/**
 	 * 通过ID查询用户信息
 	 * @param id 用户ID
 	 * @return 用户信息
@@ -135,13 +142,5 @@ public interface SysUserService extends IService<SysUser> {
 	 * @return 校验结果
 	 */
 	R<?> checkPassword(String password);
-
-	/**
-	 * 按角色编码切换用户角色
-	 * @param userId 用户ID
-	 * @param roleCode 角色编码
-	 * @return 切换是否成功
-	 */
-	Boolean switchUserRoleByCode(Long userId, String roleCode);
 
 }

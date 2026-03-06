@@ -60,4 +60,22 @@ public class WmCustomerServiceImpl implements WmCustomerService {
 		return wmCustomerUserExtMapper.updateById(customer) > 0;
 	}
 
+	@Override
+	public WmCustomerDTO current() {
+		PigUser currentUser = SecurityUtils.getUser();
+		if (currentUser == null || currentUser.getId() == null) {
+			throw new IllegalStateException("当前登录用户不存在");
+		}
+		WmCustomerUserExt customer = wmCustomerUserExtMapper
+			.selectOne(Wrappers.<WmCustomerUserExt>lambdaQuery().eq(WmCustomerUserExt::getUserId, currentUser.getId()));
+		WmCustomerDTO result = new WmCustomerDTO();
+		if (customer == null) {
+			result.setNoExist(Boolean.TRUE);
+			return result;
+		}
+		BeanUtils.copyProperties(customer, result);
+		result.setNoExist(Boolean.FALSE);
+		return result;
+	}
+
 }

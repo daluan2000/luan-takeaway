@@ -41,6 +41,7 @@ import com.pig4cloud.pig.common.core.constant.CommonConstants;
 import com.pig4cloud.pig.common.core.exception.ErrorCodes;
 import com.pig4cloud.pig.common.core.util.MsgUtils;
 import com.pig4cloud.pig.common.core.util.R;
+import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.plugin.excel.vo.ErrorMessage;
 import lombok.AllArgsConstructor;
@@ -79,6 +80,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	private final SysPostService sysPostService;
 
 	private final SysDeptService sysDeptService;
+
+	private final SysUserRoleService sysUserRoleService;
 
 	private final SysUserRoleMapper sysUserRoleMapper;
 
@@ -223,6 +226,52 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		sysUser.setEmail(userDto.getEmail());
 		return R.ok(this.updateById(sysUser));
 	}
+
+	/**
+	 * 更新用户角色信息 禁止新增或删除admin角色
+	 * @param userDto 用户数据传输对象
+	 * @return 操作结果，包含更新是否成功
+	 */
+	@Override
+	@CacheEvict(value = CacheConstants.USER_DETAILS, key = "#userDto.username")
+	public R<Boolean> updateUserRole(UserDTO userDto) {
+
+		if (CollUtil.isEmpty(userDto.getRole())) {
+			return R.failed("角色ID列表不能为空");
+		}
+
+		PigUser user = SecurityUtils.getUser();
+		List<Long> currentRoleIds = sysUserRoleService.list(Wrappers.<SysUserRole>lambdaQuery()
+			.eq(SysUserRole::getUserId, user.getId()))
+			.stream()
+			.map(SysUserRole::getRoleId)
+			.toList();
+		List<SysRole> currentRoles = CollUtil.isEmpty(currentRoleIds)
+			? Collections.emptyList()
+			: sysRoleService.listByIds(currentRoleIds);
+
+		List<SysRole> roles = sysRoleService.listByIds(userDto.getRole());
+
+		Set<Long> currentAdminRoleIds = currentRoles.stream()
+			.filter(role -> StrUtil.containsIgnoreCase(role.getRoleCode(), "admin"))
+			.map(SysRole::getRoleId)
+			.collect(Collectors.toSet());
+		Set<Long> targetAdminRoleIds = roles.stream()
+			.filter(role -> StrUtil.containsIgnoreCase(role.getRoleCode(), "admin"))
+			.map(SysRole::getRoleId)
+			.collect(Collectors.toSet());
+
+		if (!currentAdminRoleIds.equals(targetAdminRoleIds)) {
+			return R.failed("禁止新增或删除admin角色");
+		}
+
+		UserDTO ud = new UserDTO();
+		ud.setUserId(user.getId());
+		ud.setRole(userDto.getRole());
+		ud.setUsername(userDto.getUsername()); // 至少传递用户名用于缓存清理
+		return R.ok(updateUser(ud));
+	}
+
 
 	/**
 	 * 更新用户信息
@@ -420,40 +469,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		return R.ok(saveUser(user));
 	}
 
-	@Override
-	@Transactional(rollbackFor = Exception.class)
-	public Boolean switchUserRoleByCode(Long userId, String roleCode) {
-		if (Objects.isNull(userId) || StrUtil.isBlank(roleCode)) {
-			throw new IllegalArgumentException("用户ID和角色编码不能为空");
-		}
-
-		SysUser sysUser = baseMapper.selectById(userId);
-		if (Objects.isNull(sysUser)) {
-			throw new IllegalArgumentException("用户不存在");
-		}
-
-		SysRole sysRole = sysRoleService
-			.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, roleCode.trim()));
-		if (Objects.isNull(sysRole)) {
-			throw new IllegalArgumentException("角色编码不存在: " + roleCode);
-		}
-
-		sysUserRoleMapper.delete(Wrappers.<SysUserRole>lambdaQuery().eq(SysUserRole::getUserId, userId));
-
-		SysUserRole userRole = new SysUserRole();
-		userRole.setUserId(userId);
-		userRole.setRoleId(sysRole.getRoleId());
-		sysUserRoleMapper.insert(userRole);
-
-		Cache cache = cacheManager.getCache(CacheConstants.USER_DETAILS);
-		if (cache != null) {
-			String username = sysUser.getUsername();
-			if (username != null) {
-				cache.evictIfPresent(username);
-			}
-		}
-		return Boolean.TRUE;
-	}
 
 	/**
 	 * 锁定用户

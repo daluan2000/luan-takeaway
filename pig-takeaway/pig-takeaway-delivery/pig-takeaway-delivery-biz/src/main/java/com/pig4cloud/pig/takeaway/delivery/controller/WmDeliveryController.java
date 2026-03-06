@@ -33,6 +33,12 @@ public class WmDeliveryController {
 		return R.ok(wmDeliveryService.createRider(riderDTO));
 	}
 
+	@GetMapping(TakeawayApiConstants.DELIVERY_PATH + "/rider/current")
+	@Operation(summary = "获取当前用户骑手扩展信息")
+	public R<WmDeliveryDTO> current() {
+		return R.ok(wmDeliveryService.current());
+	}
+
 	@PutMapping(TakeawayApiConstants.DELIVERY_PATH + "/rider")
 	@Operation(summary = "骑手更新")
 	@SysLog("骑手更新")

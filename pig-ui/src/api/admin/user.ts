@@ -39,6 +39,14 @@ export const putObj = (obj: Object) => {
 	});
 };
 
+export const updateUserRole = (obj: Object) => {
+	return request({
+		url: '/admin/user/role',
+		method: 'put',
+		data: obj,
+	});
+};
+
 export function getDetails(obj: Object) {
 	return request({
 		url: '/admin/user/details',

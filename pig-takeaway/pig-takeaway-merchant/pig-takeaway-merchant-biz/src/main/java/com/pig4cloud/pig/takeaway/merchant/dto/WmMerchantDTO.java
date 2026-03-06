@@ -2,9 +2,11 @@ package com.pig4cloud.pig.takeaway.merchant.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
+
+import com.pig4cloud.pig.takeaway.common.entity.WmMerchantUserExt;
 
 /**
  * 商家传输对象
@@ -13,30 +15,15 @@ import java.io.Serializable;
  */
 @Data
 @Schema(description = "商家传输对象")
-public class WmMerchantDTO implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+public class WmMerchantDTO extends WmMerchantUserExt {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "主键ID")
-	private Long id;
+	@Schema(description = "扩展信息是否不存在")
+	private Boolean noExist;
 
-	@Schema(description = "用户ID")
-	private Long userId;
-
-	@Schema(description = "商家名称")
-	private String merchantName;
-
-	@Schema(description = "联系人")
-	private String contactName;
-
-	@Schema(description = "门店地址ID")
-	private Long storeAddressId;
-
-	@Schema(description = "营业状态")
-	private String businessStatus;
-
-	@Schema(description = "审核状态")
-	private String auditStatus;
+	// 保留，后续可扩展传输字段
 
 }

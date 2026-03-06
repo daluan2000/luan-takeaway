@@ -156,6 +156,13 @@ public class SysUserController {
 		return R.ok(userService.updateUser(userDto));
 	}
 
+	@SysLog("更新角色")
+	@PutMapping("/role")
+	@Operation(summary = "更新角色", description = "更新角色，禁止新增或删除admin角色")
+	public R<Boolean> updateUserRole(@Valid @RequestBody UserDTO userDto) {
+		return userService.updateUserRole(userDto);
+	}
+
 	/**
 	 * 分页查询用户
 	 * @param page 参数集

@@ -24,6 +24,13 @@ export function updateMerchant(data?: object) {
 	});
 }
 
+export function currentMerchant() {
+	return request({
+		url: '/takeaway/merchant/current',
+		method: 'get',
+	});
+}
+
 export function auditMerchant(id: string | number, auditStatus: string) {
 	return request({
 		url: `/takeaway/merchant/${id}/audit/${auditStatus}`,

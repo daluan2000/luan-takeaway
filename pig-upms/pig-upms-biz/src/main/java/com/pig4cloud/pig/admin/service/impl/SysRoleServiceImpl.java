@@ -65,7 +65,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	 * @return 角色信息列表
 	 */
 	@Override
-	public List listRolesByUserId(Long userId) {
+	public List<SysRole> listRolesByUserId(Long userId) {
 		return baseMapper.listRolesByUserId(userId);
 	}
 
@@ -111,7 +111,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 	 * @return ok fail
 	 */
 	@Override
-	public R importRole(List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
+	public R<?> importRole(List<RoleExcelVO> excelVOList, BindingResult bindingResult) {
 		// 通用校验获取失败的数据
 		List<ErrorMessage> errorMessageList = (List<ErrorMessage>) bindingResult.getTarget();
 

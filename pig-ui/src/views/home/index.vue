@@ -4,10 +4,10 @@
       <splitpanes>
         <pane size="70">
           <splitpanes horizontal>
-            <pane size="25">
+            <pane size="50">
               <current-user/>
             </pane>
-            <pane size="75">
+            <pane size="50">
               <favorite/>
             </pane>
           </splitpanes>

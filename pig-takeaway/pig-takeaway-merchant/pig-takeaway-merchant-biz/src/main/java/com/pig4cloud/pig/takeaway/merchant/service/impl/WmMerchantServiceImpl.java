@@ -88,6 +88,24 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	}
 
 	@Override
+	public WmMerchantDTO current() {
+		PigUser currentUser = SecurityUtils.getUser();
+		if (currentUser == null || currentUser.getId() == null) {
+			throw new IllegalStateException("当前登录用户不存在");
+		}
+		WmMerchantUserExt merchant = wmMerchantUserExtMapper
+			.selectOne(Wrappers.<WmMerchantUserExt>lambdaQuery().eq(WmMerchantUserExt::getUserId, currentUser.getId()));
+		WmMerchantDTO result = new WmMerchantDTO();
+		if (merchant == null) {
+			result.setNoExist(Boolean.TRUE);
+			return result;
+		}
+		BeanUtils.copyProperties(merchant, result);
+		result.setNoExist(Boolean.FALSE);
+		return result;
+	}
+
+	@Override
 	public Page<WmMerchantUserExt> page(Page<WmMerchantUserExt> page, Long userId, String auditStatus, String businessStatus) {
 		return wmMerchantUserExtMapper.selectPage(page,
 				Wrappers.<WmMerchantUserExt>lambdaQuery()

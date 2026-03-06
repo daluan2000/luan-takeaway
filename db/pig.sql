@@ -630,7 +630,7 @@ CREATE TABLE `sys_user` (
   PRIMARY KEY (`user_id`) USING BTREE,
   KEY `user_wx_openid` (`wx_openid`) USING BTREE,
   KEY `user_qq_openid` (`qq_openid`) USING BTREE,
-  KEY `user_idx1_username` (`username`) USING BTREE
+  UNIQUE KEY `user_idx1_username` (`username`) USING BTREE
 ) ENGINE=InnoDB  COMMENT='用户表';
 
 -- ----------------------------

@@ -2,9 +2,12 @@ package com.pig4cloud.pig.takeaway.customer.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
+
+import com.pig4cloud.pig.takeaway.common.entity.WmAddress;
+import com.pig4cloud.pig.takeaway.common.entity.WmCustomerUserExt;
 
 /**
  * 客户传输对象
@@ -12,22 +15,17 @@ import java.io.Serializable;
  * @author pig
  */
 @Data
+@EqualsAndHashCode(callSuper = false)
 @Schema(description = "客户传输对象")
-public class WmCustomerDTO implements Serializable {
+public class WmCustomerDTO extends WmCustomerUserExt {
 
 	@Serial
 	private static final long serialVersionUID = 1L;
 
-	@Schema(description = "主键ID")
-	private Long id;
+	@Schema(description = "扩展信息是否不存在")
+	private Boolean noExist;
 
-	@Schema(description = "用户ID")
-	private Long userId;
-
-	@Schema(description = "真实姓名")
-	private String realName;
-
-	@Schema(description = "默认地址ID")
-	private Long defaultAddressId;
+	@Schema(description = "默认地址")
+	private WmAddress defAddress;
 
 }

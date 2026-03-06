@@ -9,6 +9,8 @@ public interface WmDeliveryService {
 
 	WmDeliveryDTO createRider(WmDeliveryDTO riderDTO);
 
+	WmDeliveryDTO current();
+
 	boolean updateRider(WmDeliveryDTO riderDTO);
 
 	boolean createDeliveryOrder(CreateDeliveryOrderRequest request);

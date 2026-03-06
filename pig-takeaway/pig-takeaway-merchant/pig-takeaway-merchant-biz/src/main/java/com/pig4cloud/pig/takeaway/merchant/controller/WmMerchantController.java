@@ -53,6 +53,12 @@ public class WmMerchantController {
 		return R.ok(wmMerchantService.updateMerchant(merchantDTO));
 	}
 
+	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/current")
+	@Operation(summary = "获取当前用户商家扩展信息")
+	public R<WmMerchantDTO> current() {
+		return R.ok(wmMerchantService.current());
+	}
+
 	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/page")
 	@Operation(summary = "商家分页查询")
 	public R<Page<WmMerchantUserExt>> page(@ParameterObject Page<WmMerchantUserExt> page,

@@ -74,7 +74,7 @@ public interface SysRoleService extends IService<SysRole> {
 	 * @param bindingResult 错误信息列表
 	 * @return 导入结果
 	 */
-	R importRole(List<RoleExcelVO> excelVOList, BindingResult bindingResult);
+	R<?> importRole(List<RoleExcelVO> excelVOList, BindingResult bindingResult);
 
 	/**
 	 * 查询全部角色列表

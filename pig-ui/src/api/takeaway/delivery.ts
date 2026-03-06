@@ -16,6 +16,13 @@ export function saveRider(data?: object) {
 	});
 }
 
+export function currentRider() {
+	return request({
+		url: '/takeaway/delivery/rider/current',
+		method: 'get',
+	});
+}
+
 export function acceptOrder(orderId: string | number, deliveryUserId: string | number) {
 	return request({
 		url: `/takeaway/delivery/order/${orderId}/accept/${deliveryUserId}`,

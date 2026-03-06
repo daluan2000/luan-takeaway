@@ -68,6 +68,24 @@ public class WmDeliveryServiceImpl implements WmDeliveryService {
 	}
 
 	@Override
+	public WmDeliveryDTO current() {
+		PigUser currentUser = SecurityUtils.getUser();
+		if (currentUser == null || currentUser.getId() == null) {
+			throw new IllegalStateException("当前登录用户不存在");
+		}
+		WmDeliveryUserExt delivery = wmDeliveryUserExtMapper
+			.selectOne(Wrappers.<WmDeliveryUserExt>lambdaQuery().eq(WmDeliveryUserExt::getUserId, currentUser.getId()));
+		WmDeliveryDTO result = new WmDeliveryDTO();
+		if (delivery == null) {
+			result.setNoExist(Boolean.TRUE);
+			return result;
+		}
+		BeanUtils.copyProperties(delivery, result);
+		result.setNoExist(Boolean.FALSE);
+		return result;
+	}
+
+	@Override
 	public boolean updateRider(WmDeliveryDTO riderDTO) {
 		if (riderDTO.getId() == null) {
 			throw new IllegalArgumentException("骑手ID不能为空");
