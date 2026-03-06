@@ -69,8 +69,8 @@ public class WmDeliveryController {
 		return R.ok(wmDeliveryService.completeOrder(orderId, deliveryUserId));
 	}
 
-	@PostMapping(TakeawayApiConstants.INTERNAL_DELIVERY_PATH + "/create")
-	@Operation(summary = "内部调用-创建配送单")
+	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/service/create")
+	@Operation(summary = "创建配送单")
 	public R<Boolean> create(@RequestBody CreateDeliveryOrderRequest request) {
 		return R.ok(wmDeliveryService.createDeliveryOrder(request));
 	}

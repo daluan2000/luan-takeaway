@@ -16,6 +16,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @AllArgsConstructor
@@ -62,11 +65,42 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 
 	@Override
 	public boolean apply(WmMerchantUserExt merchant) {
+		Objects.requireNonNull(merchant, "商家参数不能为空");
+		PigUser currentUser = SecurityUtils.getUser();
+		if (currentUser == null || currentUser.getId() == null) {
+			throw new IllegalStateException("当前登录用户不存在");
+		}
+		merchant.setUserId(currentUser.getId());
+		merchant.setId(null);
 		merchant.setAuditStatus(TakeawayStatusConstants.Merchant.AUDIT_PENDING);
 		if (merchant.getBusinessStatus() == null) {
 			merchant.setBusinessStatus(TakeawayStatusConstants.Merchant.BUSINESS_OPEN);
 		}
-		return wmMerchantUserExtMapper.insert(merchant) > 0;
+
+		boolean saved = wmMerchantUserExtMapper.insert(merchant) > 0;
+		if (saved && merchant.getId() != null) {
+			scheduleAutoApprove(merchant.getId());
+		}
+		return saved;
+	}
+
+	private void scheduleAutoApprove(Long merchantId) {
+		int delaySeconds = ThreadLocalRandom.current().nextInt(3, 11);
+		CompletableFuture.runAsync(() -> {
+			try {
+				TimeUnit.SECONDS.sleep(delaySeconds);
+			}
+			catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+
+			wmMerchantUserExtMapper.update(null,
+					Wrappers.<WmMerchantUserExt>lambdaUpdate()
+						.set(WmMerchantUserExt::getAuditStatus, TakeawayStatusConstants.Merchant.AUDIT_APPROVED)
+						.eq(WmMerchantUserExt::getId, merchantId)
+						.eq(WmMerchantUserExt::getAuditStatus, TakeawayStatusConstants.Merchant.AUDIT_PENDING));
+		});
 	}
 
 	@Override
@@ -84,7 +118,12 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		}
 		WmMerchantUserExt merchant = new WmMerchantUserExt();
 		BeanUtils.copyProperties(merchantDTO, merchant);
-		return wmMerchantUserExtMapper.updateById(merchant) > 0;
+		merchant.setAuditStatus(TakeawayStatusConstants.Merchant.AUDIT_PENDING);
+		boolean updated = wmMerchantUserExtMapper.updateById(merchant) > 0;
+		if (updated) {
+			scheduleAutoApprove(merchantDTO.getId());
+		}
+		return updated;
 	}
 
 	@Override

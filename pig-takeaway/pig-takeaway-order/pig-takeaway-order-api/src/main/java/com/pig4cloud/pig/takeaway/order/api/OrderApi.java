@@ -24,7 +24,7 @@ public interface OrderApi {
 	 * @return 订单信息
 	 */
 	@NoToken
-	@GetMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}")
+	@GetMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}")
 	R<WmOrder> getById(@PathVariable("orderId") Long orderId);
 
 	/**
@@ -33,7 +33,7 @@ public interface OrderApi {
 	 * @return 是否成功
 	 */
 	@NoToken
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/pay-success")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/pay-success")
 	R<Boolean> markPaid(@PathVariable("orderId") Long orderId);
 
 	/**
@@ -42,7 +42,7 @@ public interface OrderApi {
 	 * @return 是否成功
 	 */
 	@NoToken
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/merchant-accept")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/merchant-accept")
 	R<Boolean> merchantAccept(@PathVariable("orderId") Long orderId);
 
 	/**
@@ -52,7 +52,7 @@ public interface OrderApi {
 	 * @return 是否成功
 	 */
 	@NoToken
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/delivery-start/{deliveryUserId}")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/delivery-start/{deliveryUserId}")
 	R<Boolean> deliveryStart(@PathVariable("orderId") Long orderId,
 			@PathVariable("deliveryUserId") Long deliveryUserId);
 
@@ -62,7 +62,7 @@ public interface OrderApi {
 	 * @return 是否成功
 	 */
 	@NoToken
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/finish")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/finish")
 	R<Boolean> finish(@PathVariable("orderId") Long orderId);
 
 }

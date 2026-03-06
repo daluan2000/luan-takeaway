@@ -84,14 +84,14 @@ public class WmDishController {
 		return R.ok(wmDishService.updateById(dish));
 	}
 
-	@PostMapping(TakeawayApiConstants.INTERNAL_DISH_PATH + "/stock/deduct")
-	@Operation(summary = "内部调用-扣减库存")
+	@PostMapping(TakeawayApiConstants.DISH_PATH + "/service/stock/deduct")
+	@Operation(summary = "扣减库存")
 	public R<Boolean> deductStock(@RequestBody DeductStockRequest request) {
 		return R.ok(wmDishService.deductStock(request));
 	}
 
-	@GetMapping(TakeawayApiConstants.INTERNAL_DISH_PATH + "/ids")
-	@Operation(summary = "内部调用-按ID查询菜品")
+	@GetMapping(TakeawayApiConstants.DISH_PATH + "/service/ids")
+	@Operation(summary = "按ID查询菜品")
 	public R<List<WmDish>> listByIds(@RequestParam("merchantUserId") Long merchantUserId,
 			@RequestParam("ids") List<Long> ids) {
 		return R.ok(wmDishService.listByMerchantAndIds(merchantUserId, ids));

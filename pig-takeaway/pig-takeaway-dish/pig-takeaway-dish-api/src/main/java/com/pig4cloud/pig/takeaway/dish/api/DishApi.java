@@ -28,7 +28,7 @@ public interface DishApi {
 	 * @return 是否成功
 	 */
 	@NoToken
-	@PostMapping(TakeawayApiConstants.INTERNAL_DISH_PATH + "/stock/deduct")
+	@PostMapping(TakeawayApiConstants.DISH_PATH + "/service/stock/deduct")
 	R<Boolean> deductStock(@RequestBody DeductStockRequest request);
 
 	/**
@@ -38,7 +38,7 @@ public interface DishApi {
 	 * @return 菜品列表
 	 */
 	@NoToken
-	@GetMapping(TakeawayApiConstants.INTERNAL_DISH_PATH + "/ids")
+	@GetMapping(TakeawayApiConstants.DISH_PATH + "/service/ids")
 	R<List<WmDish>> listByIds(@RequestParam("merchantUserId") Long merchantUserId,
 			@RequestParam("ids") List<Long> ids);
 

@@ -54,33 +54,33 @@ public class WmOrderController {
 		return R.ok(wmOrderService.cancel(orderId));
 	}
 
-	@GetMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}")
-	@Operation(summary = "内部调用-查询订单")
+	@GetMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}")
+	@Operation(summary = "查询订单")
 	public R<WmOrder> getById(@PathVariable("orderId") Long orderId) {
 		return R.ok(wmOrderService.getById(orderId));
 	}
 
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/pay-success")
-	@Operation(summary = "内部调用-支付成功")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/pay-success")
+	@Operation(summary = "支付成功")
 	public R<Boolean> paySuccess(@PathVariable("orderId") Long orderId) {
 		return R.ok(wmOrderService.markPaid(orderId));
 	}
 
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/merchant-accept")
-	@Operation(summary = "内部调用-商家接单")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/merchant-accept")
+	@Operation(summary = "商家接单")
 	public R<Boolean> merchantAccept(@PathVariable("orderId") Long orderId) {
 		return R.ok(wmOrderService.merchantAccept(orderId));
 	}
 
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/delivery-start/{deliveryUserId}")
-	@Operation(summary = "内部调用-开始配送")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/delivery-start/{deliveryUserId}")
+	@Operation(summary = "开始配送")
 	public R<Boolean> deliveryStart(@PathVariable("orderId") Long orderId,
 			@PathVariable("deliveryUserId") Long deliveryUserId) {
 		return R.ok(wmOrderService.deliveryStart(orderId, deliveryUserId));
 	}
 
-	@PostMapping(TakeawayApiConstants.INTERNAL_ORDER_PATH + "/{orderId}/finish")
-	@Operation(summary = "内部调用-订单完成")
+	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/finish")
+	@Operation(summary = "订单完成")
 	public R<Boolean> finish(@PathVariable("orderId") Long orderId) {
 		return R.ok(wmOrderService.finish(orderId));
 	}

@@ -23,7 +23,7 @@ public interface DeliveryApi {
 	 * @return 是否成功
 	 */
 	@NoToken
-	@PostMapping(TakeawayApiConstants.INTERNAL_DELIVERY_PATH + "/create")
+	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/service/create")
 	R<Boolean> createDeliveryOrder(@RequestBody CreateDeliveryOrderRequest request);
 
 }

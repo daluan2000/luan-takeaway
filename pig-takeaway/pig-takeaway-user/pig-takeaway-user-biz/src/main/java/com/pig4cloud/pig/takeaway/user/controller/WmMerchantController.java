@@ -35,7 +35,7 @@ public class WmMerchantController {
 	@PostMapping(TakeawayApiConstants.MERCHANT_PATH + "/apply")
 	@Operation(summary = "商家入驻申请")
 	@SysLog("商家入驻申请")
-	public R<Boolean> apply(@RequestBody WmMerchantUserExt merchant) {
+	public R<Boolean> apply(@RequestBody WmMerchantDTO merchant) {
 		return R.ok(wmMerchantService.apply(merchant));
 	}
 

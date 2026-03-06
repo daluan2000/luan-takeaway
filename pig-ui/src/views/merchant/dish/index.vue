@@ -1,0 +1,259 @@
+<template>
+	<div class="layout-padding">
+		<div class="layout-padding-auto layout-padding-view">
+			<el-card>
+				<template #header>
+					<div class="card-header">
+						<span>我的菜品</span>
+						<el-button type="primary" @click="openCreate">新增菜品</el-button>
+					</div>
+				</template>
+
+				<el-form ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
+					<el-form-item label="菜品名称" prop="dishName">
+						<el-input v-model="state.queryForm.dishName" placeholder="请输入菜品名称" clearable style="width: 220px" />
+					</el-form-item>
+					<el-form-item label="销售状态" prop="saleStatus">
+						<el-select v-model="state.queryForm.saleStatus" placeholder="请选择状态" clearable style="width: 180px">
+							<el-option label="上架" value="1" />
+							<el-option label="下架" value="0" />
+						</el-select>
+					</el-form-item>
+					<el-form-item>
+						<el-button type="primary" icon="Search" @click="getDataList">查询</el-button>
+						<el-button icon="Refresh" @click="resetQuery">重置</el-button>
+					</el-form-item>
+				</el-form>
+
+				<el-table :data="state.dataList" v-loading="state.loading" border style="width: 100%" :cell-style="tableStyle.cellStyle" :header-cell-style="tableStyle.headerCellStyle">
+					<el-table-column type="index" label="序号" width="70" />
+					<el-table-column prop="dishName" label="菜品名称" min-width="140" show-overflow-tooltip />
+					<el-table-column prop="dishDesc" label="菜品描述" min-width="220" show-overflow-tooltip />
+					<el-table-column prop="price" label="价格(元)" width="120" />
+					<el-table-column prop="stock" label="库存" width="100" />
+					<el-table-column label="销售状态" width="120">
+						<template #default="scope">
+							<el-tag v-if="scope.row.saleStatus === '1'" type="success">上架</el-tag>
+							<el-tag v-else type="info">下架</el-tag>
+						</template>
+					</el-table-column>
+					<el-table-column prop="createTime" label="创建时间" min-width="180" show-overflow-tooltip />
+					<el-table-column label="操作" width="260" fixed="right">
+						<template #default="scope">
+							<el-button text type="primary" @click="openEdit(scope.row)">编辑</el-button>
+							<el-button text type="primary" @click="handleToggleSale(scope.row)">
+								{{ scope.row.saleStatus === '1' ? '下架' : '上架' }}
+							</el-button>
+							<el-button text type="danger" @click="handleDelete(scope.row)">删除</el-button>
+						</template>
+					</el-table-column>
+				</el-table>
+
+				<pagination @current-change="currentChangeHandle" @size-change="sizeChangeHandle" v-bind="state.pagination" />
+			</el-card>
+		</div>
+
+		<el-dialog v-model="dialogVisible" :title="form.id ? '编辑菜品' : '新增菜品'" width="640px" destroy-on-close>
+			<el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+				<el-form-item label="菜品名称" prop="dishName">
+					<el-input v-model="form.dishName" maxlength="128" placeholder="请输入菜品名称" />
+				</el-form-item>
+
+				<el-form-item label="菜品描述" prop="dishDesc">
+					<el-input v-model="form.dishDesc" maxlength="255" type="textarea" :rows="3" placeholder="请输入菜品描述" />
+				</el-form-item>
+
+				<el-row :gutter="12">
+					<el-col :span="12">
+						<el-form-item label="价格(元)" prop="price">
+							<el-input-number v-model="form.price" :min="0" :max="999999" :precision="2" :step="0.1" controls-position="right" style="width: 100%" />
+						</el-form-item>
+					</el-col>
+					<el-col :span="12">
+						<el-form-item label="库存" prop="stock">
+							<el-input-number v-model="form.stock" :min="0" :max="999999" :step="1" controls-position="right" style="width: 100%" />
+						</el-form-item>
+					</el-col>
+				</el-row>
+
+				<el-form-item label="销售状态" prop="saleStatus">
+					<el-radio-group v-model="form.saleStatus">
+						<el-radio label="1">上架</el-radio>
+						<el-radio label="0">下架</el-radio>
+					</el-radio-group>
+				</el-form-item>
+			</el-form>
+
+			<template #footer>
+				<el-button @click="dialogVisible = false">取消</el-button>
+				<el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+			</template>
+		</el-dialog>
+	</div>
+</template>
+
+<script setup lang="ts" name="merchantDish">
+import { useTable, type BasicTableProps } from '/@/hooks/table';
+import { addObj, delObj, pageList, putObj, saleOff, saleOn } from '/@/api/takeaway/dish';
+import { useMessage, useMessageBox } from '/@/hooks/message';
+import { useUserInfo } from '/@/stores/userInfo';
+
+interface DishForm {
+	id?: number;
+	merchantUserId?: number;
+	dishName: string;
+	dishDesc: string;
+	price: number;
+	stock: number;
+	saleStatus: string;
+}
+
+const queryRef = ref();
+const formRef = ref();
+const dialogVisible = ref(false);
+const submitting = ref(false);
+
+const form = reactive<DishForm>({
+	id: undefined,
+	merchantUserId: undefined,
+	dishName: '',
+	dishDesc: '',
+	price: 0,
+	stock: 0,
+	saleStatus: '1',
+});
+
+const rules = reactive({
+	dishName: [{ required: true, message: '请输入菜品名称', trigger: 'blur' }],
+	price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
+	stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
+	saleStatus: [{ required: true, message: '请选择销售状态', trigger: 'change' }],
+});
+
+const state: BasicTableProps = reactive<BasicTableProps>({
+	createdIsNeed: false,
+	queryForm: {
+		merchantUserId: undefined,
+		dishName: '',
+		saleStatus: '',
+	},
+	pageList,
+});
+
+const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTable(state);
+
+const currentMerchantUserId = computed(() => {
+	return useUserInfo().userInfos?.user?.userId as number | undefined;
+});
+
+const resetForm = () => {
+	form.id = undefined;
+	form.merchantUserId = currentMerchantUserId.value;
+	form.dishName = '';
+	form.dishDesc = '';
+	form.price = 0;
+	form.stock = 0;
+	form.saleStatus = '1';
+};
+
+const resetQuery = () => {
+	queryRef.value?.resetFields();
+	state.queryForm.merchantUserId = currentMerchantUserId.value;
+	getDataList();
+};
+
+const openCreate = () => {
+	resetForm();
+	dialogVisible.value = true;
+};
+
+const openEdit = (row: any) => {
+	form.id = row.id;
+	form.merchantUserId = row.merchantUserId;
+	form.dishName = row.dishName || '';
+	form.dishDesc = row.dishDesc || '';
+	form.price = Number(row.price || 0);
+	form.stock = Number(row.stock || 0);
+	form.saleStatus = row.saleStatus || '1';
+	dialogVisible.value = true;
+};
+
+const handleSubmit = async () => {
+	await formRef.value.validate(async (valid: boolean) => {
+		if (!valid) return;
+
+		submitting.value = true;
+		try {
+			const payload: any = {
+				merchantUserId: form.merchantUserId || currentMerchantUserId.value,
+				dishName: form.dishName,
+				dishDesc: form.dishDesc,
+				price: form.price,
+				stock: form.stock,
+				saleStatus: form.saleStatus,
+			};
+
+			if (form.id) {
+				payload.id = form.id;
+				await putObj(payload);
+				useMessage().success('菜品修改成功');
+			} else {
+				await addObj(payload);
+				useMessage().success('菜品新增成功');
+			}
+
+			dialogVisible.value = false;
+			getDataList(false);
+		} catch (error: any) {
+			useMessage().error(error?.msg || error?.response?.data?.msg || '提交失败');
+		} finally {
+			submitting.value = false;
+		}
+	});
+};
+
+const handleDelete = async (row: any) => {
+	try {
+		await useMessageBox().confirm(`确认删除菜品「${row.dishName}」吗？`);
+	} catch {
+		return;
+	}
+
+	try {
+		await delObj(row.id);
+		useMessage().success('删除成功');
+		getDataList(false);
+	} catch (error: any) {
+		useMessage().error(error?.msg || error?.response?.data?.msg || '删除失败');
+	}
+};
+
+const handleToggleSale = async (row: any) => {
+	const isOn = row.saleStatus === '1';
+	try {
+		if (isOn) {
+			await saleOff(row.id);
+			useMessage().success('下架成功');
+		} else {
+			await saleOn(row.id);
+			useMessage().success('上架成功');
+		}
+		getDataList(false);
+	} catch (error: any) {
+		useMessage().error(error?.msg || error?.response?.data?.msg || '状态更新失败');
+	}
+};
+
+onMounted(() => {
+	state.queryForm.merchantUserId = currentMerchantUserId.value;
+	getDataList();
+});
+</script>
+
+<style scoped>
+.card-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+</style>

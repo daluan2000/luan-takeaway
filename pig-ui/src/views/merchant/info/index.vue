@@ -17,6 +17,15 @@
 					class="mb20"
 				/>
 
+				<el-alert
+					v-if="!isCreateMode && form.auditStatus === '0'"
+					title="当前为待审状态，系统将于3-10秒内自动审批，请稍候或点击刷新"
+					type="info"
+					show-icon
+					:closable="false"
+					class="mb20"
+				/>
+
 				<el-form ref="formRef" :model="form" :rules="rules" label-width="120px" style="max-width: 700px">
 					<el-form-item label="商家名称" prop="merchantName">
 						<el-input v-model="form.merchantName" maxlength="128" placeholder="请输入商家名称" />
@@ -27,7 +36,13 @@
 					</el-form-item>
 
 					<el-form-item label="门店地址ID" prop="storeAddressId">
-						<el-input v-model="form.storeAddressId" placeholder="请输入门店地址ID" />
+						<el-select v-model="form.storeAddressId" placeholder="请选择门店地址" filterable clearable style="width: 100%">
+							<el-option v-for="item in addressOptions" :key="item.value" :label="item.label" :value="item.value" />
+						</el-select>
+						<div v-if="!addressOptions.length" class="address-empty-tip">
+							<el-alert title="暂无可用地址，请先新增地址" type="warning" :closable="false" show-icon />
+							<el-button type="primary" link @click="goAddressPage">去新增地址</el-button>
+						</div>
 					</el-form-item>
 
 					<el-form-item label="营业状态" prop="businessStatus">
@@ -57,13 +72,20 @@
 
 <script setup lang="ts" name="merchantInfo">
 import { useMessage } from '/@/hooks/message';
+import { listAddress } from '/@/api/takeaway/address';
 import { applyMerchant, currentMerchant, updateMerchant } from '/@/api/takeaway/merchant';
 import { useUserInfo } from '/@/stores/userInfo';
+import { useRouter } from 'vue-router';
 
 const formRef = ref();
+const router = useRouter();
 const loading = ref(false);
 const submitting = ref(false);
 const isCreateMode = ref(true);
+const addressOptions = ref<Array<{ label: string; value: string }>>([]);
+const autoAuditPolling = ref(false);
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let pollTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const form = reactive({
 	id: undefined as number | undefined,
@@ -78,12 +100,50 @@ const form = reactive({
 const rules = reactive({
 	merchantName: [{ required: true, message: '请输入商家名称', trigger: 'blur' }],
 	contactName: [{ required: true, message: '请输入联系人', trigger: 'blur' }],
-	storeAddressId: [{ required: true, message: '请输入门店地址ID', trigger: 'blur' }],
+	storeAddressId: [{ required: true, message: '请选择门店地址', trigger: 'change' }],
 	businessStatus: [{ required: true, message: '请选择营业状态', trigger: 'change' }],
 });
 
+const buildAddressOptionLabel = (item: any) => {
+	const addressText = [item?.province, item?.city, item?.district, item?.detailAddress].filter(Boolean).join(' ');
+	if (addressText) {
+		return `${addressText}（ID:${item.id}）`;
+	}
+	return `地址ID: ${item.id}`;
+};
+
+const loadAddressOptions = async () => {
+	try {
+		const res = await listAddress();
+		const list = res?.data || [];
+		addressOptions.value = list
+			.filter((item: any) => item?.id !== undefined && item?.id !== null)
+			.map((item: any) => ({
+				label: buildAddressOptionLabel(item),
+				value: String(item.id),
+			}));
+	} catch {
+		addressOptions.value = [];
+		useMessage().warning('地址列表加载失败，请稍后重试');
+	}
+};
+
+const goAddressPage = async () => {
+	const candidates = ['/address/index'];
+	for (const path of candidates) {
+		try {
+			await router.push(path);
+			return;
+		} catch {
+			// 尝试下一个候选路由
+		}
+	}
+	useMessage().warning('未找到地址管理页面，请联系管理员配置菜单路由');
+};
+
 const resetForm = () => {
 	form.id = undefined;
+	form.userId = undefined;
 	form.merchantName = '';
 	form.contactName = '';
 	form.storeAddressId = '';
@@ -91,8 +151,10 @@ const resetForm = () => {
 	form.auditStatus = '0';
 };
 
-const loadCurrent = async () => {
-	loading.value = true;
+const loadCurrent = async (showLoading = true) => {
+	if (showLoading) {
+		loading.value = true;
+	}
 	try {
 		const res = await currentMerchant();
 		const data = res?.data || {};
@@ -112,8 +174,41 @@ const loadCurrent = async () => {
 		form.businessStatus = data.businessStatus || '1';
 		form.auditStatus = data.auditStatus || '0';
 	} finally {
-		loading.value = false;
+		if (showLoading) {
+			loading.value = false;
+		}
 	}
+};
+
+const stopAutoAuditPolling = () => {
+	if (pollTimer) {
+		clearInterval(pollTimer);
+		pollTimer = null;
+	}
+	if (pollTimeout) {
+		clearTimeout(pollTimeout);
+		pollTimeout = null;
+	}
+	autoAuditPolling.value = false;
+};
+
+const startAutoAuditPolling = () => {
+	stopAutoAuditPolling();
+	autoAuditPolling.value = true;
+
+	pollTimer = setInterval(async () => {
+		await loadCurrent(false);
+		if (form.auditStatus !== '0') {
+			stopAutoAuditPolling();
+			if (form.auditStatus === '1') {
+				useMessage().success('系统已自动审批通过');
+			}
+		}
+	}, 1500);
+
+	pollTimeout = setTimeout(() => {
+		stopAutoAuditPolling();
+	}, 20000);
 };
 
 const handleSubmit = async () => {
@@ -126,22 +221,25 @@ const handleSubmit = async () => {
 			const payload: any = {
 				merchantName: form.merchantName,
 				contactName: form.contactName,
-				storeAddressId: Number(form.storeAddressId),
+				storeAddressId: form.storeAddressId,
 				businessStatus: form.businessStatus,
 			};
 
 			if (isCreateMode.value) {
 				payload.userId = currentUserId;
 				await applyMerchant(payload);
-				useMessage().success('新增成功');
+				useMessage().success('已提交入驻申请，状态已置为待审，系统将自动审批');
 			} else {
 				payload.id = form.id;
 				payload.userId = form.userId || currentUserId;
 				await updateMerchant(payload);
-				useMessage().success('修改成功');
+				useMessage().success('已提交更新，状态已重置为待审，系统将自动审批');
 			}
 
 			await loadCurrent();
+			if (!isCreateMode.value && form.auditStatus === '0') {
+				startAutoAuditPolling();
+			}
 		} catch (error: any) {
 			useMessage().error(error?.msg || error?.response?.data?.msg || '提交失败');
 		} finally {
@@ -150,8 +248,16 @@ const handleSubmit = async () => {
 	});
 };
 
-onMounted(() => {
-	loadCurrent();
+onMounted(async () => {
+	loadAddressOptions();
+	await loadCurrent();
+	if (!isCreateMode.value && form.auditStatus === '0') {
+		startAutoAuditPolling();
+	}
+});
+
+onBeforeUnmount(() => {
+	stopAutoAuditPolling();
 });
 </script>
 
@@ -160,5 +266,17 @@ onMounted(() => {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+}
+
+.address-empty-tip {
+	margin-top: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.address-empty-tip :deep(.el-alert) {
+	flex: 1;
 }
 </style>
