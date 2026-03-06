@@ -12,7 +12,6 @@ services:
     volumes:
       - ./db/pig.sql:/docker-entrypoint-initdb.d/01-pig.sql:ro
       - ./db/pig_config.sql:/docker-entrypoint-initdb.d/02-pig_config.sql:ro
-      - ./db/migration/takeaway.sql:/docker-entrypoint-initdb.d/03-takeaway.sql:ro
     networks:
       - spring_cloud_default
 
