@@ -14,9 +14,9 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "停止 Java 微服务: pig-gateway, pig-auth, pig-upms, pig-monitor, pig-codegen, pig-quartz, pig-takeaway-merchant, pig-takeaway-customer, pig-takeaway-dish, pig-takeaway-order, pig-takeaway-pay, pig-takeaway-delivery"
-docker compose stop pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz pig-takeaway-merchant pig-takeaway-customer pig-takeaway-dish pig-takeaway-order pig-takeaway-pay pig-takeaway-delivery
+echo "停止 Java 微服务: pig-gateway, pig-auth, pig-upms, pig-monitor, pig-codegen, pig-quartz, pig-takeaway-user, pig-takeaway-dish, pig-takeaway-order, pig-takeaway-pay"
+docker compose stop pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay
 
 echo
 echo "Java 微服务已停止，查看状态:"
-echo "docker compose ps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz pig-takeaway-merchant pig-takeaway-customer pig-takeaway-dish pig-takeaway-order pig-takeaway-pay pig-takeaway-delivery"
+echo "docker compose ps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay"

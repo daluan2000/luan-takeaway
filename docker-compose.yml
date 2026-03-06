@@ -191,34 +191,13 @@ services:
     networks:
       - spring_cloud_default
 
-  pig-takeaway-merchant:
+  pig-takeaway-user:
     build:
-      context: ./pig-takeaway/pig-takeaway-merchant/pig-takeaway-merchant-biz
+      context: ./pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz
     restart: "no"
-    image: pig-takeaway-merchant
-    container_name: pig-takeaway-merchant
-    hostname: pig-takeaway-merchant
-    environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
-    depends_on:
-      pig-mysql:
-        condition: service_healthy
-      pig-redis:
-        condition: service_started
-      pig-register:
-        condition: service_started
-    networks:
-      - spring_cloud_default
-
-  pig-takeaway-customer:
-    build:
-      context: ./pig-takeaway/pig-takeaway-customer/pig-takeaway-customer-biz
-    restart: "no"
-    image: pig-takeaway-customer
-    container_name: pig-takeaway-customer
-    hostname: pig-takeaway-customer
+    image: pig-takeaway-user
+    container_name: pig-takeaway-user
+    hostname: pig-takeaway-user
     environment:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis
@@ -282,27 +261,6 @@ services:
     image: pig-takeaway-pay
     container_name: pig-takeaway-pay
     hostname: pig-takeaway-pay
-    environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
-    depends_on:
-      pig-mysql:
-        condition: service_healthy
-      pig-redis:
-        condition: service_started
-      pig-register:
-        condition: service_started
-    networks:
-      - spring_cloud_default
-
-  pig-takeaway-delivery:
-    build:
-      context: ./pig-takeaway/pig-takeaway-delivery/pig-takeaway-delivery-biz
-    restart: "no"
-    image: pig-takeaway-delivery
-    container_name: pig-takeaway-delivery
-    hostname: pig-takeaway-delivery
     environment:
       MYSQL_HOST: pig-mysql
       REDIS_HOST: pig-redis

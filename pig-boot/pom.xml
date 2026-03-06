@@ -48,10 +48,10 @@
 			<artifactId>pig-quartz</artifactId>
 			<version>${revision}</version>
 		</dependency>
-		<!--可选：外卖商家服务模块 -->
+		<!--可选：外卖用户服务模块（商家/客户/配送） -->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>
-			<artifactId>pig-takeaway-merchant-biz</artifactId>
+			<artifactId>pig-takeaway-user-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!--可选：外卖菜品服务模块 -->
@@ -72,18 +72,7 @@
 			<artifactId>pig-takeaway-pay-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
-		<!--可选：外卖配送服务模块 -->
-		<dependency>
-			<groupId>com.pig4cloud</groupId>
-			<artifactId>pig-takeaway-delivery-biz</artifactId>
-			<version>${revision}</version>
-		</dependency>
-		 <!--可选：外卖客户服务模块 -->
-		<dependency>
-			<groupId>com.pig4cloud</groupId>
-			<artifactId>pig-takeaway-customer-biz</artifactId>
-			<version>${revision}</version>
-		</dependency>
+
 		<!--安全模块 -->
 		<dependency>
 			<groupId>com.pig4cloud</groupId>

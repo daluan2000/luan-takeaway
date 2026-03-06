@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-@EnablePigDoc("takeaway-pay")
+@EnablePigDoc("takeaway/pay")
 @EnablePigFeignClients
 @EnableDiscoveryClient
 @AutoConfigurationPackage(basePackages = "com.pig4cloud.pig.takeaway")

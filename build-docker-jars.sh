@@ -16,12 +16,10 @@ MODULES=(
   "pig-visual/pig-monitor"
   "pig-visual/pig-codegen"
   "pig-visual/pig-quartz"
-  "pig-takeaway/pig-takeaway-merchant/pig-takeaway-merchant-biz"
-  "pig-takeaway/pig-takeaway-customer/pig-takeaway-customer-biz"
+  "pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz"
   "pig-takeaway/pig-takeaway-dish/pig-takeaway-dish-biz"
   "pig-takeaway/pig-takeaway-order/pig-takeaway-order-biz"
   "pig-takeaway/pig-takeaway-pay/pig-takeaway-pay-biz"
-  "pig-takeaway/pig-takeaway-delivery/pig-takeaway-delivery-biz"
 )
 
 JARS=(
@@ -31,12 +29,10 @@ JARS=(
   "pig-visual/pig-monitor/target/pig-monitor-exec.jar"
   "pig-visual/pig-codegen/target/pig-codegen-exec.jar"
   "pig-visual/pig-quartz/target/pig-quartz-exec.jar"
-  "pig-takeaway/pig-takeaway-merchant/pig-takeaway-merchant-biz/target/pig-takeaway-merchant-biz-exec.jar"
-  "pig-takeaway/pig-takeaway-customer/pig-takeaway-customer-biz/target/pig-takeaway-customer-biz-exec.jar"
+  "pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz/target/pig-takeaway-user-biz-exec.jar"
   "pig-takeaway/pig-takeaway-dish/pig-takeaway-dish-biz/target/pig-takeaway-dish-biz-exec.jar"
   "pig-takeaway/pig-takeaway-order/pig-takeaway-order-biz/target/pig-takeaway-order-biz-exec.jar"
   "pig-takeaway/pig-takeaway-pay/pig-takeaway-pay-biz/target/pig-takeaway-pay-biz-exec.jar"
-  "pig-takeaway/pig-takeaway-delivery/pig-takeaway-delivery-biz/target/pig-takeaway-delivery-biz-exec.jar"
 )
 
 PL="$(IFS=,; echo "${MODULES[*]}")"
