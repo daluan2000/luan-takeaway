@@ -1,7 +1,6 @@
 package com.pig4cloud.pig.takeaway.delivery.api;
 
 import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.feign.annotation.NoToken;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
 import com.pig4cloud.pig.takeaway.common.constant.TakeawayServiceNameConstants;
 import com.pig4cloud.pig.takeaway.common.dto.CreateDeliveryOrderRequest;
@@ -22,7 +21,6 @@ public interface DeliveryApi {
 	 * @param request 创建配送单请求
 	 * @return 是否成功
 	 */
-	@NoToken
 	@PostMapping(TakeawayApiConstants.DELIVERY_PATH + "/service/create")
 	R<Boolean> createDeliveryOrder(@RequestBody CreateDeliveryOrderRequest request);
 

@@ -4,10 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.pig4cloud.pig.common.core.util.R;
 import com.pig4cloud.pig.common.log.annotation.SysLog;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
-import com.pig4cloud.pig.takeaway.common.dto.CreateOrderRequest;
+import com.pig4cloud.pig.takeaway.common.dto.OrderDTO;
 import com.pig4cloud.pig.takeaway.common.entity.WmOrder;
-import com.pig4cloud.pig.takeaway.common.vo.OrderCreateResultVO;
-import com.pig4cloud.pig.takeaway.common.vo.OrderDetailVO;
 import com.pig4cloud.pig.takeaway.order.service.WmOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,13 +28,14 @@ public class WmOrderController {
 	@PostMapping(TakeawayApiConstants.ORDER_PATH)
 	@Operation(summary = "用户下单")
 	@SysLog("用户下单")
-	public R<OrderCreateResultVO> create(@RequestBody CreateOrderRequest request) {
+	public R<OrderDTO> create(@RequestBody OrderDTO request) {
 		return R.ok(wmOrderService.createOrder(request));
 	}
 
 	@GetMapping(TakeawayApiConstants.ORDER_PATH + "/page")
 	@Operation(summary = "订单分页查询")
-	public R<Page<WmOrder>> page(@ParameterObject Page<WmOrder> page, @RequestParam(required = false) Long customerUserId,
+	public R<Page<OrderDTO>> page(@ParameterObject Page<WmOrder> page,
+			@RequestParam(required = false) Long customerUserId,
 			@RequestParam(required = false) Long merchantUserId, @RequestParam(required = false) Long deliveryUserId,
 			@RequestParam(required = false) String status) {
 		return R.ok(wmOrderService.queryPage(page, customerUserId, merchantUserId, deliveryUserId, status));
@@ -44,7 +43,7 @@ public class WmOrderController {
 
 	@GetMapping(TakeawayApiConstants.ORDER_PATH + "/{orderId}")
 	@Operation(summary = "订单详情")
-	public R<OrderDetailVO> detail(@PathVariable("orderId") Long orderId) {
+	public R<OrderDTO> detail(@PathVariable("orderId") Long orderId) {
 		return R.ok(wmOrderService.detail(orderId));
 	}
 

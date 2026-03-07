@@ -1,0 +1,31 @@
+package com.pig4cloud.pig.takeaway.common.dto;
+
+import com.pig4cloud.pig.takeaway.common.entity.WmOrder;
+import com.pig4cloud.pig.takeaway.common.entity.WmOrderItem;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.util.List;
+
+/**
+ * 订单传输对象
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "订单传输对象")
+public class OrderDTO extends WmOrder {
+
+	@Schema(description = "商家名称")
+	private String merchantName;
+
+	@Schema(description = "骑手名称")
+	private String deliveryRiderName;
+
+	@Schema(description = "下单菜品项")
+	private List<DishPurchaseItemDTO> items;
+
+	@Schema(description = "订单明细")
+	private List<WmOrderItem> orderItems;
+
+}

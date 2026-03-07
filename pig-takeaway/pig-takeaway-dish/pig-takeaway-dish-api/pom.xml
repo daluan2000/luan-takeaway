@@ -16,5 +16,9 @@
             <groupId>com.pig4cloud</groupId>
             <artifactId>pig-takeaway-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.pig4cloud</groupId>
+            <artifactId>pig-common-feign</artifactId>
+        </dependency>
     </dependencies>
 </project>

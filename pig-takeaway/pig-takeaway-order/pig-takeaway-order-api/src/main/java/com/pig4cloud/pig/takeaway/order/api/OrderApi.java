@@ -1,7 +1,6 @@
 package com.pig4cloud.pig.takeaway.order.api;
 
 import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.feign.annotation.NoToken;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
 import com.pig4cloud.pig.takeaway.common.constant.TakeawayServiceNameConstants;
 import com.pig4cloud.pig.takeaway.common.entity.WmOrder;
@@ -23,7 +22,6 @@ public interface OrderApi {
 	 * @param orderId 订单ID
 	 * @return 订单信息
 	 */
-	@NoToken
 	@GetMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}")
 	R<WmOrder> getById(@PathVariable("orderId") Long orderId);
 
@@ -32,7 +30,6 @@ public interface OrderApi {
 	 * @param orderId 订单ID
 	 * @return 是否成功
 	 */
-	@NoToken
 	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/pay-success")
 	R<Boolean> markPaid(@PathVariable("orderId") Long orderId);
 
@@ -41,7 +38,6 @@ public interface OrderApi {
 	 * @param orderId 订单ID
 	 * @return 是否成功
 	 */
-	@NoToken
 	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/merchant-accept")
 	R<Boolean> merchantAccept(@PathVariable("orderId") Long orderId);
 
@@ -51,7 +47,6 @@ public interface OrderApi {
 	 * @param deliveryUserId 配送员用户ID
 	 * @return 是否成功
 	 */
-	@NoToken
 	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/delivery-start/{deliveryUserId}")
 	R<Boolean> deliveryStart(@PathVariable("orderId") Long orderId,
 			@PathVariable("deliveryUserId") Long deliveryUserId);
@@ -61,7 +56,6 @@ public interface OrderApi {
 	 * @param orderId 订单ID
 	 * @return 是否成功
 	 */
-	@NoToken
 	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/finish")
 	R<Boolean> finish(@PathVariable("orderId") Long orderId);
 

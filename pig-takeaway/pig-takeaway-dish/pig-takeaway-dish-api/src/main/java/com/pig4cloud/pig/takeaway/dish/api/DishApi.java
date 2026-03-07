@@ -1,7 +1,6 @@
 package com.pig4cloud.pig.takeaway.dish.api;
 
 import com.pig4cloud.pig.common.core.util.R;
-import com.pig4cloud.pig.common.feign.annotation.NoToken;
 import com.pig4cloud.pig.takeaway.common.api.TakeawayApiConstants;
 import com.pig4cloud.pig.takeaway.common.constant.TakeawayServiceNameConstants;
 import com.pig4cloud.pig.takeaway.common.dto.DeductStockRequest;
@@ -27,7 +26,6 @@ public interface DishApi {
 	 * @param request 扣减库存请求
 	 * @return 是否成功
 	 */
-	@NoToken
 	@PostMapping(TakeawayApiConstants.DISH_PATH + "/service/stock/deduct")
 	R<Boolean> deductStock(@RequestBody DeductStockRequest request);
 
@@ -37,7 +35,6 @@ public interface DishApi {
 	 * @param ids 菜品ID列表
 	 * @return 菜品列表
 	 */
-	@NoToken
 	@GetMapping(TakeawayApiConstants.DISH_PATH + "/service/ids")
 	R<List<WmDish>> listByIds(@RequestParam("merchantUserId") Long merchantUserId,
 			@RequestParam("ids") List<Long> ids);

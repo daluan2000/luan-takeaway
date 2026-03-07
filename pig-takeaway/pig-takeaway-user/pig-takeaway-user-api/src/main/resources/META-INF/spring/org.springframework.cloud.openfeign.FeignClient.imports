@@ -1,0 +1,3 @@
+com.pig4cloud.pig.takeaway.customer.api.CustomerApi
+com.pig4cloud.pig.takeaway.delivery.api.DeliveryApi
+com.pig4cloud.pig.takeaway.merchant.api.MerchantApi
