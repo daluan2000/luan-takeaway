@@ -1,17 +1,17 @@
 <template>
 	<div class="layout-padding">
 		<div class="layout-padding-auto layout-padding-view">
-			<el-card v-loading="loading">
+			<el-card>
 				<template #header>
 					<div class="card-header">
-						<span>配送接单</span>
+						<span>我的配送单</span>
 						<el-button link type="primary" @click="loadData">刷新</el-button>
 					</div>
 				</template>
 
 				<el-alert
 					v-if="!riderReady"
-					title="未获取到骑手身份或配送范围，请先维护骑手信息"
+					title="未获取到当前骑手身份，请先完善骑手信息"
 					type="warning"
 					show-icon
 					:closable="false"
@@ -19,11 +19,14 @@
 				/>
 
 				<el-form :inline="true" :model="queryForm" @keyup.enter="loadData">
-					<el-form-item label="配送范围(公里)">
-						<el-input v-model="displayScope" disabled style="width: 180px" placeholder="未设置" />
+					<el-form-item label="订单状态" prop="status">
+						<el-select v-model="queryForm.status" placeholder="请选择状态" clearable style="width: 220px" @change="onStatusChange">
+							<el-option v-for="item in ORDER_STATUS_OPTIONS" :key="item.value" :label="item.label" :value="item.value" />
+						</el-select>
 					</el-form-item>
 					<el-form-item>
 						<el-button type="primary" icon="Search" @click="loadData">查询</el-button>
+						<el-button icon="Refresh" @click="resetQuery">重置</el-button>
 					</el-form-item>
 				</el-form>
 
@@ -37,12 +40,12 @@
 				>
 					<el-table-column type="index" label="序号" width="70" />
 					<el-table-column prop="orderNo" label="订单号" min-width="220" show-overflow-tooltip />
-					<el-table-column label="客户" min-width="140" show-overflow-tooltip>
+					<el-table-column label="客户" min-width="150" show-overflow-tooltip>
 						<template #default="scope">
 							{{ scope.row.customerName || '-' }}
 						</template>
 					</el-table-column>
-					<el-table-column label="商家" min-width="160" show-overflow-tooltip>
+					<el-table-column label="商家" min-width="150" show-overflow-tooltip>
 						<template #default="scope">
 							{{ scope.row.merchantName || '-' }}
 						</template>
@@ -50,11 +53,6 @@
 					<el-table-column label="配送地址" min-width="220" show-overflow-tooltip>
 						<template #default="scope">
 							{{ formatAddress(scope.row.customerAddress) }}
-						</template>
-					</el-table-column>
-					<el-table-column label="配送距离(公里)" min-width="130">
-						<template #default="scope">
-							{{ scope.row.distanceKmText }}
 						</template>
 					</el-table-column>
 					<el-table-column label="订单金额(元)" min-width="130">
@@ -69,58 +67,52 @@
 					</el-table-column>
 					<el-table-column label="订单状态" min-width="140">
 						<template #default="scope">
-							<el-tag type="info">{{ getStatusLabel(scope.row.orderStatus) }}</el-tag>
+							<el-tag :type="getStatusTagType(scope.row.orderStatus)">
+								{{ getStatusLabel(scope.row.orderStatus) }}
+							</el-tag>
 						</template>
 					</el-table-column>
-					<el-table-column prop="createTime" label="下单时间" min-width="180" show-overflow-tooltip />
-					<el-table-column label="操作" width="160" fixed="right">
+					<el-table-column prop="deliveryStartTime" label="开始配送时间" min-width="180" show-overflow-tooltip />
+					<el-table-column prop="finishTime" label="完成时间" min-width="180" show-overflow-tooltip />
+					<el-table-column label="操作" width="180" fixed="right">
 						<template #default="scope">
 							<el-button
+								v-if="scope.row.orderStatus === ORDER_STATUS.DELIVERING"
 								text
 								type="primary"
-								:loading="acceptingId === String(scope.row.id)"
-								@click="handleAccept(scope.row)"
+								:loading="finishingId === String(scope.row.id)"
+								@click="handleFinish(scope.row)"
 							>
-								接单
+								配送完成
 							</el-button>
+							<span v-else class="op-disabled">暂无操作</span>
 						</template>
 					</el-table-column>
 				</el-table>
 
-				<pagination
-					v-bind="pagination"
-					@current-change="currentChangeHandle"
-					@size-change="sizeChangeHandle"
-				/>
+				<pagination v-bind="pagination" @current-change="currentChangeHandle" @size-change="sizeChangeHandle" />
 			</el-card>
 		</div>
 	</div>
 </template>
 
-<script setup lang="ts" name="deliveryOrderIndex">
+<script setup lang="ts" name="deliverySendIndex">
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { currentRider } from '/@/api/takeaway/delivery';
-import { deliveryStartOrder, pageList as pageOrderList } from '/@/api/takeaway/order';
+import { deliveryFinishOrder, pageList as pageOrderList } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
 import type { Pagination, TableStyle } from '/@/hooks/table';
 
 interface AddressItem {
-	id?: string | number;
 	province?: string;
 	city?: string;
 	district?: string;
 	detailAddress?: string;
-	longitude?: number | string;
-	latitude?: number | string;
 }
 
 interface RiderInfo {
 	id?: string | number;
 	userId?: string | number;
-	realName?: string;
-	deliveryScopeKm?: number | string;
-	onlineStatus?: string;
-	employmentStatus?: string;
 	noExist?: boolean;
 }
 
@@ -132,16 +124,21 @@ interface OrderRow {
 	totalAmount?: number;
 	payAmount?: number;
 	orderStatus?: string;
-	createTime?: string;
+	deliveryStartTime?: string;
+	finishTime?: string;
 	customerAddress?: AddressItem;
-	merchantAddress?: AddressItem;
-	distanceKm?: number;
-	distanceKmText?: string;
+	createTime?: string;
 }
 
 const ORDER_STATUS = {
-	MERCHANT_ACCEPTED: '2',
+	DELIVERING: '3',
+	FINISHED: '4',
 } as const;
+
+const ORDER_STATUS_OPTIONS = [
+	{ label: '配送中', value: ORDER_STATUS.DELIVERING },
+	{ label: '配送已完成', value: ORDER_STATUS.FINISHED },
+];
 
 const STATUS_LABEL_MAP: Record<string, string> = {
 	'0': '待支付',
@@ -153,13 +150,15 @@ const STATUS_LABEL_MAP: Record<string, string> = {
 };
 
 const loading = ref(false);
-const acceptingId = ref('');
 const riderReady = ref(false);
 const riderUserId = ref<number | undefined>();
-const riderScopeKm = ref<number>(0);
+const finishingId = ref('');
+const sourceRows = ref<OrderRow[]>([]);
 const allRows = ref<OrderRow[]>([]);
 
-const queryForm = reactive({});
+const queryForm = reactive({
+	status: ORDER_STATUS.DELIVERING,
+});
 
 const pagination = reactive<Pagination>({
 	current: 1,
@@ -178,13 +177,6 @@ const tableStyle: TableStyle = {
 	},
 	rowStyle: { textAlign: 'center' },
 };
-
-const displayScope = computed(() => {
-	if (!riderScopeKm.value || Number.isNaN(riderScopeKm.value)) {
-		return '';
-	}
-	return riderScopeKm.value.toFixed(2);
-});
 
 const pageRows = computed(() => {
 	const current = Number(pagination.current || 1);
@@ -205,20 +197,6 @@ const toNumber = (value: unknown): number | undefined => {
 	return Number.isNaN(num) ? undefined : num;
 };
 
-const calcDistanceKm = (from: AddressItem, to: AddressItem) => {
-	const fromLng = Number(from.longitude);
-	const fromLat = Number(from.latitude);
-	const toLng = Number(to.longitude);
-	const toLat = Number(to.latitude);
-	if ([fromLng, fromLat, toLng, toLat].some((item) => Number.isNaN(item))) {
-		return undefined;
-	}
-	const avgLatRad = ((fromLat + toLat) / 2) * (Math.PI / 180);
-	const dxKm = (toLng - fromLng) * 111 * Math.cos(avgLatRad);
-	const dyKm = (toLat - fromLat) * 111;
-	return Math.sqrt(dxKm * dxKm + dyKm * dyKm);
-};
-
 const formatAddress = (address?: AddressItem) => {
 	if (!address) return '-';
 	const text = [address.province, address.city, address.district, address.detailAddress].filter(Boolean).join('');
@@ -235,6 +213,12 @@ const formatMoney = (value: unknown) => {
 
 const getStatusLabel = (status: string) => STATUS_LABEL_MAP[status] || `未知状态(${status ?? '-'})`;
 
+const getStatusTagType = (status: string) => {
+	if (status === ORDER_STATUS.DELIVERING) return 'warning';
+	if (status === ORDER_STATUS.FINISHED) return 'success';
+	return 'info';
+};
+
 const currentChangeHandle = (val: number) => {
 	pagination.current = val;
 };
@@ -242,6 +226,17 @@ const currentChangeHandle = (val: number) => {
 const sizeChangeHandle = (val: number) => {
 	pagination.size = val;
 	pagination.current = 1;
+};
+
+const onStatusChange = () => {
+	pagination.current = 1;
+	applyLocalFilter();
+};
+
+const resetQuery = () => {
+	queryForm.status = ORDER_STATUS.DELIVERING;
+	pagination.current = 1;
+	applyLocalFilter();
 };
 
 const getCurrentRiderUserId = () => {
@@ -252,71 +247,51 @@ const getCurrentRiderUserId = () => {
 	return undefined;
 };
 
-const prepareRiderContext = async () => {
+const ensureRiderContext = async () => {
 	const riderRes = await currentRider();
 	const rider: RiderInfo = riderRes?.data || {};
 	if (rider.noExist || !rider.id) {
 		throw new Error('当前用户暂无骑手扩展信息');
 	}
-	if (rider.onlineStatus !== '1') {
-		throw new Error('当前骑手未在线，无法接单');
-	}
-	if (rider.employmentStatus !== '1') {
-		throw new Error('当前骑手非在职状态，无法接单');
-	}
-
-	const scopeKm = Number(rider.deliveryScopeKm);
-	if (Number.isNaN(scopeKm) || scopeKm <= 0) {
-		throw new Error('请先设置有效的配送范围');
-	}
-
 	riderUserId.value = toNumber(rider.userId) || getCurrentRiderUserId();
-	riderScopeKm.value = scopeKm;
 	riderReady.value = !!riderUserId.value;
 	if (!riderReady.value) {
-		throw new Error('未获取到当前骑手身份，无法接单');
+		throw new Error('未获取到当前骑手身份，无法查询配送单');
 	}
+};
+
+const applyLocalFilter = () => {
+	const targetStatus = queryForm.status;
+	const deliveryRows = sourceRows.value.filter((row) => {
+		if (row.orderStatus !== ORDER_STATUS.DELIVERING && row.orderStatus !== ORDER_STATUS.FINISHED) {
+			return false;
+		}
+		if (!targetStatus) {
+			return true;
+		}
+		return row.orderStatus === targetStatus;
+	});
+	allRows.value = deliveryRows;
+	pagination.total = deliveryRows.length;
 };
 
 const loadData = async () => {
 	loading.value = true;
+	riderReady.value = false;
+	sourceRows.value = [];
 	allRows.value = [];
 	pagination.current = 1;
 	pagination.total = 0;
-	riderReady.value = false;
 	try {
-		await prepareRiderContext();
-		const scopeLimit = riderScopeKm.value;
-
+		await ensureRiderContext();
 		const res = await pageOrderList({
 			current: 1,
 			size: 500,
-			status: ORDER_STATUS.MERCHANT_ACCEPTED,
+			deliveryUserId: riderUserId.value,
 		});
 		const records: OrderRow[] = res?.data?.records || [];
-
-		// 在前端进行距离筛选：商家地址到客户地址距离 < 骑手配送范围
-		const matched = records
-			.map((row) => {
-				const customerAddress = row.customerAddress;
-				const merchantAddress = row.merchantAddress;
-				if (!customerAddress || !merchantAddress) {
-					return null;
-				}
-				const distanceKm = calcDistanceKm(merchantAddress, customerAddress);
-				if (distanceKm === undefined || distanceKm >= scopeLimit) {
-					return null;
-				}
-				return {
-					...row,
-					distanceKm,
-					distanceKmText: distanceKm.toFixed(2),
-				};
-			})
-			.filter(Boolean) as OrderRow[];
-
-		allRows.value = matched;
-		pagination.total = matched.length;
+		sourceRows.value = records.sort((a, b) => String(b.createTime || '').localeCompare(String(a.createTime || '')));
+		applyLocalFilter();
 	} catch (error: any) {
 		useMessage().warning(error?.message || error?.msg || '加载失败');
 	} finally {
@@ -324,27 +299,32 @@ const loadData = async () => {
 	}
 };
 
-const handleAccept = async (row: OrderRow) => {
+const handleFinish = async (row: OrderRow) => {
 	const orderId = normalizeId(row?.id);
-	if (!orderId || !riderUserId.value) {
-		useMessage().warning('订单或骑手信息缺失，无法接单');
+	if (!orderId) {
+		useMessage().warning('订单ID不存在，无法完成配送');
 		return;
 	}
+	if (row.orderStatus !== ORDER_STATUS.DELIVERING) {
+		useMessage().warning('仅配送中订单可操作完成');
+		return;
+	}
+
 	try {
-		await useMessageBox().confirm(`确认接单「${row.orderNo || row.id}」吗？`);
+		await useMessageBox().confirm(`确认将订单「${row.orderNo || row.id}」标记为配送完成吗？`);
 	} catch {
 		return;
 	}
 
-	acceptingId.value = orderId;
+	finishingId.value = orderId;
 	try {
-		await deliveryStartOrder(orderId, riderUserId.value);
-		useMessage().success('接单成功，已开始配送');
+		await deliveryFinishOrder(orderId);
+		useMessage().success('配送完成');
 		await loadData();
 	} catch (error: any) {
-		useMessage().error(error?.msg || error?.response?.data?.msg || '接单失败');
+		useMessage().error(error?.msg || error?.response?.data?.msg || '操作失败');
 	} finally {
-		acceptingId.value = '';
+		finishingId.value = '';
 	}
 };
 
@@ -358,5 +338,10 @@ onMounted(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+}
+
+.op-disabled {
+	color: var(--el-text-color-disabled);
+	font-size: 13px;
 }
 </style>

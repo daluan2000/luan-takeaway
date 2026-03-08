@@ -101,6 +101,7 @@
 <script setup lang="ts" name="addressIndex">
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { addAddress, delAddress, getAddress, listAddress, updateAddress } from '/@/api/takeaway/address';
+import chinaRegionData from '/@/assets/data/province-city-district.min.json';
 
 interface AddressForm {
 	id?: number;
@@ -128,6 +129,11 @@ type LeafletGlobal = {
 		addTo: (map: any) => any;
 		setLatLng: (latLng: [number, number]) => void;
 	};
+};
+
+type ChinaRegionNode = {
+	label: string;
+	children?: ChinaRegionNode[];
 };
 
 const loading = ref(false);
@@ -223,89 +229,115 @@ const ensureLeaflet = async () => {
 
 const toAddressValue = (value?: string) => value?.trim() || '';
 
-const MUNICIPALITIES = ['北京市', '上海市', '天津市', '重庆市'];
+const CHINA_REGION_DATA = chinaRegionData as unknown as ChinaRegionNode[];
 
-const REGION_CODE_TO_NAME: Record<string, string> = {
-	'CN-BJ': '北京市',
-	'CN-SH': '上海市',
-	'CN-TJ': '天津市',
-	'CN-CQ': '重庆市',
-	'CN-HE': '河北省',
-	'CN-SX': '山西省',
-	'CN-NM': '内蒙古自治区',
-	'CN-LN': '辽宁省',
-	'CN-JL': '吉林省',
-	'CN-HL': '黑龙江省',
-	'CN-JS': '江苏省',
-	'CN-ZJ': '浙江省',
-	'CN-AH': '安徽省',
-	'CN-FJ': '福建省',
-	'CN-JX': '江西省',
-	'CN-SD': '山东省',
-	'CN-HA': '河南省',
-	'CN-HB': '湖北省',
-	'CN-HN': '湖南省',
-	'CN-GD': '广东省',
-	'CN-GX': '广西壮族自治区',
-	'CN-HI': '海南省',
-	'CN-SC': '四川省',
-	'CN-GZ': '贵州省',
-	'CN-YN': '云南省',
-	'CN-XZ': '西藏自治区',
-	'CN-SN': '陕西省',
-	'CN-GS': '甘肃省',
-	'CN-QH': '青海省',
-	'CN-NX': '宁夏回族自治区',
-	'CN-XJ': '新疆维吾尔自治区',
-	'CN-HK': '香港特别行政区',
-	'CN-MO': '澳门特别行政区',
-	'CN-TW': '台湾省',
+const normalizeAlias = (value?: string) => {
+	return toAddressValue(value).replace(/[\s,，]/g, '');
 };
 
-const pickFirstNonEmpty = (...values: Array<string | undefined>) => {
-	for (const value of values) {
-		const normalized = toAddressValue(value);
-		if (normalized) return normalized;
+const buildAliasIndex = (names: string[], suffixPatterns: RegExp[]) => {
+	const aliasMap = new Map<string, string>();
+	names.forEach((name) => {
+		const normalized = normalizeAlias(name);
+		if (!normalized) return;
+		aliasMap.set(normalized, name);
+		suffixPatterns.forEach((pattern) => {
+			const noSuffix = normalized.replace(pattern, '');
+			if (noSuffix && noSuffix !== normalized) {
+				aliasMap.set(noSuffix, name);
+			}
+		});
+	});
+
+	const aliases = Array.from(aliasMap.entries()).sort((a, b) => b[0].length - a[0].length);
+	return { aliasMap, aliases };
+};
+
+type AliasIndex = ReturnType<typeof buildAliasIndex>;
+
+const PROVINCE_INDEX = buildAliasIndex(
+	CHINA_REGION_DATA.map((item) => item.label),
+	[/(省|自治区|特别行政区)$/]
+);
+
+const PROVINCE_CITY_INDEX = new Map<string, AliasIndex>();
+const CITY_DISTRICT_INDEX = new Map<string, AliasIndex>();
+const PROVINCE_DISTRICT_INDEX = new Map<string, AliasIndex>();
+const PROVINCE_DISTRICT_TO_CITY = new Map<string, Map<string, string>>();
+
+CHINA_REGION_DATA.forEach((provinceNode) => {
+	const province = provinceNode.label;
+	const cityNodes = provinceNode.children || [];
+	const cityNames = cityNodes.map((cityNode) => cityNode.label);
+	PROVINCE_CITY_INDEX.set(province, buildAliasIndex(cityNames, [/(市|地区|自治州|盟)$/]));
+
+	const districtNamesOfProvince: string[] = [];
+	const districtToCityMap = new Map<string, string>();
+	cityNodes.forEach((cityNode) => {
+		const city = cityNode.label;
+		const districtNames = (cityNode.children || []).map((districtNode) => districtNode.label);
+		CITY_DISTRICT_INDEX.set(`${province}|${city}`, buildAliasIndex(districtNames, [/(区|县|旗)$/]));
+		districtNames.forEach((districtName) => {
+			districtToCityMap.set(districtName, city);
+		});
+		districtNamesOfProvince.push(...districtNames);
+	});
+
+	PROVINCE_DISTRICT_INDEX.set(province, buildAliasIndex(districtNamesOfProvince, [/(区|县|旗)$/]));
+	PROVINCE_DISTRICT_TO_CITY.set(province, districtToCityMap);
+});
+
+const matchBySources = (sources: string[], index?: AliasIndex) => {
+	if (!index) return '';
+	const sourceText = sources.map((item) => normalizeAlias(item)).filter(Boolean).join('|');
+	if (!sourceText) return '';
+
+	for (const [alias, official] of index.aliases) {
+		if (alias.length < 2) continue;
+		if (sourceText.includes(alias)) {
+			return official;
+		}
 	}
+
 	return '';
-};
-
-const normalizeRegionName = (value?: string) => {
-	const normalized = toAddressValue(value);
-	if (!normalized) return '';
-	return REGION_CODE_TO_NAME[normalized.toUpperCase()] || normalized;
-};
-
-const extractProvinceFromText = (text: string) => {
-	const source = toAddressValue(text);
-	if (!source) return '';
-
-	const municipalityMatch = source.match(/(北京市|上海市|天津市|重庆市)/);
-	if (municipalityMatch?.[1]) return municipalityMatch[1];
-
-	const provinceLikeMatch = source.match(/([^,，\s]+(?:省|自治区|特别行政区))/);
-	return provinceLikeMatch?.[1] || '';
 };
 
 const parseGeoAddress = (raw: any) => {
 	const addr = raw?.address || {};
 	const detailAddress = toAddressValue(raw?.display_name);
-	const city = normalizeRegionName(pickFirstNonEmpty(addr.city, addr.town, addr.municipality, addr.county, addr.state_district, addr.state));
-	const district = pickFirstNonEmpty(addr.city_district, addr.suburb, addr.county, addr.quarter, addr.borough, addr.neighbourhood);
+	const sourceParts = [
+		detailAddress,
+		...Object.values(addr).map((value) => toAddressValue(String(value || ''))),
+	].filter(Boolean);
 
-	let province = normalizeRegionName(pickFirstNonEmpty(addr.state, addr.province, addr.region, addr['ISO3166-2-lvl4']));
-	if (!province) {
-		province = extractProvinceFromText(detailAddress);
-	}
-	if (!province && MUNICIPALITIES.includes(city)) {
-		province = city;
-	}
+	let province = matchBySources(sourceParts, PROVINCE_INDEX);
+	let city = '';
+	let district = '';
 
-	const normalizedCity = city || (MUNICIPALITIES.includes(province) ? province : '');
+	if (province) {
+		city = matchBySources(sourceParts, PROVINCE_CITY_INDEX.get(province));
+
+		if (city) {
+			district = matchBySources(sourceParts, CITY_DISTRICT_INDEX.get(`${province}|${city}`));
+		}
+
+		if (!district) {
+			district = matchBySources(sourceParts, PROVINCE_DISTRICT_INDEX.get(province));
+		}
+
+		if (!city && district) {
+			const districtToCityMap = PROVINCE_DISTRICT_TO_CITY.get(province);
+			city = districtToCityMap?.get(district) || '';
+		}
+
+		if (city === '市辖区') {
+			city = province;
+		}
+	}
 
 	return {
 		province: province || '未知省',
-		city: normalizedCity || '未知市',
+		city: city || '未知市',
 		district: district || '未知区',
 		detailAddress: detailAddress || '地图选点地址',
 	};
@@ -367,7 +399,8 @@ const initMap = async () => {
 			maxZoom: 18,
 			attribution: '&copy; OpenStreetMap contributors',
 		}).addTo(leafletMap);
-		leafletMap.setView([39.9042, 116.4074], 11);
+		// 设置地图中心和尺度
+		leafletMap.setView([39.900957, 116.382944], 13);
 
 		leafletMap.on('click', async (event: any) => {
 			const { lat, lng } = event?.latlng || {};

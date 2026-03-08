@@ -43,3 +43,10 @@ export function deliveryStartOrder(orderId: string | number, deliveryUserId: str
 		method: 'post',
 	});
 }
+
+export function deliveryFinishOrder(orderId: string | number) {
+	return request({
+		url: `/takeaway/order/service/${orderId}/finish`,
+		method: 'post',
+	});
+}

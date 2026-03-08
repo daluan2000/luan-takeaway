@@ -152,8 +152,6 @@ const submittingMap = reactive<Record<string, boolean>>({});
 const currentCustomerUserId = ref<string | undefined>();
 const currentDeliveryAddressId = ref<string | undefined>();
 
-const MUNICIPALITIES = ['北京市', '上海市', '天津市', '重庆市'];
-
 const cardTitle = computed(() => {
 	return currentDisplayRegion.value ? `${currentDisplayRegion.value}营业商店与菜品` : '同城营业商店与菜品';
 });
@@ -232,11 +230,7 @@ const calcDistanceKm = (userAddress: AddressItem, storeAddress?: AddressItem) =>
 
 const resolveDisplayRegion = (address?: AddressItem | null) => {
 	if (!address) return '';
-	const province = String(address.province || '').trim();
 	const city = String(address.city || '').trim();
-	if (MUNICIPALITIES.includes(province)) {
-		return province;
-	}
 	return city;
 };
 

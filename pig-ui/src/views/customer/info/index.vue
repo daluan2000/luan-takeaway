@@ -67,7 +67,13 @@ const form = reactive({
 
 const rules = reactive({
 	realName: [{ required: true, message: '请输入客户姓名', trigger: 'blur' }],
+	defaultAddressId: [{ required: true, message: '请选择默认地址', trigger: 'change' }],
 });
+
+const validateAddressField = async () => {
+	await nextTick();
+	formRef.value?.validateField('defaultAddressId');
+};
 
 const buildAddressOptionLabel = (item: any) => {
 	const addressText = [item?.province, item?.city, item?.district, item?.detailAddress].filter(Boolean).join(' ');
@@ -132,6 +138,7 @@ const loadCurrent = async () => {
 		form.defaultAddressId = data.defaultAddressId ? String(data.defaultAddressId) : '';
 	} finally {
 		loading.value = false;
+		await validateAddressField();
 	}
 };
 

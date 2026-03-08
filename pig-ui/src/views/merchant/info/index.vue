@@ -104,6 +104,11 @@ const rules = reactive({
 	businessStatus: [{ required: true, message: '请选择营业状态', trigger: 'change' }],
 });
 
+const validateAddressField = async () => {
+	await nextTick();
+	formRef.value?.validateField('storeAddressId');
+};
+
 const buildAddressOptionLabel = (item: any) => {
 	const addressText = [item?.province, item?.city, item?.district, item?.detailAddress].filter(Boolean).join(' ');
 	if (addressText) {
@@ -176,6 +181,7 @@ const loadCurrent = async (showLoading = true) => {
 	} finally {
 		if (showLoading) {
 			loading.value = false;
+			await validateAddressField();
 		}
 	}
 };

@@ -4,11 +4,16 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.pig4cloud.pig.common.security.service.PigUser;
 import com.pig4cloud.pig.common.security.util.SecurityUtils;
 import com.pig4cloud.pig.takeaway.common.entity.WmAddress;
+import com.pig4cloud.pig.takeaway.common.entity.WmCustomerUserExt;
+import com.pig4cloud.pig.takeaway.common.entity.WmMerchantUserExt;
 import com.pig4cloud.pig.takeaway.common.mapper.WmAddressMapper;
+import com.pig4cloud.pig.takeaway.common.mapper.WmCustomerUserExtMapper;
+import com.pig4cloud.pig.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.pig4cloud.pig.takeaway.user.service.WmAddressService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +23,10 @@ import java.util.Objects;
 public class WmAddressServiceImpl implements WmAddressService {
 
 	private final WmAddressMapper wmAddressMapper;
+
+	private final WmMerchantUserExtMapper wmMerchantUserExtMapper;
+
+	private final WmCustomerUserExtMapper wmCustomerUserExtMapper;
 
 	@Override
 	public WmAddress createAddress(WmAddress address) {
@@ -50,12 +59,19 @@ public class WmAddressServiceImpl implements WmAddressService {
 		return wmAddressMapper.updateById(target) > 0;
 	}
 
+	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public boolean deleteAddress(Long id) {
 		if (id == null) {
 			throw new IllegalArgumentException("地址ID不能为空");
 		}
 		getOwnedById(id, currentUserId());
+		wmMerchantUserExtMapper.update(null, Wrappers.<WmMerchantUserExt>lambdaUpdate()
+			.set(WmMerchantUserExt::getStoreAddressId, null)
+			.eq(WmMerchantUserExt::getStoreAddressId, id));
+		wmCustomerUserExtMapper.update(null, Wrappers.<WmCustomerUserExt>lambdaUpdate()
+			.set(WmCustomerUserExt::getDefaultAddressId, null)
+			.eq(WmCustomerUserExt::getDefaultAddressId, id));
 		return wmAddressMapper.deleteById(id) > 0;
 	}
 
