@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
  *
  * @author pig
  */
-@FeignClient(contextId = "deliveryApi", value = TakeawayServiceNameConstants.TAKEAWAY_DELIVERY_SERVICE)
+@FeignClient(contextId = "deliveryApi", value = TakeawayServiceNameConstants.TAKEAWAY_USER_SERVICE)
 public interface DeliveryApi {
 
 	/**

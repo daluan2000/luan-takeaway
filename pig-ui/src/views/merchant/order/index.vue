@@ -4,7 +4,7 @@
 			<el-card>
 				<template #header>
 					<div class="card-header">
-						<span>我的订单</span>
+						<span>商家订单</span>
 						<el-button link type="primary" @click="refreshList">刷新</el-button>
 					</div>
 				</template>
@@ -31,12 +31,12 @@
 				>
 					<el-table-column type="index" label="序号" width="70" />
 					<el-table-column prop="orderNo" label="订单号" min-width="220" show-overflow-tooltip />
-					<el-table-column label="商家名称" min-width="160" show-overflow-tooltip>
+					<el-table-column label="客户" min-width="160" show-overflow-tooltip>
 						<template #default="scope">
-							{{ scope.row.merchantName || '-' }}
+							{{ scope.row.customerName || '-' }}
 						</template>
 					</el-table-column>
-					<el-table-column label="骑手名称" min-width="160" show-overflow-tooltip>
+					<el-table-column label="骑手" min-width="160" show-overflow-tooltip>
 						<template #default="scope">
 							{{ scope.row.deliveryRiderName || '-' }}
 						</template>
@@ -60,17 +60,18 @@
 					</el-table-column>
 					<el-table-column prop="createTime" label="下单时间" min-width="180" show-overflow-tooltip />
 					<el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip />
-					<el-table-column label="操作" width="240" fixed="right">
+					<el-table-column label="操作" width="180" fixed="right">
 						<template #default="scope">
-							<template v-if="scope.row.orderStatus === ORDER_STATUS.WAIT_PAY">
-								<el-button text type="primary" :loading="payingId === String(scope.row.id)" @click="handlePay(scope.row)">
-									去支付
-								</el-button>
-								<el-button text type="danger" :loading="cancellingId === String(scope.row.id)" @click="handleCancel(scope.row)">
-									取消订单
-								</el-button>
-							</template>
-							<span v-else class="op-disabled">暂无操作</span>
+							<el-button
+								v-if="scope.row.orderStatus === ORDER_STATUS.PAID"
+								text
+								type="primary"
+								:loading="acceptingId === String(scope.row.id)"
+								@click="handleAccept(scope.row)"
+							>
+								接单
+							</el-button>
+							<span v-else class="op-disabled">不可接单</span>
 						</template>
 					</el-table-column>
 				</el-table>
@@ -81,12 +82,10 @@
 	</div>
 </template>
 
-<script setup lang="ts" name="customerOrderIndex">
+<script setup lang="ts" name="merchantOrderIndex">
 import { useTable, type BasicTableProps } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
-import { currentCustomer } from '/@/api/takeaway/customer';
-import { cancelOrder, pageList } from '/@/api/takeaway/order';
-import { mockPay } from '/@/api/takeaway/pay';
+import { merchantAcceptOrder, pageList } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
 
 const ORDER_STATUS = {
@@ -118,13 +117,12 @@ const statusLabelMap: Record<string, string> = {
 };
 
 const queryRef = ref();
-const cancellingId = ref('');
-const payingId = ref('');
+const acceptingId = ref('');
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	createdIsNeed: false,
 	queryForm: {
-		customerUserId: undefined as number | undefined,
+		merchantUserId: undefined as number | undefined,
 		status: '',
 	},
 	pageList,
@@ -132,20 +130,10 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 
 const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTable(state);
 
-const resolveCurrentCustomerUserId = async () => {
-	try {
-		const res = await currentCustomer();
-		const customerUserId = Number(res?.data?.userId);
-		if (!Number.isNaN(customerUserId) && customerUserId > 0) {
-			return customerUserId;
-		}
-	} catch {
-		// Ignore and fallback to current login info.
-	}
-
-	const fallbackUserId = Number(useUserInfo().userInfos?.user?.userId);
-	if (!Number.isNaN(fallbackUserId) && fallbackUserId > 0) {
-		return fallbackUserId;
+const resolveCurrentMerchantUserId = () => {
+	const merchantUserId = Number(useUserInfo().userInfos?.user?.userId);
+	if (!Number.isNaN(merchantUserId) && merchantUserId > 0) {
+		return merchantUserId;
 	}
 	return undefined;
 };
@@ -182,69 +170,38 @@ const refreshList = () => {
 	getDataList(false);
 };
 
-const handleCancel = async (row: any) => {
+const handleAccept = async (row: any) => {
 	if (!row?.id) {
-		useMessage().warning('订单ID不存在，无法取消');
+		useMessage().warning('订单ID不存在，无法接单');
 		return;
 	}
-	if (row.orderStatus !== ORDER_STATUS.WAIT_PAY) {
-		useMessage().warning('仅待支付订单可取消');
+	if (row.orderStatus !== ORDER_STATUS.PAID) {
+		useMessage().warning('仅已支付订单可接单');
 		return;
 	}
 
 	try {
-		await useMessageBox().confirm(`确认取消订单「${row.orderNo || row.id}」吗？`);
+		await useMessageBox().confirm(`确认接单「${row.orderNo || row.id}」吗？`);
 	} catch {
 		return;
 	}
 
-	cancellingId.value = String(row.id);
+	acceptingId.value = String(row.id);
 	try {
-		await cancelOrder(row.id);
-		useMessage().success('订单已取消');
+		await merchantAcceptOrder(row.id);
+		useMessage().success('接单成功');
 		getDataList(false);
 	} catch (error: any) {
-		useMessage().error(error?.msg || error?.response?.data?.msg || '取消订单失败');
+		useMessage().error(error?.msg || error?.response?.data?.msg || '接单失败');
 	} finally {
-		cancellingId.value = '';
+		acceptingId.value = '';
 	}
 };
 
-const handlePay = async (row: any) => {
-	if (!row?.id) {
-		useMessage().warning('订单ID不存在，无法支付');
-		return;
-	}
-	if (row.orderStatus !== ORDER_STATUS.WAIT_PAY) {
-		useMessage().warning('仅待支付订单可支付');
-		return;
-	}
-
-	try {
-		await useMessageBox().confirm(`确认支付订单「${row.orderNo || row.id}」吗？`);
-	} catch {
-		return;
-	}
-
-	payingId.value = String(row.id);
-	try {
-		await mockPay({
-			orderId: row.id,
-			payChannel: '0',
-		});
-		useMessage().success('支付成功');
-		getDataList(false);
-	} catch (error: any) {
-		useMessage().error(error?.msg || error?.response?.data?.msg || '支付失败');
-	} finally {
-		payingId.value = '';
-	}
-};
-
-onMounted(async () => {
-	state.queryForm.customerUserId = await resolveCurrentCustomerUserId();
-	if (!state.queryForm.customerUserId) {
-		useMessage().warning('未获取到当前客户身份，无法查询订单');
+onMounted(() => {
+	state.queryForm.merchantUserId = resolveCurrentMerchantUserId();
+	if (!state.queryForm.merchantUserId) {
+		useMessage().warning('未获取到当前商家身份，无法查询订单');
 		return;
 	}
 	getDataList();

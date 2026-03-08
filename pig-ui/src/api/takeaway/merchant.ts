@@ -45,13 +45,6 @@ export function updateBusinessStatus(id: string | number, businessStatus: string
 	});
 }
 
-export function acceptMerchantOrder(orderId: string | number) {
-	return request({
-		url: `/takeaway/user/merchant/order/${orderId}/accept`,
-		method: 'post',
-	});
-}
-
 export function listMerchantByRegion(params?: { province?: string; city?: string; district?: string }) {
 	return request({
 		url: '/takeaway/user/merchant/list',

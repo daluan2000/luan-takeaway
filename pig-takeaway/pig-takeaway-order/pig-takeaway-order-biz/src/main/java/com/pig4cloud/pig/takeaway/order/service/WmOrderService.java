@@ -11,7 +11,7 @@ public interface WmOrderService extends IService<WmOrder> {
 
 	OrderDTO detail(Long orderId);
 
-	Page<OrderDTO> queryPage(Page<WmOrder> page, Long customerUserId, Long merchantUserId, Long deliveryUserId,
+	Page<OrderDTO> queryPage(Page<OrderDTO> page, Long customerUserId, Long merchantUserId, Long deliveryUserId,
 			String status);
 
 	boolean markPaid(Long orderId);

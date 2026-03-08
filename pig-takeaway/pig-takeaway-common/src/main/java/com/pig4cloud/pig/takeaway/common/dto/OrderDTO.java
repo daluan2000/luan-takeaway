@@ -2,6 +2,7 @@ package com.pig4cloud.pig.takeaway.common.dto;
 
 import com.pig4cloud.pig.takeaway.common.entity.WmOrder;
 import com.pig4cloud.pig.takeaway.common.entity.WmOrderItem;
+import com.pig4cloud.pig.takeaway.common.entity.WmAddress;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,6 +22,15 @@ public class OrderDTO extends WmOrder {
 
 	@Schema(description = "骑手名称")
 	private String deliveryRiderName;
+
+	@Schema(description = "客户姓名")
+	private String customerName;
+
+	@Schema(description = "客户地址")
+	private WmAddress customerAddress;
+
+	@Schema(description = "商家地址")
+	private WmAddress merchantAddress;
 
 	@Schema(description = "下单菜品项")
 	private List<DishPurchaseItemDTO> items;

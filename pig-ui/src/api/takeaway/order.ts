@@ -29,3 +29,17 @@ export function cancelOrder(orderId: string | number) {
 		method: 'post',
 	});
 }
+
+export function merchantAcceptOrder(orderId: string | number) {
+	return request({
+		url: `/takeaway/order/service/${orderId}/merchant-accept`,
+		method: 'post',
+	});
+}
+
+export function deliveryStartOrder(orderId: string | number, deliveryUserId: string | number) {
+	return request({
+		url: `/takeaway/order/service/${orderId}/delivery-start/${deliveryUserId}`,
+		method: 'post',
+	});
+}

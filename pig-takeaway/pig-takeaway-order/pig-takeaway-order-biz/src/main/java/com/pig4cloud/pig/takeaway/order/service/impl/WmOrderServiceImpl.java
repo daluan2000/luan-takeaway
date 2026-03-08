@@ -12,10 +12,12 @@ import com.pig4cloud.pig.takeaway.common.entity.WmAddress;
 import com.pig4cloud.pig.takeaway.common.entity.WmDish;
 import com.pig4cloud.pig.takeaway.common.entity.WmDeliveryUserExt;
 import com.pig4cloud.pig.takeaway.common.entity.WmMerchantUserExt;
+import com.pig4cloud.pig.takeaway.common.entity.WmCustomerUserExt;
 import com.pig4cloud.pig.takeaway.common.entity.WmOrder;
 import com.pig4cloud.pig.takeaway.common.entity.WmOrderItem;
 import com.pig4cloud.pig.takeaway.common.mapper.WmDeliveryUserExtMapper;
 import com.pig4cloud.pig.takeaway.common.mapper.WmAddressMapper;
+import com.pig4cloud.pig.takeaway.common.mapper.WmCustomerUserExtMapper;
 import com.pig4cloud.pig.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.pig4cloud.pig.takeaway.common.mapper.WmOrderItemMapper;
 import com.pig4cloud.pig.takeaway.common.mapper.WmOrderMapper;
@@ -45,6 +47,8 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 	private final WmAddressMapper wmAddressMapper;
 
 	private final WmMerchantUserExtMapper wmMerchantUserExtMapper;
+
+	private final WmCustomerUserExtMapper wmCustomerUserExtMapper;
 
 	private final WmDeliveryUserExtMapper wmDeliveryUserExtMapper;
 
@@ -120,7 +124,9 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			wmOrderItemMapper.insert(orderItem);
 		}
 
-		return toOrderDTO(order, null, null);
+		OrderDTO orderDTO = new OrderDTO();
+		BeanUtils.copyProperties(order, orderDTO);
+		return orderDTO;
 	}
 
 	@Override
@@ -134,25 +140,46 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			.orderByAsc(WmOrderItem::getId));
 		String merchantName = null;
 		String riderName = null;
+		String customerName = null;
+		WmAddress customerAddress = null;
+		WmAddress merchantAddress = null;
+		if (order.getDeliveryAddressId() != null) {
+			customerAddress = wmAddressMapper.selectById(order.getDeliveryAddressId());
+		}
+		if (order.getCustomerUserId() != null) {
+			WmCustomerUserExt customer = wmCustomerUserExtMapper.selectOne(
+				Wrappers.<WmCustomerUserExt>lambdaQuery().eq(WmCustomerUserExt::getUserId, order.getCustomerUserId()));
+			customerName = customer != null ? customer.getRealName() : null;
+		}
 		if (order.getMerchantUserId() != null) {
 			WmMerchantUserExt merchant = wmMerchantUserExtMapper.selectOne(
 				Wrappers.<WmMerchantUserExt>lambdaQuery().eq(WmMerchantUserExt::getUserId, order.getMerchantUserId()));
 			merchantName = merchant != null ? merchant.getMerchantName() : null;
+			if (merchant != null && merchant.getStoreAddressId() != null) {
+				merchantAddress = wmAddressMapper.selectById(merchant.getStoreAddressId());
+			}
 		}
 		if (order.getDeliveryUserId() != null) {
 			WmDeliveryUserExt rider = wmDeliveryUserExtMapper.selectOne(
 				Wrappers.<WmDeliveryUserExt>lambdaQuery().eq(WmDeliveryUserExt::getUserId, order.getDeliveryUserId()));
 			riderName = rider != null ? rider.getRealName() : null;
 		}
-		OrderDTO orderDTO = toOrderDTO(order, merchantName, riderName);
+		OrderDTO orderDTO = new OrderDTO();
+		BeanUtils.copyProperties(order, orderDTO);
+		orderDTO.setCustomerName(customerName);
+		orderDTO.setMerchantName(merchantName);
+		orderDTO.setDeliveryRiderName(riderName);
+		orderDTO.setCustomerAddress(customerAddress);
+		orderDTO.setMerchantAddress(merchantAddress);
 		orderDTO.setOrderItems(items);
 		return orderDTO;
 	}
 
 	@Override
-	public Page<OrderDTO> queryPage(Page<WmOrder> page, Long customerUserId, Long merchantUserId, Long deliveryUserId,
+	public Page<OrderDTO> queryPage(Page<OrderDTO> page, Long customerUserId, Long merchantUserId, Long deliveryUserId,
 			String status) {
-		Page<WmOrder> orderPage = page(page, Wrappers.<WmOrder>lambdaQuery()
+		Page<WmOrder> queryPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+		Page<WmOrder> orderPage = page(queryPage, Wrappers.<WmOrder>lambdaQuery()
 			.eq(customerUserId != null, WmOrder::getCustomerUserId, customerUserId)
 			.eq(merchantUserId != null, WmOrder::getMerchantUserId, merchantUserId)
 			.eq(deliveryUserId != null, WmOrder::getDeliveryUserId, deliveryUserId)
@@ -168,11 +195,45 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			.map(WmOrder::getMerchantUserId)
 			.filter(Objects::nonNull)
 			.collect(Collectors.toSet());
+		Set<Long> customerUserIds = records.stream()
+			.map(WmOrder::getCustomerUserId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+		Set<Long> customerAddressIds = records.stream()
+			.map(WmOrder::getDeliveryAddressId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+		Map<Long, WmMerchantUserExt> merchantMap = new HashMap<>(merchantUserIds.size());
 		Map<Long, String> merchantNameMap = new HashMap<>(merchantUserIds.size());
+		Map<Long, String> customerNameMap = new HashMap<>(customerUserIds.size());
+		Map<Long, WmAddress> customerAddressMap = new HashMap<>(customerAddressIds.size());
 		if (!merchantUserIds.isEmpty()) {
 			wmMerchantUserExtMapper
 				.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery().in(WmMerchantUserExt::getUserId, merchantUserIds))
-				.forEach(merchant -> merchantNameMap.put(merchant.getUserId(), merchant.getMerchantName()));
+				.forEach(merchant -> {
+					merchantMap.put(merchant.getUserId(), merchant);
+					merchantNameMap.put(merchant.getUserId(), merchant.getMerchantName());
+				});
+		}
+		if (!customerUserIds.isEmpty()) {
+			wmCustomerUserExtMapper
+				.selectList(Wrappers.<WmCustomerUserExt>lambdaQuery().in(WmCustomerUserExt::getUserId, customerUserIds))
+				.forEach(customer -> customerNameMap.put(customer.getUserId(), customer.getRealName()));
+		}
+		if (!customerAddressIds.isEmpty()) {
+			wmAddressMapper.selectList(Wrappers.<WmAddress>lambdaQuery().in(WmAddress::getId, customerAddressIds))
+				.forEach(address -> customerAddressMap.put(address.getId(), address));
+		}
+
+		Set<Long> merchantAddressIds = merchantMap.values()
+			.stream()
+			.map(WmMerchantUserExt::getStoreAddressId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+		Map<Long, WmAddress> merchantAddressMap = new HashMap<>(merchantAddressIds.size());
+		if (!merchantAddressIds.isEmpty()) {
+			wmAddressMapper.selectList(Wrappers.<WmAddress>lambdaQuery().in(WmAddress::getId, merchantAddressIds))
+				.forEach(address -> merchantAddressMap.put(address.getId(), address));
 		}
 
 		Set<Long> deliveryUserIds = records.stream()
@@ -189,8 +250,14 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		List<OrderDTO> voRecords = records.stream().map(order -> {
 			OrderDTO orderDTO = new OrderDTO();
 			BeanUtils.copyProperties(order, orderDTO);
+			orderDTO.setCustomerName(customerNameMap.get(order.getCustomerUserId()));
 			orderDTO.setMerchantName(merchantNameMap.get(order.getMerchantUserId()));
 			orderDTO.setDeliveryRiderName(riderNameMap.get(order.getDeliveryUserId()));
+			orderDTO.setCustomerAddress(customerAddressMap.get(order.getDeliveryAddressId()));
+			WmMerchantUserExt merchant = merchantMap.get(order.getMerchantUserId());
+			if (merchant != null) {
+				orderDTO.setMerchantAddress(merchantAddressMap.get(merchant.getStoreAddressId()));
+			}
 			return orderDTO;
 		}).toList();
 
@@ -292,14 +359,6 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		if (!customerUserId.equals(address.getUserId())) {
 			throw new IllegalArgumentException("收货地址不属于当前下单用户");
 		}
-	}
-
-	private OrderDTO toOrderDTO(WmOrder order, String merchantName, String riderName) {
-		OrderDTO orderDTO = new OrderDTO();
-		BeanUtils.copyProperties(order, orderDTO);
-		orderDTO.setMerchantName(merchantName);
-		orderDTO.setDeliveryRiderName(riderName);
-		return orderDTO;
 	}
 
 }

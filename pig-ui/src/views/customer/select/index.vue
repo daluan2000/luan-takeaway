@@ -28,7 +28,10 @@
 					>
 						<template #title>
 							<div class="merchant-title">
-								<span class="merchant-name">{{ merchant.merchantName || `商店#${merchant.id}` }}</span>
+								<span class="merchant-name">
+									<span class="merchant-label">商家名称：</span>
+									{{ merchant.merchantName || `商店#${merchant.id}` }}
+								</span>
 								<span class="merchant-city">{{ currentCity }}</span>
 								<el-tooltip
 									v-if="getMerchantAddress(merchant)"
@@ -432,27 +435,39 @@ onMounted(() => {
 }
 
 .merchant-title {
-	display: flex;
+	display: grid;
+	grid-template-columns: minmax(220px, 2fr) 80px minmax(260px, 3fr) 90px;
 	align-items: center;
-	gap: 12px;
+	column-gap: 12px;
 	width: 100%;
 	overflow: hidden;
 }
 
 .merchant-name {
+	display: flex;
+	align-items: center;
+	min-width: 0;
 	font-weight: 700;
 	font-size: 16px;
 	line-height: 1.4;
 }
 
-.merchant-city {
-	font-size: 12px;
+.merchant-label {
+	font-size: 13px;
+	font-weight: 500;
 	color: var(--el-text-color-secondary);
+	margin-right: 4px;
 	flex-shrink: 0;
 }
 
+.merchant-city {
+	font-size: 12px;
+	color: var(--el-text-color-secondary);
+}
+
 .merchant-address {
-	max-width: 320px;
+	max-width: 100%;
+	min-width: 0;
 	font-size: 12px;
 	color: var(--el-text-color-regular);
 	overflow: hidden;
@@ -463,7 +478,19 @@ onMounted(() => {
 .merchant-distance {
 	font-size: 12px;
 	color: var(--el-color-primary);
-	flex-shrink: 0;
+	justify-self: end;
+	text-align: right;
+}
+
+@media (max-width: 768px) {
+	.merchant-title {
+		grid-template-columns: minmax(180px, 1fr) auto;
+		row-gap: 4px;
+	}
+
+	.merchant-address {
+		grid-column: 1 / 3;
+	}
 }
 
 .merchant-actions {

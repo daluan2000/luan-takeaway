@@ -34,7 +34,7 @@ public class WmOrderController {
 
 	@GetMapping(TakeawayApiConstants.ORDER_PATH + "/page")
 	@Operation(summary = "订单分页查询")
-	public R<Page<OrderDTO>> page(@ParameterObject Page<WmOrder> page,
+	public R<Page<OrderDTO>> page(@ParameterObject Page<OrderDTO> page,
 			@RequestParam(required = false) Long customerUserId,
 			@RequestParam(required = false) Long merchantUserId, @RequestParam(required = false) Long deliveryUserId,
 			@RequestParam(required = false) String status) {

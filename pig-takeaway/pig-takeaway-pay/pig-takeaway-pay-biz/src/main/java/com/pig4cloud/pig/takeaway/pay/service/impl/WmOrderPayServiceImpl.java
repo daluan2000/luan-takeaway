@@ -40,6 +40,12 @@ public class WmOrderPayServiceImpl extends ServiceImpl<WmOrderPayMapper, WmOrder
 			throw new IllegalStateException("当前订单状态不可支付");
 		}
 
+		R<Boolean> paySuccessResp = orderApi.markPaid(order.getId());
+		Boolean marked = unwrap(paySuccessResp, "更新订单支付状态失败");
+		if (!Boolean.TRUE.equals(marked)) {
+			throw new IllegalStateException("更新订单支付状态失败");
+		}
+
 		WmOrderPay pay = new WmOrderPay();
 		pay.setOrderId(order.getId());
 		pay.setOrderNo(order.getOrderNo());
@@ -49,12 +55,6 @@ public class WmOrderPayServiceImpl extends ServiceImpl<WmOrderPayMapper, WmOrder
 		pay.setPayChannel(request.getPayChannel() == null ? TakeawayStatusConstants.Pay.CHANNEL_MOCK : request.getPayChannel());
 		pay.setPayTime(LocalDateTime.now());
 		save(pay);
-
-		R<Boolean> paySuccessResp = orderApi.markPaid(order.getId());
-		Boolean marked = unwrap(paySuccessResp, "更新订单支付状态失败");
-		if (!Boolean.TRUE.equals(marked)) {
-			throw new IllegalStateException("更新订单支付状态失败");
-		}
 
 		CreateDeliveryOrderRequest createRequest = new CreateDeliveryOrderRequest();
 		createRequest.setOrderId(order.getId());
