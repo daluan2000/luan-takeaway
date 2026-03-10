@@ -30,6 +30,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.List;
@@ -107,6 +108,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			throw new IllegalStateException("扣减库存失败");
 		}
 
+		List<WmOrderItem> orderItems = new ArrayList<>(request.getItems().size());
 		for (DishPurchaseItemDTO item : request.getItems()) {
 			WmDish dish = dishMap.get(item.getDishId());
 			if (dish == null) {
@@ -122,10 +124,12 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			orderItem.setQuantity(item.getQuantity());
 			orderItem.setItemAmount(itemAmount);
 			wmOrderItemMapper.insert(orderItem);
+			orderItems.add(orderItem);
 		}
 
 		OrderDTO orderDTO = new OrderDTO();
 		BeanUtils.copyProperties(order, orderDTO);
+		orderDTO.setOrderItems(orderItems);
 		return orderDTO;
 	}
 
@@ -240,11 +244,23 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			.map(WmOrder::getDeliveryUserId)
 			.filter(Objects::nonNull)
 			.collect(Collectors.toSet());
+		Set<Long> orderIds = records.stream()
+			.map(WmOrder::getId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
 		Map<Long, String> riderNameMap = new HashMap<>(deliveryUserIds.size());
+		Map<Long, List<WmOrderItem>> orderItemsMap = new HashMap<>(orderIds.size());
 		if (!deliveryUserIds.isEmpty()) {
 			wmDeliveryUserExtMapper
 				.selectList(Wrappers.<WmDeliveryUserExt>lambdaQuery().in(WmDeliveryUserExt::getUserId, deliveryUserIds))
 				.forEach(rider -> riderNameMap.put(rider.getUserId(), rider.getRealName()));
+		}
+		if (!orderIds.isEmpty()) {
+			wmOrderItemMapper.selectList(Wrappers.<WmOrderItem>lambdaQuery()
+				.in(WmOrderItem::getOrderId, orderIds)
+				.orderByAsc(WmOrderItem::getId))
+				.forEach(item -> orderItemsMap.computeIfAbsent(item.getOrderId(), key -> new java.util.ArrayList<>())
+					.add(item));
 		}
 
 		List<OrderDTO> voRecords = records.stream().map(order -> {
@@ -258,6 +274,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			if (merchant != null) {
 				orderDTO.setMerchantAddress(merchantAddressMap.get(merchant.getStoreAddressId()));
 			}
+			orderDTO.setOrderItems(orderItemsMap.getOrDefault(order.getId(), java.util.Collections.emptyList()));
 			return orderDTO;
 		}).toList();
 

@@ -1371,6 +1371,7 @@ DROP TABLE IF EXISTS `wm_dish`;
 CREATE TABLE `wm_dish` (
   `id` bigint NOT NULL COMMENT '主键ID',
   `merchant_user_id` bigint NOT NULL COMMENT '商家用户ID(sys_user.user_id)',
+  `dish_image` varchar(512) DEFAULT NULL COMMENT '菜品图片URL',
   `dish_name` varchar(128) NOT NULL COMMENT '菜品名称',
   `dish_desc` varchar(255) DEFAULT NULL COMMENT '菜品描述',
   `price` decimal(10,2) NOT NULL COMMENT '售价',
@@ -1387,11 +1388,11 @@ CREATE TABLE `wm_dish` (
 -- 转存表中的数据 `wm_dish`
 --
 
-INSERT INTO `wm_dish` (`id`, `merchant_user_id`, `dish_name`, `dish_desc`, `price`, `stock`, `sale_status`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
-(2029883716233834498, 1, '鱼香肉丝', NULL, 10.00, 92, '1', 'admin', 'admin', '2026-03-06 19:36:06', '2026-03-08 14:12:20', '0'),
-(2029899317291405313, 2000000000000000002, '大汉报', NULL, 20.00, 94, '1', 'test_user', NULL, '2026-03-06 20:38:06', '2026-03-07 13:43:55', '0'),
-(2030278373866377218, 1, '辣椒炒肉', NULL, 5.00, 49, '1', 'admin', 'admin', '2026-03-07 21:44:20', '2026-03-08 14:12:19', '0'),
-(2030278477109170178, 1, '牛肉汤', NULL, 7.00, 69, '1', 'admin', 'admin', '2026-03-07 21:44:44', '2026-03-08 14:12:19', '0');
+INSERT INTO `wm_dish` (`id`, `merchant_user_id`, `dish_image`, `dish_name`, `dish_desc`, `price`, `stock`, `sale_status`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2029883716233834498, 1, NULL, '鱼香肉丝', NULL, 10.00, 92, '1', 'admin', 'admin', '2026-03-06 19:36:06', '2026-03-08 14:12:20', '0'),
+(2029899317291405313, 2000000000000000002, NULL, '大汉报', NULL, 20.00, 94, '1', 'test_user', NULL, '2026-03-06 20:38:06', '2026-03-07 13:43:55', '0'),
+(2030278373866377218, 1, NULL, '辣椒炒肉', NULL, 5.00, 49, '1', 'admin', 'admin', '2026-03-07 21:44:20', '2026-03-08 14:12:19', '0'),
+(2030278477109170178, 1, NULL, '牛肉汤', NULL, 7.00, 69, '1', 'admin', 'admin', '2026-03-07 21:44:44', '2026-03-08 14:12:19', '0');
 
 -- --------------------------------------------------------
 

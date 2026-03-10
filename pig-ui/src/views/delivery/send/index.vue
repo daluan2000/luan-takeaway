@@ -38,43 +38,62 @@
 					:cell-style="tableStyle.cellStyle"
 					:header-cell-style="tableStyle.headerCellStyle"
 				>
-					<el-table-column type="index" label="序号" width="70" />
-					<el-table-column prop="orderNo" label="订单号" min-width="220" show-overflow-tooltip />
-					<el-table-column label="客户" min-width="150" show-overflow-tooltip>
+					<el-table-column prop="orderNo" label="订单号" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.orderNo" show-overflow-tooltip />
+					<el-table-column label="客户" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.customerName" show-overflow-tooltip>
 						<template #default="scope">
 							{{ scope.row.customerName || '-' }}
 						</template>
 					</el-table-column>
-					<el-table-column label="商家" min-width="150" show-overflow-tooltip>
+					<el-table-column label="商家" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.merchantName" show-overflow-tooltip>
 						<template #default="scope">
 							{{ scope.row.merchantName || '-' }}
 						</template>
 					</el-table-column>
-					<el-table-column label="配送地址" min-width="220" show-overflow-tooltip>
+					<el-table-column label="配送地址" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.deliveryAddress" show-overflow-tooltip>
 						<template #default="scope">
 							{{ formatAddress(scope.row.customerAddress) }}
 						</template>
 					</el-table-column>
-					<el-table-column label="订单金额(元)" min-width="130">
+					<el-table-column label="订单金额(元)" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.totalAmount">
 						<template #default="scope">
 							{{ formatMoney(scope.row.totalAmount) }}
 						</template>
 					</el-table-column>
-					<el-table-column label="应付金额(元)" min-width="130">
+					<el-table-column label="应付金额(元)" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.payAmount">
 						<template #default="scope">
 							{{ formatMoney(scope.row.payAmount) }}
 						</template>
 					</el-table-column>
-					<el-table-column label="订单状态" min-width="140">
+					<el-table-column label="订单状态" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.orderStatus">
 						<template #default="scope">
 							<el-tag :type="getStatusTagType(scope.row.orderStatus)">
 								{{ getStatusLabel(scope.row.orderStatus) }}
 							</el-tag>
 						</template>
 					</el-table-column>
-					<el-table-column prop="deliveryStartTime" label="开始配送时间" min-width="180" show-overflow-tooltip />
-					<el-table-column prop="finishTime" label="完成时间" min-width="180" show-overflow-tooltip />
-					<el-table-column label="操作" width="180" fixed="right">
+					<el-table-column label="菜品明细" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.orderItems" show-overflow-tooltip>
+						<template #default="scope">
+							{{ formatOrderItems(scope.row.orderItems) }}
+						</template>
+					</el-table-column>
+					<el-table-column label="时间" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.timeInfo">
+						<template #default="scope">
+							<el-tooltip placement="top-start" :show-after="200">
+								<template #content>
+									<div class="time-tooltip-content">{{ getOrderTimeText(scope.row) }}</div>
+								</template>
+								<div
+									class="time-cell"
+									:class="{ 'is-expanded': isTimeExpanded(scope.row) }"
+									@click="toggleTimeExpanded(scope.row)"
+								>
+									{{ getOrderTimeText(scope.row) }}
+								</div>
+							</el-tooltip>
+						</template>
+					</el-table-column>
+					<el-table-column prop="remark" label="备注" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.remark" show-overflow-tooltip />
+					<el-table-column label="操作" :width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.deliverySendActions" fixed="right">
 						<template #default="scope">
 							<el-button
 								v-if="scope.row.orderStatus === ORDER_STATUS.DELIVERING"
@@ -102,6 +121,8 @@ import { currentRider } from '/@/api/takeaway/delivery';
 import { deliveryFinishOrder, pageList as pageOrderList } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
 import type { Pagination, TableStyle } from '/@/hooks/table';
+import { TAKEAWAY_ORDER_TABLE_COL_WIDTH } from '/@/constants/takeawayOrderTable';
+import { getOrderTimelineText } from '/@/utils/takeawayOrderTime';
 
 interface AddressItem {
 	province?: string;
@@ -124,9 +145,13 @@ interface OrderRow {
 	totalAmount?: number;
 	payAmount?: number;
 	orderStatus?: string;
+	payTime?: string;
+	merchantAcceptTime?: string;
 	deliveryStartTime?: string;
 	finishTime?: string;
+	remark?: string;
 	customerAddress?: AddressItem;
+	orderItems?: Array<{ dishName?: string; quantity?: number }>;
 	createTime?: string;
 }
 
@@ -155,6 +180,7 @@ const riderUserId = ref<number | undefined>();
 const finishingId = ref('');
 const sourceRows = ref<OrderRow[]>([]);
 const allRows = ref<OrderRow[]>([]);
+const expandedTimeMap = reactive<Record<string, boolean>>({});
 
 const queryForm = reactive({
 	status: ORDER_STATUS.DELIVERING,
@@ -192,6 +218,23 @@ const normalizeId = (value: unknown): string | undefined => {
 	return String(value);
 };
 
+const getOrderTimeText = (row: Record<string, unknown>) => getOrderTimelineText(row);
+
+const getRowKey = (row: Record<string, unknown>) => {
+	return normalizeId(row.id) || normalizeId(row.orderNo) || '';
+};
+
+const isTimeExpanded = (row: Record<string, unknown>) => {
+	const key = getRowKey(row);
+	return key ? !!expandedTimeMap[key] : false;
+};
+
+const toggleTimeExpanded = (row: Record<string, unknown>) => {
+	const key = getRowKey(row);
+	if (!key) return;
+	expandedTimeMap[key] = !expandedTimeMap[key];
+};
+
 const toNumber = (value: unknown): number | undefined => {
 	const num = Number(value);
 	return Number.isNaN(num) ? undefined : num;
@@ -217,6 +260,15 @@ const getStatusTagType = (status: string) => {
 	if (status === ORDER_STATUS.DELIVERING) return 'warning';
 	if (status === ORDER_STATUS.FINISHED) return 'success';
 	return 'info';
+};
+
+const formatOrderItems = (items: Array<{ dishName?: string; quantity?: number }> | undefined) => {
+	if (!items?.length) {
+		return '-';
+	}
+	return items
+		.map((item) => `${item.dishName || '未知菜品'}x${Number(item.quantity || 0)}`)
+		.join(', ');
 };
 
 const currentChangeHandle = (val: number) => {
@@ -343,5 +395,24 @@ onMounted(async () => {
 .op-disabled {
 	color: var(--el-text-color-disabled);
 	font-size: 13px;
+}
+
+.time-cell {
+	line-height: 1.5;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+	color: var(--el-text-color-regular);
+}
+
+.time-cell.is-expanded {
+	white-space: pre-line;
+}
+
+.time-tooltip-content {
+	white-space: pre-line;
+	line-height: 1.6;
+	max-width: 360px;
 }
 </style>

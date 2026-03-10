@@ -26,19 +26,24 @@
 				</el-form>
 
 				<el-table :data="state.dataList" v-loading="state.loading" border style="width: 100%" :cell-style="tableStyle.cellStyle" :header-cell-style="tableStyle.headerCellStyle">
-					<el-table-column type="index" label="序号" width="70" />
-					<el-table-column prop="dishName" label="菜品名称" min-width="140" show-overflow-tooltip />
-					<el-table-column prop="dishDesc" label="菜品描述" min-width="220" show-overflow-tooltip />
-					<el-table-column prop="price" label="价格(元)" width="120" />
-					<el-table-column prop="stock" label="库存" width="100" />
-					<el-table-column label="销售状态" width="120">
+					<el-table-column label="菜品图片" width="100">
+						<template #default="scope">
+							<el-image v-if="scope.row.dishImage" :src="scope.row.dishImage" fit="cover" :preview-src-list="[scope.row.dishImage]" preview-teleported class="dish-image" />
+							<span v-else class="no-image">未上传</span>
+						</template>
+					</el-table-column>
+					<el-table-column prop="dishName" label="菜品名称" min-width="120" show-overflow-tooltip />
+					<el-table-column prop="dishDesc" label="菜品描述" min-width="140" show-overflow-tooltip />
+					<el-table-column prop="price" label="价格(元)" width="80" />
+					<el-table-column prop="stock" label="库存" width="80" />
+					<el-table-column label="销售状态" width="90">
 						<template #default="scope">
 							<el-tag v-if="scope.row.saleStatus === '1'" type="success">上架</el-tag>
 							<el-tag v-else type="info">下架</el-tag>
 						</template>
 					</el-table-column>
-					<el-table-column prop="createTime" label="创建时间" min-width="180" show-overflow-tooltip />
-					<el-table-column label="操作" width="260" fixed="right">
+					<el-table-column prop="createTime" label="创建时间" min-width="160" show-overflow-tooltip />
+					<el-table-column label="操作" width="160" fixed="right">
 						<template #default="scope">
 							<el-button text type="primary" @click="openEdit(scope.row)">编辑</el-button>
 							<el-button text type="primary" @click="handleToggleSale(scope.row)">
@@ -55,6 +60,10 @@
 
 		<el-dialog v-model="dialogVisible" :title="form.id ? '编辑菜品' : '新增菜品'" width="640px" destroy-on-close>
 			<el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+				<el-form-item label="菜品图片" prop="dishImage">
+					<UploadImg v-model="form.dishImage" :limit="1" :file-size="10" :is-show-tip="true" />
+				</el-form-item>
+
 				<el-form-item label="菜品名称" prop="dishName">
 					<el-input v-model="form.dishName" maxlength="128" placeholder="请输入菜品名称" />
 				</el-form-item>
@@ -101,6 +110,7 @@ import { useUserInfo } from '/@/stores/userInfo';
 interface DishForm {
 	id?: number;
 	merchantUserId?: number;
+	dishImage: string;
 	dishName: string;
 	dishDesc: string;
 	price: number;
@@ -116,6 +126,7 @@ const submitting = ref(false);
 const form = reactive<DishForm>({
 	id: undefined,
 	merchantUserId: undefined,
+	dishImage: '',
 	dishName: '',
 	dishDesc: '',
 	price: 0,
@@ -149,6 +160,7 @@ const currentMerchantUserId = computed(() => {
 const resetForm = () => {
 	form.id = undefined;
 	form.merchantUserId = currentMerchantUserId.value;
+	form.dishImage = '';
 	form.dishName = '';
 	form.dishDesc = '';
 	form.price = 0;
@@ -170,6 +182,7 @@ const openCreate = () => {
 const openEdit = (row: any) => {
 	form.id = row.id;
 	form.merchantUserId = row.merchantUserId;
+	form.dishImage = row.dishImage || '';
 	form.dishName = row.dishName || '';
 	form.dishDesc = row.dishDesc || '';
 	form.price = Number(row.price || 0);
@@ -186,6 +199,7 @@ const handleSubmit = async () => {
 		try {
 			const payload: any = {
 				merchantUserId: form.merchantUserId || currentMerchantUserId.value,
+				dishImage: form.dishImage,
 				dishName: form.dishName,
 				dishDesc: form.dishDesc,
 				price: form.price,
@@ -255,5 +269,17 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+}
+
+.dish-image {
+	width: 48px;
+	height: 48px;
+	border-radius: 6px;
+	border: 1px solid var(--el-border-color-light);
+}
+
+.no-image {
+	font-size: 12px;
+	color: var(--el-text-color-secondary);
 }
 </style>

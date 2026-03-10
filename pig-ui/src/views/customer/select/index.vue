@@ -52,31 +52,64 @@
 							description="该商店暂无在售菜品"
 							:image-size="80"
 						/>
-						<el-table v-else :data="dishMap[merchant.userId || 0]" size="small" border>
-							<el-table-column prop="dishName" label="菜品名称" min-width="160" show-overflow-tooltip />
-							<el-table-column prop="dishDesc" label="菜品描述" min-width="220" show-overflow-tooltip />
-							<el-table-column label="价格(元)" width="120">
-								<template #default="scope">
-									{{ Number(scope.row.price || 0).toFixed(2) }}
-								</template>
-							</el-table-column>
-							<el-table-column prop="stock" label="库存" width="100" />
-							<el-table-column label="数量" width="180">
-								<template #default="scope">
+						<div v-else class="dish-grid">
+							<el-card
+								v-for="dish in dishMap[merchant.userId || 0]"
+								:key="dish.id || dish.dishName"
+								shadow="hover"
+								class="dish-card"
+							>
+								<div class="dish-image-wrapper">
+									<el-image
+										v-if="dish.dishImage"
+										:src="dish.dishImage"
+										fit="cover"
+										:preview-src-list="[dish.dishImage]"
+										preview-teleported
+										class="dish-image"
+									/>
+									<div v-else class="dish-image-placeholder">
+										图片不存在
+									</div>
+								</div>
+
+								<div class="dish-content">
+									<div class="dish-name" :title="dish.dishName || '-'">{{ dish.dishName || '-' }}</div>
+									<div class="dish-desc" :title="dish.dishDesc || '-'">{{ dish.dishDesc || '-' }}</div>
+									<div class="dish-meta">
+										<span class="dish-price">￥{{ Number(dish.price || 0).toFixed(2) }}</span>
+										<span class="dish-stock">库存 {{ Number(dish.stock || 0) }}</span>
+									</div>
 									<el-input-number
-										:model-value="getDishQuantity(merchant.userId || 0, scope.row.id || 0)"
+										:model-value="getDishQuantity(merchant.userId || 0, dish.id || 0)"
 										:min="0"
-										:max="Number(scope.row.stock || 0)"
+										:max="Number(dish.stock || 0)"
 										:step="1"
 										controls-position="right"
-										style="width: 100%"
-										@update:model-value="updateDishQuantity(merchant.userId || 0, scope.row.id || 0, $event)"
+										class="dish-quantity"
+										@update:model-value="updateDishQuantity(merchant.userId || 0, dish.id || 0, $event)"
 									/>
-								</template>
-							</el-table-column>
-						</el-table>
+								</div>
+							</el-card>
+
+							<div class="merchant-remark-panel">
+								<div class="merchant-remark-title">订单备注</div>
+								<el-input
+									v-model="remarkMap[merchant.userId || 0]"
+									type="textarea"
+									:rows="2"
+									maxlength="120"
+									show-word-limit
+									resize="none"
+									placeholder="例如：少辣、不要香菜、请尽快配送"
+								/>
+							</div>
+						</div>
 
 						<div class="merchant-actions">
+							<div class="selected-total">
+								已选金额：<span class="selected-total-amount">￥{{ getSelectedTotalAmount(merchant.userId || 0) }}</span>
+							</div>
 							<el-button
 								type="primary"
 								size="small"
@@ -127,6 +160,7 @@ interface MerchantItem {
 
 interface DishItem {
 	id?: string | number;
+	dishImage?: string;
 	dishName?: string;
 	dishDesc?: string;
 	price?: number;
@@ -148,12 +182,14 @@ const merchantList = ref<MerchantItem[]>([]);
 const dishMap = reactive<Record<string, DishItem[]>>({});
 const distanceMap = reactive<Record<string, string>>({});
 const quantityMap = reactive<Record<string, Record<string, number>>>({});
+const remarkMap = reactive<Record<string, string>>({});
 const submittingMap = reactive<Record<string, boolean>>({});
 const currentCustomerUserId = ref<string | undefined>();
 const currentDeliveryAddressId = ref<string | undefined>();
 
 const cardTitle = computed(() => {
 	return currentDisplayRegion.value ? `${currentDisplayRegion.value}营业商店与菜品` : '同城营业商店与菜品';
+	
 });
 
 const emptyMerchantDescription = computed(() => {
@@ -184,6 +220,12 @@ const clearSubmittingMap = () => {
 	});
 };
 
+const clearRemarkMap = () => {
+	Object.keys(remarkMap).forEach((key) => {
+		delete remarkMap[key];
+	});
+};
+
 const ensureMerchantQuantityMap = (merchantUserId: string | number) => {
 	const merchantKey = normalizeId(merchantUserId);
 	if (!merchantKey) {
@@ -209,6 +251,20 @@ const updateDishQuantity = (merchantUserId: string | number, dishId: string | nu
 	if (!merchantKey || !dishKey) return;
 	const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
 	merchantQuantity[dishKey] = Math.max(0, Math.floor(Number(value ?? 0)));
+};
+
+const getSelectedTotalAmount = (merchantUserId: string | number) => {
+	const merchantKey = normalizeId(merchantUserId);
+	if (!merchantKey) return '0.00';
+	const dishes = dishMap[merchantKey] || [];
+	const total = dishes.reduce((sum, dish) => {
+		const dishId = normalizeId(dish.id);
+		if (!dishId) return sum;
+		const quantity = getDishQuantity(merchantKey, dishId);
+		if (quantity <= 0) return sum;
+		return sum + Number(dish.price || 0) * quantity;
+	}, 0);
+	return total.toFixed(2);
 };
 
 const calcDistanceKm = (userAddress: AddressItem, storeAddress?: AddressItem) => {
@@ -308,6 +364,7 @@ const submitOrder = async (merchant: MerchantItem) => {
 	}
 
 	const dishes = dishMap[merchantUserId] || [];
+	const remark = String(remarkMap[merchantUserId] || '').trim();
 	const items = dishes
 		.map((dish) => {
 			const dishId = normalizeId(dish.id);
@@ -333,12 +390,14 @@ const submitOrder = async (merchant: MerchantItem) => {
 			customerUserId,
 			merchantUserId,
 			deliveryAddressId,
+			remark,
 			items,
 		});
 		const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
 		Object.keys(merchantQuantity).forEach((key) => {
 			merchantQuantity[key] = 0;
 		});
+		remarkMap[merchantUserId] = '';
 		useMessage().success('下单成功');
 		await loadData();
 	} catch (error: any) {
@@ -354,6 +413,7 @@ const loadData = async () => {
 	clearDishMap();
 	clearDistanceMap();
 	clearQuantityMap();
+	clearRemarkMap();
 	clearSubmittingMap();
 	currentCity.value = '';
 	currentDisplayRegion.value = '';
@@ -400,6 +460,7 @@ const loadData = async () => {
 				});
 				const records: DishItem[] = dishRes?.data?.records || [];
 				dishMap[merchantUserId] = records.filter((item) => item.saleStatus === '1');
+				remarkMap[merchantUserId] = '';
 				const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
 				dishMap[merchantUserId].forEach((dish) => {
 					const dishId = normalizeId(dish.id);
@@ -489,7 +550,141 @@ onMounted(() => {
 
 .merchant-actions {
 	display: flex;
+	align-items: center;
 	justify-content: flex-end;
+	gap: 8px;
+	flex-wrap: wrap;
 	margin-top: 12px;
+}
+
+.selected-total {
+	font-size: 13px;
+	color: var(--el-text-color-regular);
+}
+
+.selected-total-amount {
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--el-color-danger);
+}
+
+@media (max-width: 768px) {
+	.merchant-actions {
+		justify-content: flex-end;
+		gap: 6px;
+	}
+
+	.selected-total {
+		white-space: nowrap;
+	}
+}
+
+.dish-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+	gap: 10px;
+	margin-top: 8px;
+}
+
+.dish-card {
+	border-radius: 8px;
+}
+
+.merchant-remark-panel {
+	grid-column: 1 / -1;
+	padding: 12px 14px;
+	border-radius: 12px;
+	border: 1px solid var(--el-border-color-lighter);
+	background: linear-gradient(120deg, var(--el-fill-color-light) 0%, var(--el-bg-color) 100%);
+	box-shadow: 0 4px 14px rgb(0 0 0 / 4%);
+}
+
+.merchant-remark-title {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--el-text-color-primary);
+	margin-bottom: 8px;
+	letter-spacing: 0.2px;
+}
+
+.dish-image-wrapper {
+	width: 100%;
+	height: 116px;
+	margin-bottom: 8px;
+}
+
+.dish-image {
+	width: 100%;
+	height: 100%;
+	border-radius: 8px;
+	display: block;
+}
+
+.dish-image-placeholder {
+	width: 100%;
+	height: 100%;
+	border-radius: 8px;
+	border: 1px dashed var(--el-border-color);
+	background: var(--el-fill-color-light);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	color: var(--el-text-color-secondary);
+}
+
+.dish-content {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.dish-name {
+	font-size: 14px;
+	font-weight: 700;
+	color: var(--el-text-color-primary);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dish-desc {
+	font-size: 11px;
+	line-height: 1.4;
+	color: var(--el-text-color-secondary);
+	height: 30px;
+	overflow: hidden;
+	display: -webkit-box;
+	line-clamp: 2;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.dish-meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.dish-price {
+	font-size: 16px;
+	font-weight: 700;
+	color: var(--el-color-danger);
+}
+
+.dish-stock {
+	font-size: 11px;
+	color: var(--el-text-color-secondary);
+}
+
+.dish-quantity {
+	width: 100%;
+}
+
+@media (max-width: 768px) {
+	.dish-grid {
+		grid-template-columns: 1fr;
+	}
 }
 </style>

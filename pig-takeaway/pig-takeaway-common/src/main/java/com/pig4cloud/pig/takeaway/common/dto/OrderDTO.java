@@ -32,7 +32,7 @@ public class OrderDTO extends WmOrder {
 	@Schema(description = "商家地址")
 	private WmAddress merchantAddress;
 
-	@Schema(description = "下单菜品项")
+	@Schema(description = "下单菜品项，下单请求入参")
 	private List<DishPurchaseItemDTO> items;
 
 	@Schema(description = "订单明细")

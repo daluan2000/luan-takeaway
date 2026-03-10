@@ -13,6 +13,8 @@ public class WmDish extends BaseTakeawayEntity {
 
 	private Long merchantUserId;
 
+	private String dishImage;
+
 	private String dishName;
 
 	private String dishDesc;

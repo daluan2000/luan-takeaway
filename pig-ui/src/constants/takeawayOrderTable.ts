@@ -1,0 +1,18 @@
+export const TAKEAWAY_ORDER_TABLE_COL_WIDTH = {
+	orderNo: 190,
+	customerName: 80,
+	merchantName: 100,
+	deliveryRiderName: 100,
+	deliveryAddress: 100,
+	distanceKm: 100,
+	totalAmount: 110,
+	payAmount: 110,
+	orderStatus: 110,
+	orderItems: 130,
+	timeInfo: 220,
+	remark: 160,
+    merchantActions: 160,
+	customerActions: 160,
+    deliverySendActions: 160,
+	deliveryOrderActions: 160,
+} as const;
