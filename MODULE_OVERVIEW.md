@@ -9,7 +9,7 @@
 - `pig-gateway`：统一网关（路由、限流、请求预处理）
 - `pig-auth`：认证授权中心（OAuth2）
 - `pig-upms`：用户/角色/菜单/日志等权限管理
-- `pig-visual`：监控、代码生成、定时任务可视化模块
+- `pig-visual`：监控可视化模块
 - `pig-common`：公共基础能力（安全、Feign、MyBatis、日志、XSS 等）
 - `pig-boot`：单体启动聚合器
 
@@ -23,7 +23,7 @@
 
 ## 4. 典型实现流程（单体）
 1. 启动 `pig-boot`。
-2. 直接聚合 `pig-auth`、`pig-upms-biz`、`pig-codegen`、`pig-quartz` 等能力。
+2. 直接聚合 `pig-auth`、`pig-upms-biz` 等能力。
 3. 保留统一安全与文档能力，但不依赖网关做跨服务路由。
 
 ## 5. 基础设施

@@ -42,9 +42,9 @@ for ((attempt = 1; attempt <= MAX_RETRIES; attempt++)); do
 done
 
 echo
-echo "启动 Java 微服务(每次强制重建镜像): pig-gateway, pig-auth, pig-upms, pig-monitor, pig-codegen, pig-quartz, pig-takeaway-user, pig-takeaway-dish, pig-takeaway-order, pig-takeaway-pay"
-docker compose up -d --build --force-recreate --no-deps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay
+echo "启动 Java 微服务(每次强制重建镜像): pig-gateway, pig-auth, pig-upms, pig-monitor, pig-takeaway-user, pig-takeaway-dish, pig-takeaway-order, pig-takeaway-pay"
+docker compose up -d --build --force-recreate --no-deps pig-gateway pig-auth pig-upms pig-monitor pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay
 
 echo
 echo "Java 微服务已启动，查看状态:"
-echo "docker compose ps pig-gateway pig-auth pig-upms pig-monitor pig-codegen pig-quartz pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay"
+echo "docker compose ps pig-gateway pig-auth pig-upms pig-monitor pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay"

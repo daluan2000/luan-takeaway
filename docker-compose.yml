@@ -150,47 +150,6 @@ services:
     networks:
       - spring_cloud_default
 
-  pig-codegen:
-    build:
-      context: ./pig-visual/pig-codegen
-    restart: "no"
-    container_name: pig-codegen
-    hostname: pig-codegen
-    image: pig-codegen
-    environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
-    depends_on:
-      pig-mysql:
-        condition: service_healthy
-      pig-redis:
-        condition: service_started
-      pig-register:
-        condition: service_started
-    networks:
-      - spring_cloud_default
-
-  pig-quartz:
-    build:
-      context: ./pig-visual/pig-quartz
-    restart: "no"
-    image: pig-quartz
-    container_name: pig-quartz
-    environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
-    depends_on:
-      pig-mysql:
-        condition: service_healthy
-      pig-redis:
-        condition: service_started
-      pig-register:
-        condition: service_started
-    networks:
-      - spring_cloud_default
-
   pig-takeaway-user:
     build:
       context: ./pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz

@@ -5,11 +5,11 @@
 
 ## 关键实现
 - 启动入口：`PigBootApplication`。
-- 通过依赖聚合 `pig-auth`、`pig-upms-biz`、`pig-codegen`、`pig-quartz`。
+- 通过依赖聚合 `pig-auth`、`pig-upms-biz`。
 - 启用资源服务与接口文档能力（`EnablePigResourceServer`、`EnablePigDoc`）。
 
 ## 实现流程
 1. 启动 `PigBootApplication`。
 2. Spring Boot 自动装配被聚合模块的 Bean。
-3. 统一对外提供管理、认证、代码生成、定时任务等能力。
+3. 统一对外提供管理、认证等能力。
 4. 与微服务模式相比，省去网关跨服务转发链路。

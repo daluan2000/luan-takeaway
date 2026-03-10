@@ -30,8 +30,6 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>pig-codegen</module>
         <module>pig-monitor</module>
-        <module>pig-quartz</module>
     </modules>
 </project>

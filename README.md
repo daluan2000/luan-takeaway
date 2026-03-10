@@ -92,8 +92,6 @@ pig
      └── pig-upms-biz -- 通用用户权限管理系统业务处理模块[4000]
 └── pig-visual
      └── pig-monitor -- 服务监控 [5001]
-     ├── pig-codegen -- 图形化代码生成 [5002]
-     └── pig-quartz -- 定时任务管理台 [5007]
 ```
 
 ## 免费公开课

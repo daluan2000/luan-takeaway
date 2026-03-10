@@ -491,7 +491,7 @@ export function toUnderline(str: string) {
 /**
  * 自动适配不同的后端架构
  * 1. 例如 /act/oa/task ,在微服务架构保持不变,在单体架构编程 /admin/oa/task
- * 2. 特殊 /gen/xxx ,在微服务架构、单体架构编程 都需保持不变
+ * 2. 特殊路由按业务自行保留，不参与 /admin 前缀改写
  *
  * @param originUrl 原始路径
  */

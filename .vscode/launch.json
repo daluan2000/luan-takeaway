@@ -22,16 +22,6 @@
         },
         {
             "type": "java",
-            "name": "Spring Boot-PigCodeGenApplication<pig-codegen>",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "mainClass": "com.pig4cloud.pig.codegen.PigCodeGenApplication",
-            "projectName": "pig-codegen",
-            "args": "",
-            "envFile": "${workspaceFolder}/.env"
-        },
-        {
-            "type": "java",
             "name": "Spring Boot-PigGatewayApplication<pig-gateway>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
