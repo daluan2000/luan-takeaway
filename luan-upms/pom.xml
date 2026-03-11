@@ -30,7 +30,7 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>pig-upms-api</module>
-		<module>pig-upms-biz</module>
+		<module>luan-upms-api</module>
+		<module>luan-upms-biz</module>
 	</modules>
 </project>

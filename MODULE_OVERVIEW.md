@@ -27,5 +27,5 @@
 
 ## 5. 基础设施
 - `db/pig.sql`：核心业务库初始化脚本（用户、角色、字典、日志、任务等）。
-- `db/pig_config.sql`：Nacos 配置库初始化脚本（服务路由与各服务配置）。
+- `db/luan_config.sql`：Nacos 配置库初始化脚本（服务路由与各服务配置）。
 - `docker-compose.yml`：本地一键拉起 MySQL、Redis、Nacos 及各服务。

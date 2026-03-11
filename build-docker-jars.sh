@@ -10,23 +10,23 @@ if ! command -v mvn >/dev/null 2>&1; then
 fi
 
 MODULES=(
-  "pig-gateway"
-  "pig-auth"
-  "pig-upms/pig-upms-biz"
-  "pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz"
-  "pig-takeaway/pig-takeaway-dish/pig-takeaway-dish-biz"
-  "pig-takeaway/pig-takeaway-order/pig-takeaway-order-biz"
-  "pig-takeaway/pig-takeaway-pay/pig-takeaway-pay-biz"
+  "luan-gateway"
+  "luan-auth"
+  "luan-upms/luan-upms-biz"
+  "luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz"
+  "luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz"
+  "luan-takeaway/luan-takeaway-order/luan-takeaway-order-biz"
+  "luan-takeaway/luan-takeaway-pay/luan-takeaway-pay-biz"
 )
 
 JARS=(
-  "pig-gateway/target/pig-gateway-exec.jar"
-  "pig-auth/target/pig-auth-exec.jar"
-  "pig-upms/pig-upms-biz/target/pig-upms-biz-exec.jar"
-  "pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz/target/pig-takeaway-user-biz-exec.jar"
-  "pig-takeaway/pig-takeaway-dish/pig-takeaway-dish-biz/target/pig-takeaway-dish-biz-exec.jar"
-  "pig-takeaway/pig-takeaway-order/pig-takeaway-order-biz/target/pig-takeaway-order-biz-exec.jar"
-  "pig-takeaway/pig-takeaway-pay/pig-takeaway-pay-biz/target/pig-takeaway-pay-biz-exec.jar"
+  "luan-gateway/target/pig-gateway-exec.jar"
+  "luan-auth/target/pig-auth-exec.jar"
+  "luan-upms/luan-upms-biz/target/pig-upms-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz/target/pig-takeaway-user-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz/target/pig-takeaway-dish-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-order/luan-takeaway-order-biz/target/pig-takeaway-order-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-pay/luan-takeaway-pay-biz/target/pig-takeaway-pay-biz-exec.jar"
 )
 
 PL="$(IFS=,; echo "${MODULES[*]}")"

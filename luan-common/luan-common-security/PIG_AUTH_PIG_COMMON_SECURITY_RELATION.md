@@ -64,7 +64,7 @@
 
 ## 3.1 编译期依赖关系（静态）
 
-- `pig-auth/pom.xml` 明确依赖 `pig-common-security`。
+- `luan-auth/pom.xml` 明确依赖 `pig-common-security`。
 - 因此 `pig-auth` 可以直接使用 `pig-common-security` 的：
   - 用户模型与用户加载接口（`PigUser`, `PigUserDetailsService`）
   - OAuth2 工具类与异常定义

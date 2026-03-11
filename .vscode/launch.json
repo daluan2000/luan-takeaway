@@ -2,31 +2,31 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-PigBootApplication<pig-boot>",
+            "name": "Spring Boot-PigBootApplication<luan-boot>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.luan.takeaway.PigBootApplication",
-            "projectName": "pig-boot",
+            "projectName": "luan-boot",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "java",
-            "name": "Spring Boot-PigAuthApplication<pig-auth>",
+            "name": "Spring Boot-PigAuthApplication<luan-auth>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.luan.takeaway.auth.PigAuthApplication",
-            "projectName": "pig-auth",
+            "projectName": "luan-auth",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         },
         {
             "type": "java",
-            "name": "Spring Boot-PigGatewayApplication<pig-gateway>",
+            "name": "Spring Boot-PigGatewayApplication<luan-gateway>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.luan.takeaway.gateway.PigGatewayApplication",
-            "projectName": "pig-gateway",
+            "projectName": "luan-gateway",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         }

@@ -13,11 +13,11 @@
     <description>pig 外卖业务聚合模块</description>
 
     <modules>
-        <module>pig-takeaway-common</module>
-        <module>pig-takeaway-user</module>
-        <module>pig-takeaway-dish</module>
-        <module>pig-takeaway-order</module>
-        <module>pig-takeaway-pay</module>
+        <module>luan-takeaway-common</module>
+        <module>luan-takeaway-user</module>
+        <module>luan-takeaway-dish</module>
+        <module>luan-takeaway-order</module>
+        <module>luan-takeaway-pay</module>
     </modules>
 
     <dependencyManagement>

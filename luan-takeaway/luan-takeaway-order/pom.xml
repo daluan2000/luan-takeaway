@@ -8,12 +8,12 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-takeaway-dish</artifactId>
+    <artifactId>pig-takeaway-order</artifactId>
     <packaging>pom</packaging>
-    <description>外卖菜品服务</description>
+    <description>外卖订单服务</description>
 
     <modules>
-        <module>pig-takeaway-dish-api</module>
-        <module>pig-takeaway-dish-biz</module>
+        <module>luan-takeaway-order-api</module>
+        <module>luan-takeaway-order-biz</module>
     </modules>
 </project>

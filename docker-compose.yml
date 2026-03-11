@@ -11,7 +11,7 @@ services:
       - 33306:3306
     volumes:
       - ./db/pig.sql:/docker-entrypoint-initdb.d/01-pig.sql:ro
-      - ./db/pig_config.sql:/docker-entrypoint-initdb.d/02-pig_config.sql:ro
+      - ./db/luan_config.sql:/docker-entrypoint-initdb.d/02-luan_config.sql:ro
     networks:
       - spring_cloud_default
 
@@ -74,7 +74,7 @@ services:
 
   pig-gateway:
     build:
-      context: ./pig-gateway
+      context: ./luan-gateway
     restart: "no"
     ports:
       - 9999:9999
@@ -94,7 +94,7 @@ services:
 
   pig-auth:
     build:
-      context: ./pig-auth
+      context: ./luan-auth
     restart: "no"
     container_name: pig-auth
     hostname: pig-auth
@@ -112,7 +112,7 @@ services:
 
   pig-upms:
     build:
-      context: ./pig-upms/pig-upms-biz
+      context: ./luan-upms/luan-upms-biz
     restart: "no"
     container_name: pig-upms
     hostname: pig-upms
@@ -135,7 +135,7 @@ services:
 
   pig-takeaway-user:
     build:
-      context: ./pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz
+      context: ./luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz
     restart: "no"
     image: pig-takeaway-user
     container_name: pig-takeaway-user
@@ -156,7 +156,7 @@ services:
 
   pig-takeaway-dish:
     build:
-      context: ./pig-takeaway/pig-takeaway-dish/pig-takeaway-dish-biz
+      context: ./luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz
     restart: "no"
     image: pig-takeaway-dish
     container_name: pig-takeaway-dish
@@ -177,7 +177,7 @@ services:
 
   pig-takeaway-order:
     build:
-      context: ./pig-takeaway/pig-takeaway-order/pig-takeaway-order-biz
+      context: ./luan-takeaway/luan-takeaway-order/luan-takeaway-order-biz
     restart: "no"
     image: pig-takeaway-order
     container_name: pig-takeaway-order
@@ -198,7 +198,7 @@ services:
 
   pig-takeaway-pay:
     build:
-      context: ./pig-takeaway/pig-takeaway-pay/pig-takeaway-pay-biz
+      context: ./luan-takeaway/luan-takeaway-pay/luan-takeaway-pay-biz
     restart: "no"
     image: pig-takeaway-pay
     container_name: pig-takeaway-pay

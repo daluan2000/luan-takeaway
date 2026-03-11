@@ -38,7 +38,7 @@
 
 ## 初始化保障（仓库已处理）
 
-为避免重建后丢失命名空间，已在 `db/pig_config.sql` 增加：
+为避免重建后丢失命名空间，已在 `db/luan_config.sql` 增加：
 
 - `tenant_info` 中的 `tenant_id='public'` 记录
 - `tenant_capacity` 中的 `tenant_id='public'` 记录

@@ -86,11 +86,11 @@
 	</dependencies>
 
 	<modules>
-		<module>pig-gateway</module>
-		<module>pig-auth</module>
-		<module>pig-upms</module>
-		<module>pig-takeaway</module>
-		<module>pig-common</module>
+		<module>luan-gateway</module>
+		<module>luan-auth</module>
+		<module>luan-upms</module>
+		<module>luan-takeaway</module>
+		<module>luan-common</module>
 	</modules>
 
 	<dependencyManagement>
@@ -307,7 +307,7 @@
 		<profile>
 			<id>boot</id>
 			<modules>
-				<module>pig-boot</module>
+				<module>luan-boot</module>
 			</modules>
 		</profile>
 		<!-- 自动激活，针对 lombok 注解增强-->
