@@ -101,7 +101,7 @@ export const useThemeConfig = defineStore('themeConfig', {
 			// 是否开启水印
 			isWartermark: true,
 			// 水印文案
-			wartermarkText: 'Pig',
+			wartermarkText: 'LUAN',
 
 			/**
 			 * 其它设置
@@ -133,17 +133,17 @@ export const useThemeConfig = defineStore('themeConfig', {
 			 * 全局网站标题 / 副标题
 			 */
 			// 网站主标题（菜单导航、浏览器当前网页标题、登录form顶部右侧）
-			globalTitle: 'PIG ADMIN',
+			globalTitle: '即时配送管理系统',
 			// 网站副标题（登录左侧底部页顶部文字）
-			globalViceTitle: 'Pig 快速开发框架',
+			globalViceTitle: '即时配送管理系统',
 			// 网站副标题（登录页顶部文字）
-			globalViceTitleMsg: '专注、免费、开源、维护、解疑',
+			globalViceTitleMsg: '',
 			// 默认初始语言，可选值"<zh-cn|en|zh-tw>"，默认 zh-cn
 			globalI18n: 'zh-cn',
 			// 默认全局组件大小，可选值"<large|'default'|small>"，默认 'default'
 			globalComponentSize: 'default',
 			// footer 页面作者
-			footerAuthor: '©2025 PIGCLOUD',
+			footerAuthor: '',
 		},
 	}),
 	actions: {

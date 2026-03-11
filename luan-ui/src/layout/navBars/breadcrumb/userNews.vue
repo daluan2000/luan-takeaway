@@ -7,9 +7,9 @@
 		<div class="content-box">
 			<template v-if="newsList.length > 0">
 				<div class="content-box-item" v-for="(v, k) in newsList" :key="k">
-					<div>{{ v.label }}</div>
+					<div class="content-box-title">{{ v.title }}</div>
 					<div class="content-box-msg">
-						{{ v.value }}
+						{{ v.content }}
 					</div>
 					<div class="content-box-time">{{ v.time }}</div>
 				</div>
@@ -23,8 +23,65 @@
 // 定义变量内容
 import { useMsg } from '/@/stores/msg';
 
+interface WsPayload {
+	title?: string;
+	content?: string;
+	timestamp?: string | number;
+}
+
+interface NewsItem {
+	title: string;
+	content: string;
+	time: string;
+}
+
+const formatNewsTime = (value: string | number | undefined, fallback: string) => {
+	if (value === undefined || value === null || value === '') {
+		return fallback;
+	}
+	const timeNum = Number(value);
+	if (!Number.isFinite(timeNum)) {
+		return fallback;
+	}
+	const date = new Date(timeNum);
+	if (Number.isNaN(date.getTime())) {
+		return fallback;
+	}
+	const pad = (num: number) => `${num}`.padStart(2, '0');
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
+
+const normalizeNewsItem = (raw: any): NewsItem => {
+	const fallbackTitle = raw?.label || '通知';
+	const fallbackContent = typeof raw?.value === 'string' ? raw.value : String(raw?.value ?? '');
+	const fallbackTime = raw?.time || '';
+
+	if (typeof raw?.value !== 'string') {
+		return { title: fallbackTitle, content: fallbackContent, time: fallbackTime };
+	}
+
+	const text = raw.value.trim();
+	if (!text.startsWith('{')) {
+		return { title: fallbackTitle, content: text || fallbackContent, time: fallbackTime };
+	}
+
+	try {
+		const payload = JSON.parse(text) as WsPayload;
+		return {
+			title: payload.title?.trim() || fallbackTitle,
+			content: payload.content?.trim() || fallbackContent,
+			time: formatNewsTime(payload.timestamp, fallbackTime),
+		};
+	}
+	catch {
+		return { title: fallbackTitle, content: text || fallbackContent, time: fallbackTime };
+	}
+};
+
 const newsList = computed(() => {
-	return useMsg().getAllMsg();
+	return useMsg()
+		.getAllMsg()
+		.map((item: any) => normalizeNewsItem(item));
 });
 
 // 全部已读点击
@@ -61,6 +118,10 @@ const onAllReadClick = () => {
 
 		.content-box-item {
 			padding-top: 12px;
+
+			.content-box-title {
+				font-weight: 600;
+			}
 
 			&:last-of-type {
 				padding-bottom: 12px;
