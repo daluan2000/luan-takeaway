@@ -146,15 +146,15 @@ luan-takeaway-pay 支付管理服务
 
 | 服务           | 说明                 |
 | ------------ | ------------------ |
-| pig-register | Nacos（注册中心 + 配置中心） |
-| pig-mysql    | MySQL 数据库          |
-| pig-redis    | Redis 缓存           |
+| luan-register | Nacos（注册中心 + 配置中心） |
+| luan-mysql    | MySQL 数据库          |
+| luan-redis    | Redis 缓存           |
 
 
 mysql中包含两个数据库：
 ```
 luan （业务数据库）
-pig_config （微服务配置数据，提供nacos使用）
+luan_config （微服务配置数据，提供nacos使用）
 ```
 
 
@@ -162,13 +162,13 @@ pig_config （微服务配置数据，提供nacos使用）
 核心服务：
 | 服务                 | 说明              |
 | ------------------ | --------------- |
-| pig-gateway        | 系统网关（默认端口 9999） |
-| pig-auth           | 认证中心            |
-| pig-upms           | 系统管理服务          |
-| pig-takeaway-user  | 用户服务            |
-| pig-takeaway-dish  | 菜品服务            |
-| pig-takeaway-order | 订单服务            |
-| pig-takeaway-pay   | 支付服务            |
+| luan-gateway        | 系统网关（默认端口 9999） |
+| luan-auth           | 认证中心            |
+| luan-upms           | 系统管理服务          |
+| luan-takeaway-user  | 用户服务            |
+| luan-takeaway-dish  | 菜品服务            |
+| luan-takeaway-order | 订单服务            |
+| luan-takeaway-pay   | 支付服务            |
 
 
 
@@ -195,13 +195,13 @@ pig_config （微服务配置数据，提供nacos使用）
 查看中间件状态：
 
 ```bash
-docker compose ps pig-mysql pig-redis pig-register
+docker compose ps luan-mysql luan-redis luan-register
 ```
 
 查看微服务状态：
 
 ```bash
-docker compose ps pig-gateway pig-auth pig-upms pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay
+docker compose ps luan-gateway luan-auth luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
 ```
 
 停止 Java 服务：
@@ -235,7 +235,7 @@ db/luan_config.sql
 配置与微服务模式相同，依然建议使用Docker启动mysql redis：
 
 ```bash
-docker compose up -d pig-mysql pig-redis
+docker compose up -d luan-mysql luan-redis
 ```
 
 # 6.3 前端启动

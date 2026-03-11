@@ -17,6 +17,7 @@ import com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt;
 import com.luan.takeaway.takeaway.common.mapper.WmAddressMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
+import com.luan.takeaway.takeaway.user.message.MerchantAuditResultMqPublisher;
 import com.luan.takeaway.takeaway.user.service.WmMerchantService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	private final RemoteWsPushService remoteWsPushService;
 
 	private final ObjectMapper objectMapper;
+
+	private final MerchantAuditResultMqPublisher merchantAuditResultMqPublisher;
 
 	@Override
 	public WmMerchantDTO createMerchant(WmMerchantDTO merchantDTO) {
@@ -148,6 +151,12 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	}
 
 	private void pushAuditResultWithRetry(Long merchantId, Long userId, String messageText) {
+		if (merchantAuditResultMqPublisher.publish(merchantId, userId, messageText)) {
+			return;
+		}
+
+		log.info("商家审核结果MQ未发送成功，回退为直连推送, merchantId={}, userId={}", merchantId, userId);
+
 		WsPushMessageDTO pushMessageDTO = new WsPushMessageDTO().setMessageText(messageText)
 			.setSessionKeys(Collections.singletonList(String.valueOf(userId)));
 

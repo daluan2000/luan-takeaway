@@ -44,6 +44,20 @@ services:
     networks:
       - spring_cloud_default
 
+  luan-rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: "no"
+    container_name: luan-rabbitmq
+    hostname: luan-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - 35672:5672
+      - 35673:15672
+    networks:
+      - spring_cloud_default
+
   luan-register:
     image: nacos/nacos-server:v2.4.3
     restart: "no"
@@ -118,17 +132,23 @@ services:
     hostname: luan-upms
     image: luan-upms
     volumes:
-      - /home/luan/data/pig/files:/home/luan/data/pig/files
+      - /home/luan/data/takeaway/files:/home/luan/data/takeaway/files
     environment:
       MYSQL_HOST: luan-mysql
       REDIS_HOST: luan-redis
       NACOS_HOST: luan-register
+      RABBITMQ_HOST: luan-rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
     depends_on:
       luan-mysql:
         condition: service_healthy
       luan-redis:
         condition: service_started
       luan-register:
+        condition: service_started
+      luan-rabbitmq:
         condition: service_started
     networks:
       - spring_cloud_default
@@ -144,12 +164,18 @@ services:
       MYSQL_HOST: luan-mysql
       REDIS_HOST: luan-redis
       NACOS_HOST: luan-register
+      RABBITMQ_HOST: luan-rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
     depends_on:
       luan-mysql:
         condition: service_healthy
       luan-redis:
         condition: service_started
       luan-register:
+        condition: service_started
+      luan-rabbitmq:
         condition: service_started
     networks:
       - spring_cloud_default

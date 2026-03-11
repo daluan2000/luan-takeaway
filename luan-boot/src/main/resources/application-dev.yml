@@ -1,6 +1,11 @@
 spring:
   cache:
     type: redis # 缓存类型 Redis
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:35672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
   data:
     redis:
       database: 5
@@ -38,3 +43,9 @@ jasypt:
 sms:
   is-print: false # 是否打印日志
   config-type: yaml # 配置类型，yaml
+
+takeaway:
+  ws:
+    push:
+      mq:
+        enabled: ${TAKEAWAY_WS_PUSH_MQ_ENABLED:true}

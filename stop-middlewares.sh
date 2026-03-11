@@ -14,9 +14,9 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "停止中间件服务: luan-mysql, luan-redis, luan-register"
-docker compose stop luan-mysql luan-redis luan-register
+echo "停止中间件服务: luan-mysql, luan-redis, luan-register, luan-rabbitmq"
+docker compose stop luan-mysql luan-redis luan-register luan-rabbitmq
 
 echo
 echo "中间件已停止，查看状态:"
-echo "docker compose ps luan-mysql luan-redis luan-register"
+echo "docker compose ps luan-mysql luan-redis luan-register luan-rabbitmq"

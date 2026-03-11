@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: @artifactId@
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:35672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
   cloud:
     loadbalancer:
       cache:
@@ -22,5 +27,11 @@ spring:
     import:
       - nacos:application-@profiles.active@.yml
       - nacos:${spring.application.name}-@profiles.active@.yml
+
+takeaway:
+  ws:
+    push:
+      mq:
+        enabled: ${TAKEAWAY_WS_PUSH_MQ_ENABLED:true}
 
 
