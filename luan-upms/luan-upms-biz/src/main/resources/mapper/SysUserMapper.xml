@@ -20,14 +20,8 @@
 		<result column="nickname" property="nickname"/>
 		<result column="name" property="name"/>
 		<result column="email" property="email"/>
-		<association property="dept" javaType="com.luan.takeaway.admin.api.entity.SysDept" column="dept_id"
-					 select="com.luan.takeaway.admin.mapper.SysDeptMapper.selectById">
-		</association>
 		<collection property="roleList" ofType="com.luan.takeaway.admin.api.entity.SysRole"
 					select="com.luan.takeaway.admin.mapper.SysRoleMapper.listRolesByUserId" column="user_id">
-		</collection>
-		<collection property="postList" ofType="com.luan.takeaway.admin.api.entity.SysPost"
-					select="com.luan.takeaway.admin.mapper.SysPostMapper.listPostsByUserId" column="user_id">
 		</collection>
 	</resultMap>
 
@@ -42,9 +36,6 @@
 			<if test="query.username != null and query.username != ''">
 				<bind name="usernameLike" value="'%'+query.username+'%'"/>
 				AND u.username LIKE #{usernameLike}
-			</if>
-			<if test="query.deptId != null and query.deptId != ''">
-				AND u.dept_id = #{query.deptId}
 			</if>
 			<if test="query.phone != null and query.phone != ''">
 				<bind name="phoneLike" value="'%'+query.phone+'%'"/>
@@ -74,9 +65,6 @@
 			</if>
 			<if test="query.username != null and query.username != ''">
 				AND u.username = #{query.username}
-			</if>
-			<if test="query.deptId != null and query.deptId != ''">
-				AND u.dept_id = #{query.deptId}
 			</if>
 			<if test="query.phone != null and query.phone != ''">
 				AND u.phone = #{query.phone}

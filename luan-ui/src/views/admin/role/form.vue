@@ -34,7 +34,6 @@
 
 <script lang="ts" name="systemRoleDialog" setup>
 import {rule} from '/@/utils/validate';
-import {deptTree} from '/@/api/admin/dept';
 import {useMessage} from '/@/hooks/message';
 import {addObj, getObj, putObj, validateRoleCode, validateRoleName} from '/@/api/admin/role';
 import {useI18n} from 'vue-i18n';
@@ -46,7 +45,6 @@ const {t} = useI18n();
 
 // 定义变量内容
 const dataFormRef = ref();
-const deptTreeRef = ref();
 const visible = ref(false);
 const loading = ref(false);
 
@@ -56,16 +54,6 @@ const form = reactive({
   roleName: '',
   roleCode: '',
   roleDesc: '',
-});
-
-// 页面对应元数据
-const dataForm = reactive({
-  deptData: [],
-  deptProps: {
-    children: 'children',
-    label: 'name',
-    value: 'id',
-  },
 });
 
 // 定义校验规则
@@ -108,8 +96,6 @@ const openDialog = (id: string) => {
     form.roleId = id;
     getRoleData(id);
   }
-
-  getDeptData();
 };
 
 // 提交
@@ -133,16 +119,9 @@ const onSubmit = async () => {
 
 // 初始化角色数据
 const getRoleData = (id: string) => {
-  // 获取部门数据
+  // 获取角色数据
   getObj(id).then((res: any) => {
     Object.assign(form, res.data);
-  });
-};
-
-// 获取菜单结构数据
-const getDeptData = () => {
-  deptTree().then((res: any) => {
-    dataForm.deptData = res.data;
   });
 };
 

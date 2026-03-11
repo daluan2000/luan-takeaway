@@ -20,8 +20,6 @@
 package com.luan.takeaway.admin.api.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.luan.takeaway.admin.api.entity.SysDept;
-import com.luan.takeaway.admin.api.entity.SysPost;
 import com.luan.takeaway.admin.api.entity.SysRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -125,21 +123,10 @@ public class UserVO implements Serializable {
 	private String avatar;
 
 	/**
-	 * 部门名称
-	 */
-	@Schema(description = "所属部门名称")
-	private SysDept dept;
-
-	/**
 	 * 角色列表
 	 */
 	@Schema(description = "拥有的角色列表")
 	private List<SysRole> roleList;
-
-	/**
-	 * 岗位列表
-	 */
-	private List<SysPost> postList;
 
 	/**
 	 * 昵称

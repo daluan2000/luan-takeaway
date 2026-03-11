@@ -72,25 +72,11 @@ public class UserExcelVO implements Serializable {
 	private String email;
 
 	/**
-	 * 部门名称
-	 */
-	@NotBlank(message = "部门名称不能为空")
-	@ExcelProperty("部门名称")
-	private String deptName;
-
-	/**
 	 * 角色列表
 	 */
 	@NotBlank(message = "角色不能为空")
 	@ExcelProperty("角色")
 	private String roleNameList;
-
-	/**
-	 * 角色列表
-	 */
-	@NotBlank(message = "岗位不能为空")
-	@ExcelProperty("岗位名称")
-	private String postNameList;
 
 	/**
 	 * 锁定标记

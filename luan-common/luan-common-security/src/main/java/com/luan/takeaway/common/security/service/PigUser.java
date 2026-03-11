@@ -53,7 +53,7 @@ public class PigUser extends User implements OAuth2AuthenticatedPrincipal {
 	private final Long id;
 
 	/**
-	 * 部门ID
+	 * 组织ID
 	 */
 	@Getter
 	@JsonSerialize(using = ToStringSerializer.class)

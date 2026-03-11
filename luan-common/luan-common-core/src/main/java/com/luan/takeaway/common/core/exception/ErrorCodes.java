@@ -44,21 +44,6 @@ public interface ErrorCodes {
 	String SYS_USER_QUERY_ERROR = "sys.user.query.error";
 
 	/**
-	 * 部门名称不存在
-	 */
-	String SYS_DEPT_DEPTNAME_INEXISTENCE = "sys.dept.deptName.inexistence";
-
-	/**
-	 * 岗位名称不存在
-	 */
-	String SYS_POST_POSTNAME_INEXISTENCE = "sys.post.postName.inexistence";
-
-	/**
-	 * 岗位名称或编码已经存在
-	 */
-	String SYS_POST_NAMEORCODE_EXISTING = "sys.post.nameOrCode.existing";
-
-	/**
 	 * 角色名称不存在
 	 */
 	String SYS_ROLE_ROLENAME_INEXISTENCE = "sys.role.roleName.inexistence";

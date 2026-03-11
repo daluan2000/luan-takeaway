@@ -109,7 +109,7 @@ const state = reactive({
 	localLoading: props.loading, // 是否加载中
 });
 
-const deptTreeRef = ref(); // 部门树形结构组件实例引用
+const deptTreeRef = ref(); // 树形结构组件实例引用
 const searchName = ref(); // 查询关键字
 const isExpand = ref(true); // 是否展开所有节点
 
@@ -127,7 +127,7 @@ const handleNodeClick = (item: any) => {
 };
 
 /**
- * 获取部门树形结构数据。
+ * 获取树形结构数据。
  */
 const getdeptTree = () => {
 	if (props.query instanceof Function) {

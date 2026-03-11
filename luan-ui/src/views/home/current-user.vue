@@ -12,8 +12,7 @@
 				<div>
 					<h3 class="text-lg font-semibold text-gray-800 mb-2">{{ userData.name }}</h3>
 					<div class="flex items-center gap-2 text-sm">
-						<span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full">{{ userData?.dept?.name }}</span>
-						<span v-if="userData.postName" class="px-3 py-1 bg-green-50 text-green-600 rounded-full">{{ userData.postName }}</span>
+						<span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full">{{ userData.username }}</span>
 					</div>
 				</div>
 			</div>
@@ -72,12 +71,10 @@ import { currentCustomer } from '/@/api/takeaway/customer';
 const date = ref(new Date());
 
 const userData = ref({
-	postName: '',
 	name: '',
 	username: '',
 	userId: '',
 	avatar: '',
-	deptName: '',
 } as any);
 const loading = ref(false);
 const roleSubmitting = ref(false);
@@ -117,7 +114,6 @@ const initUserInfo = async (userId: any): Promise<void> => {
 
 		const res = await getObj(userId); // 执行查询操作
 		userData.value = res.data; // 将查询到的数据保存到 userData 变量中
-		userData.value.postName = res.data?.postList?.map((item: any) => item.postName).join(',') || ''; // 将 postList 中的 postName 合并成字符串并保存到 userData 变量中
 		roleForm.username = res.data?.username || '';
 		roleForm.role = res.data?.roleList?.map((item: any) => item.roleId) || [];
 		// 文件上传增加后端前缀

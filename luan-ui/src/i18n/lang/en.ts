@@ -5,7 +5,6 @@ export default {
 		systemMenu: 'System Menu',
 		systemRole: 'System Role',
 		systemUser: 'System User',
-		systemDept: 'System Department',
 		systemDic: 'System Dictionary',
 		limits: 'Permissions',
 		limitsFrontEnd: 'Front End',

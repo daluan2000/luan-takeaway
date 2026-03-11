@@ -1,26 +1,6 @@
 <template>
 	<div class="layout-padding">
-		<splitpanes>
-			<pane size="15">
-				<div class="layout-padding-auto layout-padding-view">
-					<el-scrollbar>
-						<query-tree :placeholder="$t('common.queryDeptTip')" :query="deptData.queryList" :show-expand="true" @node-click="handleNodeClick">
-							<!-- 没有数据权限提示 -->
-							<template #default="{ node, data }">
-								<el-tooltip v-if="data.isLock" class="item" effect="dark" :content="$t('sysuser.noDataScopeTip')" placement="right-start">
-									<span
-										>{{ node.label }}
-										<SvgIcon name="ele-Lock" />
-									</span>
-								</el-tooltip>
-								<span v-if="!data.isLock">{{ node.label }}</span>
-							</template>
-						</query-tree>
-					</el-scrollbar>
-				</div>
-			</pane>
-			<pane class="ml8">
-				<div class="layout-padding-auto layout-padding-view">
+		<div class="layout-padding-auto layout-padding-view">
 					<el-row v-show="showSearch">
 						<el-form ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
 							<el-form-item :label="$t('sysuser.username')" prop="username">
@@ -79,11 +59,6 @@
 						<el-table-column :label="$t('sysuser.username')" prop="username" fixed="left" show-overflow-tooltip></el-table-column>
 						<el-table-column :label="$t('sysuser.name')" prop="name" show-overflow-tooltip></el-table-column>
 						<el-table-column :label="$t('sysuser.phone')" prop="phone" show-overflow-tooltip></el-table-column>
-						<el-table-column :label="$t('sysuser.post')" show-overflow-tooltip>
-							<template #default="scope">
-								<el-tag v-for="(item, index) in scope.row.postList" :key="index">{{ item.postName }}</el-tag>
-							</template>
-						</el-table-column>
 						<el-table-column :label="$t('sysuser.role')" show-overflow-tooltip>
 							<template #default="scope">
 								<el-tag v-for="(item, index) in scope.row.roleList" :key="index">{{ item.roleName }}</el-tag>
@@ -117,9 +92,7 @@
 						</el-table-column>
 					</el-table>
 					<pagination v-bind="state.pagination" @current-change="currentChangeHandle" @size-change="sizeChangeHandle"> </pagination>
-				</div>
-			</pane>
-		</splitpanes>
+		</div>
 
 		<user-form ref="userDialogRef" @refresh="getDataList(false)" />
 
@@ -135,14 +108,12 @@
 
 <script lang="ts" name="systemUser" setup>
 import { delObj, pageList, putObj } from '/@/api/admin/user';
-import { deptTree } from '/@/api/admin/dept';
 import { BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
 
 // 动态引入组件
 const UserForm = defineAsyncComponent(() => import('./form.vue'));
-const QueryTree = defineAsyncComponent(() => import('/@/components/QueryTree/index.vue'));
 
 const { t } = useI18n();
 
@@ -160,7 +131,6 @@ const multiple = ref(true);
 // 定义表格查询、后台调用的API
 const state: BasicTableProps = reactive<BasicTableProps>({
 	queryForm: {
-		deptId: '',
 		username: '',
 		phone: '',
 	},
@@ -168,25 +138,9 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 });
 const { getDataList, currentChangeHandle, sizeChangeHandle, downBlobFile, tableStyle } = useTable(state);
 
-// 部门树使用的数据
-const deptData = reactive({
-	queryList: (name: String) => {
-		return deptTree({
-			deptName: name,
-		});
-	},
-});
-
 // 清空搜索条件
 const resetQuery = () => {
 	queryRef.value?.resetFields();
-	state.queryForm.deptId = '';
-	getDataList();
-};
-
-// 点击树
-const handleNodeClick = (e: any) => {
-	state.queryForm.deptId = e.id;
 	getDataList();
 };
 

@@ -16,13 +16,6 @@ export const pageList = (params?: Object) => {
 	});
 };
 
-export const deptRoleList = () => {
-	return request({
-		url: '/admin/role/list',
-		method: 'get',
-	});
-};
-
 export const getObj = (id: string) => {
 	return request({
 		url: '/admin/role/details/' + id,

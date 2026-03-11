@@ -11,7 +11,6 @@ export default {
 		refreshCacheBtn: '刷新缓存',
 		exportBtn: '导出',
 		importBtn: '导入',
-		queryDeptTip: '请输入部门名称',
 		resetBtn: '重置',
 		action: '操作',
 		optSuccessText: '操作成功',

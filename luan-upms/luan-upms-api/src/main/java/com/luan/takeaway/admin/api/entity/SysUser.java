@@ -122,12 +122,6 @@ public class SysUser implements Serializable {
 	private String avatar;
 
 	/**
-	 * 部门ID
-	 */
-	@Schema(description = "用户所属部门id")
-	private Long deptId;
-
-	/**
 	 * 微信openid
 	 */
 	@Schema(description = "微信openid")

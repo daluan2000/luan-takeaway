@@ -12,7 +12,6 @@ export default {
 		refreshCacheBtn: 'Refresh cache',
 		importBtn: 'Import',
 		importUserTip: 'Import user',
-		queryDeptTip: 'Enter department name',
 		resetBtn: 'Reset',
 		action: 'Action',
 		optSuccessText: 'Operation successful',

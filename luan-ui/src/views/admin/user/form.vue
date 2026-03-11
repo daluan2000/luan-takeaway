@@ -30,27 +30,6 @@
 							</el-select>
 						</el-form-item>
 					</el-col>
-					<el-col :span="12" class="mb20">
-						<el-form-item :label="$t('sysuser.post')" prop="post">
-							<el-select class="w100" clearable multiple placeholder="请选择岗位" v-model="dataForm.post">
-								<el-option :key="item.postId" :label="item.postName" :value="item.postId" v-for="item in postData" />
-							</el-select>
-						</el-form-item>
-					</el-col>
-					<el-col :span="12" class="mb20">
-						<el-form-item :label="$t('sysuser.dept')" prop="deptId">
-							<el-tree-select
-								:data="deptData"
-								:props="{ value: 'id', label: 'name', children: 'children' }"
-								check-strictly
-								class="w100"
-								clearable
-								placeholder="请选择所属部门"
-								v-model="dataForm.deptId"
-							>
-							</el-tree-select>
-						</el-form-item>
-					</el-col>
 
 					<el-col :span="12" class="mb20">
 						<el-form-item :label="$t('sysuser.email')" prop="email">
@@ -84,8 +63,6 @@
 <script lang="ts" name="systemUserDialog" setup>
 import { addObj, getObj, putObj, validatePhone, validateUsername } from '/@/api/admin/user';
 import { list as roleList } from '/@/api/admin/role';
-import { list as postList } from '/@/api/admin/post';
-import { deptTree } from '/@/api/admin/dept';
 import { useDict } from '/@/hooks/dict';
 import { useI18n } from 'vue-i18n';
 import { useMessage } from '/@/hooks/message';
@@ -101,9 +78,7 @@ const { lock_flag } = useDict('lock_flag');
 // 定义变量内容
 const dataFormRef = ref();
 const visible = ref(false);
-const deptData = ref<any[]>([]);
 const roleData = ref<any[]>([]);
-const postData = ref<any[]>([]);
 const loading = ref(false);
 
 const dataForm = reactive({
@@ -115,13 +90,10 @@ const dataForm = reactive({
 	qqOpenid: '',
 	lockFlag: '0',
 	phone: '' as String | undefined,
-	deptId: '',
 	roleList: [],
-	postList: [],
 	nickname: '',
 	name: '',
 	email: '',
-	post: [] as string[],
 	role: [] as string[],
 });
 
@@ -154,9 +126,7 @@ const dataRules = ref({
 		{validator: rule.overLength, trigger: 'blur'},
 		{ validator: rule.chinese, trigger: 'blur' },
 	],
-	deptId: [{ required: true, message: '部门不能为空', trigger: 'blur' }],
 	role: [{ required: true, message: '角色不能为空', trigger: 'blur' }],
-	post: [{ required: true, message: '岗位不能为空', trigger: 'blur' }],
 	// 手机号校验，不能为空、新增的时不能重复校验
 	phone: [
 		{ required: true, message: '手机号不能为空', trigger: 'blur' },
@@ -185,8 +155,6 @@ const openDialog = async (id: string) => {
 	});
 
 	// 加载使用的数据
-	getDeptData();
-	getPostData();
 	getRoleData();
 
     // 修改获取用户信息
@@ -244,13 +212,6 @@ const getUserData = async (id: string) => {
 		if (data.roleList) {
 			dataForm.role = data.roleList.map((item) => item.roleId);
 		}
-		if (data.postList) {
-			dataForm.post = data.postList.map((item) => item.postId);
-		}
-
-		if (data.dept) {
-			dataForm.deptId = data.dept.deptId;
-		}
 	} catch (err: any) {
 		useMessage().error(err.msg);
 	} finally {
@@ -258,24 +219,6 @@ const getUserData = async (id: string) => {
 	}
 };
 
-// 初始化部门数据
-const getDeptData = () => {
-	// 获取部门数据
-	deptTree().then((res) => {
-		deptData.value = res.data;
-		// 默认选择第一个
-		dataForm.deptId = res.data[0].id;
-	});
-};
-
-// 岗位数据
-const getPostData = () => {
-	postList().then((res) => {
-		postData.value = res.data;
-		// 默认选择第一个
-		dataForm.post = [res.data[0].postId];
-	});
-};
 // 角色数据
 const getRoleData = () => {
 	roleList().then((res) => {
