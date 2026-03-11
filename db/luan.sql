@@ -18,10 +18,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- 数据库： `pig`
+-- 数据库： `luan`
 --
-CREATE DATABASE IF NOT EXISTS `pig` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `pig`;
+CREATE DATABASE IF NOT EXISTS `luan` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `luan`;
 
 -- --------------------------------------------------------
 

@@ -10,7 +10,7 @@ services:
     ports:
       - 33306:3306
     volumes:
-      - ./db/pig.sql:/docker-entrypoint-initdb.d/01-pig.sql:ro
+      - ./db/luan.sql:/docker-entrypoint-initdb.d/01-luan.sql:ro
       - ./db/luan_config.sql:/docker-entrypoint-initdb.d/02-luan_config.sql:ro
     networks:
       - spring_cloud_default
