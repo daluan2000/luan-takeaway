@@ -49,9 +49,8 @@
 					</el-form-item>
 
 					<el-form-item>
-						<el-button type="primary" :loading="submitting" @click="handleSubmit">
-							{{ isCreateMode ? '新增' : '修改' }}
-						</el-button>
+						<el-button v-if="isCreateMode" v-auth="'wm_delivery_info_add'" type="primary" :loading="submitting" @click="handleSubmit">新增</el-button>
+						<el-button v-else v-auth="'wm_delivery_info_edit'" type="primary" :loading="submitting" @click="handleSubmit">修改</el-button>
 						<el-button @click="loadCurrent">刷新</el-button>
 					</el-form-item>
 				</el-form>

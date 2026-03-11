@@ -28,14 +28,13 @@
 						</el-select>
 						<div v-if="!addressOptions.length" class="address-empty-tip">
 							<el-alert title="暂无可用地址，请先新增地址" type="warning" :closable="false" show-icon />
-							<el-button type="primary" link @click="goAddressPage">去新增地址</el-button>
+							<el-button v-auth="'wm_address_add'" type="primary" link @click="goAddressPage">去新增地址</el-button>
 						</div>
 					</el-form-item>
 
 					<el-form-item>
-						<el-button type="primary" :loading="submitting" @click="handleSubmit">
-							{{ isCreateMode ? '新增' : '修改' }}
-						</el-button>
+						<el-button v-if="isCreateMode" v-auth="'wm_customer_info_add'" type="primary" :loading="submitting" @click="handleSubmit">新增</el-button>
+						<el-button v-else v-auth="'wm_customer_info_edit'" type="primary" :loading="submitting" @click="handleSubmit">修改</el-button>
 						<el-button @click="loadCurrent">刷新</el-button>
 					</el-form-item>
 				</el-form>

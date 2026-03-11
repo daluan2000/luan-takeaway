@@ -5,7 +5,7 @@
 				<template #header>
 					<div class="card-header">
 						<span>我的菜品</span>
-						<el-button type="primary" @click="openCreate">新增菜品</el-button>
+						<el-button v-auth="'wm_merchant_dish_add'" type="primary" @click="openCreate">新增菜品</el-button>
 					</div>
 				</template>
 
@@ -45,11 +45,10 @@
 					<el-table-column prop="createTime" label="创建时间" min-width="160" show-overflow-tooltip />
 					<el-table-column label="操作" width="160" fixed="right">
 						<template #default="scope">
-							<el-button text type="primary" @click="openEdit(scope.row)">编辑</el-button>
-							<el-button text type="primary" @click="handleToggleSale(scope.row)">
-								{{ scope.row.saleStatus === '1' ? '下架' : '上架' }}
-							</el-button>
-							<el-button text type="danger" @click="handleDelete(scope.row)">删除</el-button>
+							<el-button v-auth="'wm_merchant_dish_edit'" text type="primary" @click="openEdit(scope.row)">编辑</el-button>
+							<el-button v-if="scope.row.saleStatus === '1'" v-auth="'wm_merchant_dish_sale_off'" text type="primary" @click="handleToggleSale(scope.row)">下架</el-button>
+							<el-button v-else v-auth="'wm_merchant_dish_sale_on'" text type="primary" @click="handleToggleSale(scope.row)">上架</el-button>
+							<el-button v-auth="'wm_merchant_dish_del'" text type="danger" @click="handleDelete(scope.row)">删除</el-button>
 						</template>
 					</el-table-column>
 				</el-table>
@@ -95,7 +94,8 @@
 
 			<template #footer>
 				<el-button @click="dialogVisible = false">取消</el-button>
-				<el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+				<el-button v-if="form.id" v-auth="'wm_merchant_dish_edit'" type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+				<el-button v-else v-auth="'wm_merchant_dish_add'" type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
 			</template>
 		</el-dialog>
 	</div>

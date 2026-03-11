@@ -82,10 +82,10 @@
 					<el-table-column label="操作" :width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.customerActions" fixed="right">
 						<template #default="scope">
 							<template v-if="scope.row.orderStatus === ORDER_STATUS.WAIT_PAY">
-								<el-button text type="primary" :loading="payingId === String(scope.row.id)" @click="handlePay(scope.row)">
+								<el-button v-auth="'wm_customer_order_pay'" text type="primary" :loading="payingId === String(scope.row.id)" @click="handlePay(scope.row)">
 									去支付
 								</el-button>
-								<el-button text type="danger" :loading="cancellingId === String(scope.row.id)" @click="handleCancel(scope.row)">
+								<el-button v-auth="'wm_customer_order_cancel'" text type="danger" :loading="cancellingId === String(scope.row.id)" @click="handleCancel(scope.row)">
 									取消订单
 								</el-button>
 							</template>

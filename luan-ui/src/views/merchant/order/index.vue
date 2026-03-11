@@ -82,6 +82,7 @@
 					<el-table-column label="操作" :width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.merchantActions" fixed="right">
 						<template #default="scope">
 							<el-button
+								v-auth="'wm_merchant_order_accept'"
 								v-if="scope.row.orderStatus === ORDER_STATUS.PAID"
 								text
 								type="primary"

@@ -96,6 +96,7 @@
 					<el-table-column label="操作" :width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.deliverySendActions" fixed="right">
 						<template #default="scope">
 							<el-button
+								v-auth="'wm_delivery_order_finish'"
 								v-if="scope.row.orderStatus === ORDER_STATUS.DELIVERING"
 								text
 								type="primary"

@@ -5,7 +5,7 @@
 				<template #header>
 					<div class="card-header">
 						<span>我的地址</span>
-						<el-button type="primary" @click="openCreate">手动新增地址</el-button>
+						<el-button v-auth="'wm_address_add'" type="primary" @click="openCreate">手动新增地址</el-button>
 					</div>
 				</template>
 
@@ -26,7 +26,7 @@
 						</el-descriptions>
 
 						<div class="map-info-actions">
-							<el-button type="primary" :disabled="!pickedAddress.longitude || !pickedAddress.latitude" :loading="addingFromMap || resolvingAddress" @click="handleAddFromMap">
+							<el-button v-auth="'wm_address_add_map'" type="primary" :disabled="!pickedAddress.longitude || !pickedAddress.latitude" :loading="addingFromMap || resolvingAddress" @click="handleAddFromMap">
 								地图选点新增
 							</el-button>
 						</div>
@@ -43,8 +43,8 @@
 					<el-table-column prop="latitude" label="纬度" min-width="120" show-overflow-tooltip />
 					<el-table-column label="操作" width="180" fixed="right">
 						<template #default="scope">
-							<el-button type="primary" text @click="openEdit(scope.row)">编辑</el-button>
-							<el-button type="primary" text @click="handleDelete(scope.row)">删除</el-button>
+							<el-button v-auth="'wm_address_edit'" type="primary" text @click="openEdit(scope.row)">编辑</el-button>
+							<el-button v-auth="'wm_address_del'" type="primary" text @click="handleDelete(scope.row)">删除</el-button>
 						</template>
 					</el-table-column>
 				</el-table>
@@ -92,7 +92,8 @@
 
 			<template #footer>
 				<el-button @click="dialogVisible = false">取消</el-button>
-				<el-button type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+				<el-button v-if="form.id" v-auth="'wm_address_edit'" type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
+				<el-button v-else v-auth="'wm_address_add'" type="primary" :loading="submitting" @click="handleSubmit">确定</el-button>
 			</template>
 		</el-dialog>
 	</div>

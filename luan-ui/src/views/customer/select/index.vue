@@ -111,6 +111,7 @@
 								已选金额：<span class="selected-total-amount">￥{{ getSelectedTotalAmount(merchant.userId || 0) }}</span>
 							</div>
 							<el-button
+								v-auth="'wm_customer_order_create'"
 								type="primary"
 								size="small"
 								:loading="submittingMap[merchant.userId || 0]"

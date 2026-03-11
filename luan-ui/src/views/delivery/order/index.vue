@@ -96,6 +96,7 @@
 					<el-table-column label="操作" :width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.deliveryOrderActions" fixed="right">
 						<template #default="scope">
 							<el-button
+								v-auth="'wm_delivery_order_accept'"
 								text
 								type="primary"
 								:loading="acceptingId === String(scope.row.id)"
