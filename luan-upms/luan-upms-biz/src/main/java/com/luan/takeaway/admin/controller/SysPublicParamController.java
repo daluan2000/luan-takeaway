@@ -38,6 +38,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+/**
+ * 对应前端/admin/param/index
+ * 公共参数配置管理模块，比如用户注册时的默认角色，表前缀等等
+ * 暂时不改这些公共参数，暂时删除前端路由菜单，保留后端接口，后续如果需要再添加前端路由
+ */
 /**
  * 公共参数控制器：提供公共参数的增删改查及同步功能
  *

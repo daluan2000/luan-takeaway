@@ -42,6 +42,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+/**
+ * 对应前端路由 /admin/client/index
+ * 终端管理模块
+ * 暂时删除前端路由菜单，保留后端接口，后续如果需要再添加前端路由
+ */
+
 /**
  * 客户端管理模块前端控制器
  *

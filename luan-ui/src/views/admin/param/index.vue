@@ -1,3 +1,7 @@
+<!--
+	2026-03: 该页面已从前端动态路由菜单中移除（对应后端 SysPublicParamController）。
+	当前仅保留页面实现，便于后续按需恢复。
+-->
 <template>
 	<div class="layout-padding">
 		<div class="layout-padding-auto layout-padding-view">
