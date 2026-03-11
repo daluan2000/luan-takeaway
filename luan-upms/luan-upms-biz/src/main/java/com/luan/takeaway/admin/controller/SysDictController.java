@@ -47,6 +47,31 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
+在这个项目里，字典就是“前后端共享约定”的一层配置：
+
+1 后端维护字典源
+字典存于 sys_dict / sys_dict_item，通过 /admin/dict/type/{type} 提供给前端和其他服务。
+
+2 前端按字典值渲染和提交
+比如 luan-ui/src/views/admin/client/form.vue:73 的 grant_types，来自 useDict('grant_types')，用户选中后提交的是字典 value（如 password、authorization_code）。
+
+3 后端按同一套值做业务判断
+后端拿到这些值后按约定进行逻辑分支，不依赖前端文案（label），只依赖稳定的 item_value。
+
+4 文案与逻辑解耦
+label 可改（显示文案），value 尽量稳定（业务语义）；这样改展示不影响逻辑。
+
+一句话：字典是“数据驱动的业务枚举协议”，把前后端硬编码常量统一成数据库可配置的契约。
+ */
+
+
+/**
+ * 在外卖业务模块，暂时维持硬编码，暂时不用这个字典逻辑
+ * 前端暂时删除这个路由菜单，后端保留字典接口
+ */
+
+
+/**
  * 字典表前端控制器
  *
  * @author lengleng
