@@ -10,7 +10,13 @@
 					</el-col>
 					<el-col :span="12" class="mb20">
 						<el-form-item :label="$t('sysuser.password')" prop="password">
-							<el-input clearable placeholder="请输入密码" type="password" v-model="dataForm.password"></el-input>
+							<strength-meter
+								placeholder="请输入密码"
+								v-model="dataForm.password"
+								:maxLength="20"
+								:minLength="6"
+								@score="handlePassScore"
+							/>
 						</el-form-item>
 					</el-col>
 					<el-col :span="12" class="mb20">
@@ -80,6 +86,7 @@ const dataFormRef = ref();
 const visible = ref(false);
 const roleData = ref<any[]>([]);
 const loading = ref(false);
+const StrengthMeter = defineAsyncComponent(() => import('/@/components/StrengthMeter/index.vue'));
 
 const dataForm = reactive({
 	userId: '',
@@ -227,6 +234,9 @@ const getRoleData = () => {
 		dataForm.role = [res.data[0].roleId];
 	});
 };
+
+// 保留强度组件仅做提示，不阻止表单提交
+const handlePassScore = (_e) => {};
 
 // 暴露变量
 defineExpose({

@@ -72,9 +72,6 @@ const dataFormRef = ref();
 // 加载中状态
 const loading = ref(false);
 
-// 密码强度得分
-const score = ref('0');
-
 // 组件内部状态
 const state = reactive({
 	// 是否显示密码
@@ -129,25 +126,12 @@ const dataRules = reactive({
 			message: '用户密码长度必须介于 6 和 20 之间',
 			trigger: 'blur',
 		},
-		// 判断密码强度是否达到要求
-		{
-			validator: (_rule, _value, callback) => {
-				if (Number(score.value) < 2) {
-					callback('密码强度太低');
-				} else {
-					callback();
-				}
-			},
-			trigger: 'blur',
-		},
 	],
 	checked: [{ required: true, message: '请阅读并同意条款', trigger: 'blur' }],
 });
 
-// 处理密码强度得分变化事件
-const handlePassScore = (e) => {
-	score.value = e;
-};
+// 保留强度组件仅做提示，不阻止表单提交
+const handlePassScore = (_e) => {};
 
 /**
  * @name handleRegister

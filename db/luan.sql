@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主机： luan-mysql:3306
--- 生成日期： 2026-03-11 09:32:42
+-- 生成日期： 2026-03-11 12:13:06
 -- 服务器版本： 8.0.32
 -- PHP 版本： 8.3.30
 
@@ -269,8 +269,8 @@ INSERT INTO `sys_menu` (`menu_id`, `name`, `en_name`, `permission`, `path`, `par
 (1304, '分配权限', NULL, 'sys_role_perm', NULL, 1300, NULL, '1', 1, '0', NULL, '1', ' ', '2018-04-20 07:22:55', ' ', '2021-05-25 03:12:55', '0'),
 (1305, '角色导入导出', NULL, 'sys_role_export', NULL, 1300, NULL, '1', 4, '0', NULL, '1', ' ', '2022-03-26 15:54:34', ' ', NULL, '0'),
 (2000, '系统管理', 'system', NULL, '/system', -1, 'iconfont icon-quanjushezhi_o', '1', 1, '0', NULL, '0', '', '2017-11-07 20:56:00', 'admin', '2023-07-05 10:27:58', '0'),
-(2001, '日志管理', 'log', NULL, '/admin/logs', 2000, 'ele-Cloudy', '1', 0, '0', '0', '0', 'admin', '2023-03-02 12:26:42', 'admin', '2023-07-05 10:27:53', '0'),
-(2100, '操作日志', 'operation', NULL, '/admin/log/index', 2001, 'iconfont icon-jinridaiban', '1', 2, '0', '0', '0', '', '2017-11-20 14:06:22', 'admin', '2023-07-05 10:27:49', '0'),
+(2001, '日志管理', 'log', NULL, '/admin/logs', 2000, 'ele-Cloudy', '1', 0, '0', '0', '0', 'admin', '2023-03-02 12:26:42', 'admin', '2026-03-11 20:12:18', '1'),
+(2100, '操作日志', 'operation', NULL, '/admin/log/index', 2000, 'iconfont icon-jinridaiban', '1', 2, '0', '0', '0', '', '2017-11-20 14:06:22', 'admin', '2026-03-11 20:11:48', '0'),
 (2101, '日志删除', NULL, 'sys_log_del', NULL, 2100, NULL, '1', 1, '0', NULL, '1', ' ', '2017-11-20 20:37:37', ' ', '2021-05-25 03:12:55', '0'),
 (2102, '导入导出', NULL, 'sys_log_export', NULL, 2100, NULL, '1', 1, '0', NULL, '1', ' ', '2017-11-08 09:54:01', ' ', '2021-05-25 03:12:55', '0'),
 (2200, '字典管理', 'dict', NULL, '/admin/dict/index', 2000, 'iconfont icon-zhongduancanshuchaxun', '1', 6, '0', NULL, '0', '', '2017-11-29 11:30:52', 'admin', '2023-07-05 10:27:37', '0'),
@@ -472,7 +472,6 @@ INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
 (1, 1304),
 (1, 1305),
 (1, 2000),
-(1, 2001),
 (1, 2100),
 (1, 2101),
 (1, 2102),
@@ -804,7 +803,7 @@ CREATE TABLE `wm_merchant_user_ext` (
 --
 
 INSERT INTO `wm_merchant_user_ext` (`id`, `user_id`, `merchant_name`, `contact_name`, `store_address_id`, `business_status`, `audit_status`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
-(2029883489284239362, 1, '这是个餐馆', '15290082224', NULL, '1', '1', 'admin', 'admin', '2026-03-06 19:35:12', '2026-03-08 06:14:49', '0'),
+(2029883489284239362, 1, '这是个餐馆', '15290082224', 2030527661150199809, '1', '1', 'admin', 'admin', '2026-03-06 19:35:12', '2026-03-11 11:59:09', '0'),
 (2029895965941846018, 2000000000000000002, '11', '111', 2029895876007579649, '1', '1', 'test_user', NULL, '2026-03-06 20:24:47', '2026-03-06 12:24:54', '0');
 
 -- --------------------------------------------------------

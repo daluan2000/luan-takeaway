@@ -104,9 +104,10 @@ export const registerUser = (userInfo: object) => {
 };
 
 export function validateUsername(rule: any, value: any, callback: any, isEdit: boolean) {
-	const flag = new RegExp(/^([a-z\d]+?)$/).test(value);
+	const flag = /^(?!-)[A-Za-z0-9-]+$/.test(value) && !value.endsWith('-');
 	if (!flag) {
-		callback(new Error('用户名支持小写英文、数字'));
+		callback(new Error('用户名仅支持英文大小写、数字、连字符(-)，且不能以连字符开头或结尾'));
+		return;
 	}
 
 	if (isEdit) {
