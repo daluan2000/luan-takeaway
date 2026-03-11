@@ -20,11 +20,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common-log</artifactId>
+    <artifactId>luan-common-log</artifactId>
     <packaging>jar</packaging>
 
     <description>pig 日志服务</description>
@@ -34,7 +34,7 @@
         <!--工具类核心包-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -47,7 +47,7 @@
         <!--UPMS接口模块-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-upms-api</artifactId>
+            <artifactId>luan-upms-api</artifactId>
         </dependency>
         <!--安全依赖获取上下文信息-->
         <dependency>

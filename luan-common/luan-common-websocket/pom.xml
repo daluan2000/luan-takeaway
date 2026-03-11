@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.luan</groupId>
-		<artifactId>pig-common</artifactId>
+		<artifactId>luan-common</artifactId>
 		<version>${revision}</version>
 	</parent>
 
-    <artifactId>pig-common-websocket</artifactId>
+    <artifactId>luan-common-websocket</artifactId>
     <packaging>jar</packaging>
 
     <description>pig websocket 链接模块</description>
@@ -32,7 +32,7 @@
 
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-security</artifactId>
+            <artifactId>luan-common-security</artifactId>
         </dependency>
     </dependencies>
 </project>

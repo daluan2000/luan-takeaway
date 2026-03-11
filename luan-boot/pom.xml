@@ -18,7 +18,7 @@
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>pig-boot</artifactId>
+	<artifactId>luan-boot</artifactId>
 	<packaging>jar</packaging>
 
 	<description>pig 单体版本启动</description>
@@ -27,44 +27,44 @@
 		<!--必备：认证中心模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-auth</artifactId>
+			<artifactId>luan-auth</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!--必备：用户管理模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-upms-biz</artifactId>
+			<artifactId>luan-upms-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!--可选：外卖用户服务模块（商家/客户/配送） -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-takeaway-user-biz</artifactId>
+			<artifactId>luan-takeaway-user-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!--可选：外卖菜品服务模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-takeaway-dish-biz</artifactId>
+			<artifactId>luan-takeaway-dish-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!--可选：外卖订单服务模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-takeaway-order-biz</artifactId>
+			<artifactId>luan-takeaway-order-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!--可选：外卖支付服务模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-takeaway-pay-biz</artifactId>
+			<artifactId>luan-takeaway-pay-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 
 		<!--安全模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-common-security</artifactId>
+			<artifactId>luan-common-security</artifactId>
 			<version>${revision}</version>
 		</dependency>
 		<!-- 接口文档UI -->
@@ -84,7 +84,7 @@
 		<!--接口文档 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-common-swagger</artifactId>
+			<artifactId>luan-common-swagger</artifactId>
 		</dependency>
 		<!--undertow容器 -->
 		<dependency>

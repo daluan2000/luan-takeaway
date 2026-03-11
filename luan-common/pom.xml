@@ -24,7 +24,7 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common</artifactId>
+    <artifactId>luan-common</artifactId>
     <packaging>pom</packaging>
 
     <description>pig 公共聚合模块</description>

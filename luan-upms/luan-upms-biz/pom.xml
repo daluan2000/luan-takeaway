@@ -20,11 +20,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-upms</artifactId>
+        <artifactId>luan-upms</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-upms-biz</artifactId>
+    <artifactId>luan-upms-biz</artifactId>
     <packaging>jar</packaging>
 
     <description>pig 通用用户权限管理系统业务处理模块</description>
@@ -33,32 +33,32 @@
         <!--upms api、model 模块-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-upms-api</artifactId>
+            <artifactId>luan-upms-api</artifactId>
         </dependency>
         <!--文件管理-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-oss</artifactId>
+            <artifactId>luan-common-oss</artifactId>
         </dependency>
         <!--feign 调用-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-feign</artifactId>
+            <artifactId>luan-common-feign</artifactId>
         </dependency>
         <!--安全模块-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-security</artifactId>
+            <artifactId>luan-common-security</artifactId>
         </dependency>
         <!--日志处理-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-log</artifactId>
+            <artifactId>luan-common-log</artifactId>
         </dependency>
         <!--接口文档-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-swagger</artifactId>
+            <artifactId>luan-common-swagger</artifactId>
         </dependency>
         <!-- orm 模块-->
         <dependency>
@@ -87,7 +87,12 @@
         <!--xss 过滤-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-xss</artifactId>
+            <artifactId>luan-common-xss</artifactId>
+        </dependency>
+        <!-- websocket 推送 -->
+        <dependency>
+            <groupId>com.luan</groupId>
+            <artifactId>luan-common-websocket</artifactId>
         </dependency>
         <!--undertow容器-->
         <dependency>

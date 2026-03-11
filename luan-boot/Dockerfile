@@ -1,8 +1,8 @@
 FROM registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/java:21-anolis
 
-WORKDIR /pig-boot
+WORKDIR /luan-boot
 
-ARG JAR_FILE=target/pig-boot-exec.jar
+ARG JAR_FILE=target/luan-boot-exec.jar
 
 COPY ${JAR_FILE} app.jar
 

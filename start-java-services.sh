@@ -34,7 +34,7 @@ for ((attempt = 1; attempt <= MAX_RETRIES; attempt++)); do
   fi
 
   if [[ "$attempt" -eq "$MAX_RETRIES" ]]; then
-    echo "等待 Nacos 超时，请检查: docker compose logs --tail 200 pig-register"
+    echo "等待 Nacos 超时，请检查: docker compose logs --tail 200 luan-register"
     exit 1
   fi
 
@@ -42,9 +42,9 @@ for ((attempt = 1; attempt <= MAX_RETRIES; attempt++)); do
 done
 
 echo
-echo "启动 Java 微服务(每次强制重建镜像): pig-gateway, pig-auth, pig-upms, pig-takeaway-user, pig-takeaway-dish, pig-takeaway-order, pig-takeaway-pay"
-docker compose up -d --build --force-recreate --no-deps pig-gateway pig-auth pig-upms pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay
+echo "启动 Java 微服务(每次强制重建镜像): luan-gateway, luan-auth, luan-upms, luan-takeaway-user, luan-takeaway-dish, luan-takeaway-order, luan-takeaway-pay"
+docker compose up -d --build --force-recreate --no-deps luan-gateway luan-auth luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
 
 echo
 echo "Java 微服务已启动，查看状态:"
-echo "docker compose ps pig-gateway pig-auth pig-upms pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay"
+echo "docker compose ps luan-gateway luan-auth luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay"

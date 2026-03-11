@@ -19,12 +19,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <groupId>com.luan</groupId>
         <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>pig-common-datasource</artifactId>
+    <artifactId>luan-common-datasource</artifactId>
     <packaging>jar</packaging>
     <description>pig 动态切换数据源</description>
 

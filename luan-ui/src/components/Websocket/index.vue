@@ -146,13 +146,37 @@ const onMessage = (msgEvent: any) => {
 		return;
 	}
 
+	const notificationText = buildNotificationText(text);
+	if (!notificationText) {
+		emit('rollback', text);
+		return;
+	}
+
 	ElNotification.warning({
 		title: '消息提醒',
 		dangerouslyUseHTMLString: true,
-		message: text + '请及时处理',
+		message: notificationText,
 		offset: 60,
 	});
 
 	emit('rollback', text);
+};
+
+const buildNotificationText = (raw: string) => {
+	if (typeof raw !== 'string') {
+		return '';
+	}
+	const msg = raw.trim();
+	if (!msg.startsWith('{')) {
+		return '';
+	}
+	try {
+		const payload = JSON.parse(msg) as { title?: string; content?: string };
+		const parts = [payload.title, payload.content].filter((item) => !!item && item.trim().length > 0);
+		return parts.join(' - ');
+	}
+	catch {
+		return '';
+	}
 };
 </script>

@@ -1,12 +1,12 @@
 services:
-  pig-mysql:
+  luan-mysql:
     image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/mysql-server:8.0.32
     pull_policy: if_not_present
     environment:
       MYSQL_ROOT_HOST: "%"
       MYSQL_ROOT_PASSWORD: root
     restart: "no"
-    container_name: pig-mysql
+    container_name: luan-mysql
     ports:
       - 33306:3306
     volumes:
@@ -15,36 +15,36 @@ services:
     networks:
       - spring_cloud_default
 
-  pig-phpmyadmin:
+  luan-phpmyadmin:
     image: phpmyadmin:latest
     restart: "no"
-    container_name: pig-phpmyadmin
-    hostname: pig-phpmyadmin
+    container_name: luan-phpmyadmin
+    hostname: luan-phpmyadmin
     ports:
       - 8082:80
     environment:
-      PMA_HOST: pig-mysql
+      PMA_HOST: luan-mysql
       PMA_PORT: 3306
       PMA_USER: root
       PMA_PASSWORD: root
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
     networks:
       - spring_cloud_default
 
-  pig-redis:
+  luan-redis:
     image: registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/redis
     ports:
       - 36379:6379
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     restart: "no"
-    container_name: pig-redis
-    hostname: pig-redis
+    container_name: luan-redis
+    hostname: luan-redis
     networks:
       - spring_cloud_default
 
-  pig-register:
+  luan-register:
     image: nacos/nacos-server:v2.4.3
     restart: "no"
     ports:
@@ -54,9 +54,9 @@ services:
     environment:
       MODE: standalone
       SPRING_DATASOURCE_PLATFORM: mysql
-      MYSQL_SERVICE_HOST: pig-mysql
+      MYSQL_SERVICE_HOST: luan-mysql
       MYSQL_SERVICE_PORT: 3306
-      MYSQL_SERVICE_DB_NAME: pig_config
+      MYSQL_SERVICE_DB_NAME: luan_config
       MYSQL_SERVICE_USER: root
       MYSQL_SERVICE_PASSWORD: root
       MYSQL_SERVICE_DB_PARAM: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useUnicode=true&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
@@ -64,155 +64,155 @@ services:
       NACOS_AUTH_IDENTITY_KEY: serverIdentity
       NACOS_AUTH_IDENTITY_VALUE: security
       NACOS_AUTH_TOKEN: VGhpc0lzTXlDdXN0b21TZWNyZXRLZXkwMTIzNDU2Nzg=
-    container_name: pig-register
-    hostname: pig-register
+    container_name: luan-register
+    hostname: luan-register
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
     networks:
       - spring_cloud_default
 
-  pig-gateway:
+  luan-gateway:
     build:
       context: ./luan-gateway
     restart: "no"
     ports:
       - 9999:9999
-    container_name: pig-gateway
-    hostname: pig-gateway
-    image: pig-gateway
+    container_name: luan-gateway
+    hostname: luan-gateway
+    image: luan-gateway
     environment:
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default
 
-  pig-auth:
+  luan-auth:
     build:
       context: ./luan-auth
     restart: "no"
-    container_name: pig-auth
-    hostname: pig-auth
-    image: pig-auth
+    container_name: luan-auth
+    hostname: luan-auth
+    image: luan-auth
     environment:
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default
 
-  pig-upms:
+  luan-upms:
     build:
       context: ./luan-upms/luan-upms-biz
     restart: "no"
-    container_name: pig-upms
-    hostname: pig-upms
-    image: pig-upms
+    container_name: luan-upms
+    hostname: luan-upms
+    image: luan-upms
     volumes:
       - /home/luan/data/pig/files:/home/luan/data/pig/files
     environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      MYSQL_HOST: luan-mysql
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default
 
-  pig-takeaway-user:
+  luan-takeaway-user:
     build:
       context: ./luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz
     restart: "no"
-    image: pig-takeaway-user
-    container_name: pig-takeaway-user
-    hostname: pig-takeaway-user
+    image: luan-takeaway-user
+    container_name: luan-takeaway-user
+    hostname: luan-takeaway-user
     environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      MYSQL_HOST: luan-mysql
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default
 
-  pig-takeaway-dish:
+  luan-takeaway-dish:
     build:
       context: ./luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz
     restart: "no"
-    image: pig-takeaway-dish
-    container_name: pig-takeaway-dish
-    hostname: pig-takeaway-dish
+    image: luan-takeaway-dish
+    container_name: luan-takeaway-dish
+    hostname: luan-takeaway-dish
     environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      MYSQL_HOST: luan-mysql
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default
 
-  pig-takeaway-order:
+  luan-takeaway-order:
     build:
       context: ./luan-takeaway/luan-takeaway-order/luan-takeaway-order-biz
     restart: "no"
-    image: pig-takeaway-order
-    container_name: pig-takeaway-order
-    hostname: pig-takeaway-order
+    image: luan-takeaway-order
+    container_name: luan-takeaway-order
+    hostname: luan-takeaway-order
     environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      MYSQL_HOST: luan-mysql
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default
 
-  pig-takeaway-pay:
+  luan-takeaway-pay:
     build:
       context: ./luan-takeaway/luan-takeaway-pay/luan-takeaway-pay-biz
     restart: "no"
-    image: pig-takeaway-pay
-    container_name: pig-takeaway-pay
-    hostname: pig-takeaway-pay
+    image: luan-takeaway-pay
+    container_name: luan-takeaway-pay
+    hostname: luan-takeaway-pay
     environment:
-      MYSQL_HOST: pig-mysql
-      REDIS_HOST: pig-redis
-      NACOS_HOST: pig-register
+      MYSQL_HOST: luan-mysql
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
     depends_on:
-      pig-mysql:
+      luan-mysql:
         condition: service_healthy
-      pig-redis:
+      luan-redis:
         condition: service_started
-      pig-register:
+      luan-register:
         condition: service_started
     networks:
       - spring_cloud_default

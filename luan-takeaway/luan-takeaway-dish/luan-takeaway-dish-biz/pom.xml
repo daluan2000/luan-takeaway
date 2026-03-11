@@ -4,33 +4,33 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-takeaway-dish</artifactId>
+        <artifactId>luan-takeaway-dish</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-takeaway-dish-biz</artifactId>
+    <artifactId>luan-takeaway-dish-biz</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-takeaway-dish-api</artifactId>
+            <artifactId>luan-takeaway-dish-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-takeaway-common</artifactId>
+            <artifactId>luan-takeaway-common</artifactId>
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-log</artifactId>
+            <artifactId>luan-common-log</artifactId>
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-swagger</artifactId>
+            <artifactId>luan-common-swagger</artifactId>
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-security</artifactId>
+            <artifactId>luan-common-security</artifactId>
         </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>

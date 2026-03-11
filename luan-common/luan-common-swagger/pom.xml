@@ -23,11 +23,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common-swagger</artifactId>
+    <artifactId>luan-common-swagger</artifactId>
     <packaging>jar</packaging>
 
     <description>pig 接口文档</description>
@@ -68,7 +68,7 @@
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
     </dependencies>
 </project>

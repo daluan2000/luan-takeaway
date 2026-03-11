@@ -20,11 +20,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-upms</artifactId>
+        <artifactId>luan-upms</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-upms-api</artifactId>
+    <artifactId>luan-upms-api</artifactId>
     <packaging>jar</packaging>
 
     <description>pig 通用用户权限管理系统公共api模块</description>
@@ -34,22 +34,22 @@
         <!--core 工具类-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
         <!--feign 注解依赖-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-feign</artifactId>
+            <artifactId>luan-common-feign</artifactId>
         </dependency>
         <!--mybatis 依赖-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-mybatis</artifactId>
+            <artifactId>luan-common-mybatis</artifactId>
         </dependency>
         <!-- excel 导入导出 -->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-excel</artifactId>
+            <artifactId>luan-common-excel</artifactId>
         </dependency>
     </dependencies>
 </project>

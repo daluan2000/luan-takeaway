@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-takeaway</artifactId>
+        <artifactId>luan-takeaway</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-takeaway-pay</artifactId>
+    <artifactId>luan-takeaway-pay</artifactId>
     <packaging>pom</packaging>
     <description>外卖支付服务</description>
 

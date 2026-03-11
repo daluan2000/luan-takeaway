@@ -18,7 +18,7 @@
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>pig-gateway</artifactId>
+	<artifactId>luan-gateway</artifactId>
 	<packaging>jar</packaging>
 
 	<description>pig 服务网关，基于 spring cloud gateway</description>
@@ -56,7 +56,7 @@
 		<!-- 工具包依赖 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>pig-common-core</artifactId>
+			<artifactId>luan-common-core</artifactId>
 		</dependency>
 		<!--接口文档 -->
 		<dependency>

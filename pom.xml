@@ -98,7 +98,7 @@
 			<!--pig 公共版本定义-->
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-bom</artifactId>
+				<artifactId>luan-common-bom</artifactId>
 				<version>${project.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
@@ -202,7 +202,7 @@
 						</authConfig>
 						<images>
 							<image>
-								<!-- 镜像名称： 172.17.0.111/library/pig-gateway:2.6.3-->
+								<!-- 镜像名称： 172.17.0.111/library/luan-gateway:2.6.3-->
 								<name>${docker.registry}/${docker.namespace}/${project.name}:${project.version}</name>
 								<build>
 									<dockerFile>${project.basedir}/Dockerfile</dockerFile>

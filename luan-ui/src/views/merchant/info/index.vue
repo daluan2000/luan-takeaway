@@ -19,7 +19,7 @@
 
 				<el-alert
 					v-if="!isCreateMode && form.auditStatus === '0'"
-					title="当前为待审状态，系统将于3-10秒内自动审批，请稍候或点击刷新"
+					title="当前为待审状态，系统将于3-10秒内自动审批，页面会在收到通知后自动刷新"
 					type="info"
 					show-icon
 					:closable="false"
@@ -74,6 +74,7 @@
 import { useMessage } from '/@/hooks/message';
 import { listAddress } from '/@/api/takeaway/address';
 import { applyMerchant, currentMerchant, updateMerchant } from '/@/api/takeaway/merchant';
+import { useMsg } from '/@/stores/msg';
 import { useUserInfo } from '/@/stores/userInfo';
 import { useRouter } from 'vue-router';
 
@@ -83,9 +84,8 @@ const loading = ref(false);
 const submitting = ref(false);
 const isCreateMode = ref(true);
 const addressOptions = ref<Array<{ label: string; value: string }>>([]);
-const autoAuditPolling = ref(false);
-let pollTimer: ReturnType<typeof setInterval> | null = null;
-let pollTimeout: ReturnType<typeof setTimeout> | null = null;
+const msgStore = useMsg();
+const currentMerchantUserId = computed(() => Number(useUserInfo().userInfos?.user?.userId || 0));
 
 const form = reactive({
 	id: undefined as number | undefined,
@@ -103,6 +103,18 @@ const rules = reactive({
 	storeAddressId: [{ required: true, message: '请选择门店地址', trigger: 'change' }],
 	businessStatus: [{ required: true, message: '请选择营业状态', trigger: 'change' }],
 });
+
+interface MerchantAuditWsMessage {
+	category?: string;
+	businessType?: string;
+	eventType?: string;
+	status?: string;
+	title?: string;
+	content?: string;
+	merchantId?: number;
+	userId?: number;
+	auditStatus?: string;
+}
 
 const validateAddressField = async () => {
 	await nextTick();
@@ -186,36 +198,64 @@ const loadCurrent = async (showLoading = true) => {
 	}
 };
 
-const stopAutoAuditPolling = () => {
-	if (pollTimer) {
-		clearInterval(pollTimer);
-		pollTimer = null;
+const parseWsPayload = (raw: unknown): MerchantAuditWsMessage | null => {
+	if (typeof raw !== 'string' || !raw.trim().startsWith('{')) {
+		return null;
 	}
-	if (pollTimeout) {
-		clearTimeout(pollTimeout);
-		pollTimeout = null;
+	try {
+		return JSON.parse(raw) as MerchantAuditWsMessage;
+	} catch {
+		return null;
 	}
-	autoAuditPolling.value = false;
 };
 
-const startAutoAuditPolling = () => {
-	stopAutoAuditPolling();
-	autoAuditPolling.value = true;
+const isCurrentMerchantAuditApprovedMessage = (payload: MerchantAuditWsMessage | null): boolean => {
+	if (!payload) return false;
+	if (payload.category !== 'BUSINESS') return false;
+	if (payload.businessType !== 'MERCHANT') return false;
+	if (payload.eventType !== 'AUDIT_RESULT') return false;
+	if (payload.status !== 'SUCCESS') return false;
+	if (payload.auditStatus !== '1') return false;
 
-	pollTimer = setInterval(async () => {
-		await loadCurrent(false);
-		if (form.auditStatus !== '0') {
-			stopAutoAuditPolling();
-			if (form.auditStatus === '1') {
-				useMessage().success('系统已自动审批通过');
-			}
+	const loginUserId = currentMerchantUserId.value;
+	if (payload.userId && loginUserId && Number(payload.userId) !== loginUserId) {
+		return false;
+	}
+	if (payload.merchantId && form.id && Number(payload.merchantId) !== Number(form.id)) {
+		return false;
+	}
+	return true;
+};
+
+const buildWsTipText = (payload: MerchantAuditWsMessage) => {
+	const parts = [payload.title, payload.content].filter((item) => !!item && item.trim().length > 0);
+	return parts.join(' - ');
+};
+
+watch(
+	() => msgStore.msgArray.length,
+	async (len, prevLen) => {
+		if (len <= prevLen) {
+			return;
 		}
-	}, 1500);
-
-	pollTimeout = setTimeout(() => {
-		stopAutoAuditPolling();
-	}, 20000);
-};
+		const newMessages = msgStore.msgArray.slice(prevLen, len);
+		for (const item of newMessages) {
+			const rawText = (item as any)?.value;
+			const payload = parseWsPayload(rawText);
+			if (!isCurrentMerchantAuditApprovedMessage(payload)) {
+				continue;
+			}
+			await loadCurrent(false);
+			if (payload) {
+				const tipText = buildWsTipText(payload);
+				if (tipText) {
+					useMessage().success(tipText);
+				}
+			}
+			break;
+		}
+	}
+);
 
 const handleSubmit = async () => {
 	await formRef.value.validate(async (valid: boolean) => {
@@ -243,9 +283,6 @@ const handleSubmit = async () => {
 			}
 
 			await loadCurrent();
-			if (!isCreateMode.value && form.auditStatus === '0') {
-				startAutoAuditPolling();
-			}
 		} catch (error: any) {
 			useMessage().error(error?.msg || error?.response?.data?.msg || '提交失败');
 		} finally {
@@ -257,13 +294,6 @@ const handleSubmit = async () => {
 onMounted(async () => {
 	loadAddressOptions();
 	await loadCurrent();
-	if (!isCreateMode.value && form.auditStatus === '0') {
-		startAutoAuditPolling();
-	}
-});
-
-onBeforeUnmount(() => {
-	stopAutoAuditPolling();
 });
 </script>
 

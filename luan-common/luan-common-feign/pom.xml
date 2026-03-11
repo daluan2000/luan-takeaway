@@ -20,19 +20,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
-    <artifactId>pig-common-feign</artifactId>
+    <artifactId>luan-common-feign</artifactId>
     <description>feign-sentinel服务降级熔断、限流组件</description>
 
     <dependencies>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

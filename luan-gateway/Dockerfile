@@ -1,8 +1,8 @@
 FROM registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/java:21-anolis
 
-WORKDIR /pig-gateway
+WORKDIR /luan-gateway
 
-ARG JAR_FILE=target/pig-gateway-exec.jar
+ARG JAR_FILE=target/luan-gateway-exec.jar
 
 COPY ${JAR_FILE} app.jar
 

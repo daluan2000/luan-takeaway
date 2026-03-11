@@ -1,8 +1,8 @@
 FROM registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/java:21-anolis
 
-WORKDIR /pig-upms-biz
+WORKDIR /luan-upms-biz
 
-ARG JAR_FILE=target/pig-upms-biz-exec.jar
+ARG JAR_FILE=target/luan-upms-biz-exec.jar
 
 COPY ${JAR_FILE} app.jar
 

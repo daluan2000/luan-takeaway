@@ -8,7 +8,7 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-takeaway</artifactId>
+    <artifactId>luan-takeaway</artifactId>
     <packaging>pom</packaging>
     <description>pig 外卖业务聚合模块</description>
 
@@ -24,27 +24,27 @@
         <dependencies>
             <dependency>
                 <groupId>com.luan</groupId>
-                <artifactId>pig-takeaway-common</artifactId>
+                <artifactId>luan-takeaway-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.luan</groupId>
-                <artifactId>pig-takeaway-user-api</artifactId>
+                <artifactId>luan-takeaway-user-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.luan</groupId>
-                <artifactId>pig-takeaway-dish-api</artifactId>
+                <artifactId>luan-takeaway-dish-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.luan</groupId>
-                <artifactId>pig-takeaway-order-api</artifactId>
+                <artifactId>luan-takeaway-order-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.luan</groupId>
-                <artifactId>pig-takeaway-pay-api</artifactId>
+                <artifactId>luan-takeaway-pay-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

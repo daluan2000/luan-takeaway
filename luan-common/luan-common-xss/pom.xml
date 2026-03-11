@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common-xss</artifactId>
+    <artifactId>luan-common-xss</artifactId>
     <packaging>jar</packaging>
 
     <description>pigx xss 安全过滤插件 基于 JSOUP</description>
@@ -20,7 +20,7 @@
     <dependencies>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
 
         <dependency>

@@ -14,12 +14,12 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "清理中间件容器及卷(不复用卷): pig-mysql, pig-redis, pig-register"
-docker compose rm -fsv pig-mysql pig-redis pig-register >/dev/null 2>&1 || true
+echo "清理中间件容器及卷(不复用卷): luan-mysql, luan-redis, luan-register"
+docker compose rm -fsv luan-mysql luan-redis luan-register >/dev/null 2>&1 || true
 
-echo "启动中间件服务(复用已有镜像，不复用卷): pig-mysql, pig-redis, pig-register"
-docker compose up -d --force-recreate pig-mysql pig-redis pig-register
+echo "启动中间件服务(复用已有镜像，不复用卷，自动清理旧前缀容器): luan-mysql, luan-redis, luan-register"
+docker compose up -d --force-recreate --remove-orphans luan-mysql luan-redis luan-register
 
 echo
 echo "中间件已启动，查看状态:"
-echo "docker compose ps pig-mysql pig-redis pig-register"
+echo "docker compose ps luan-mysql luan-redis luan-register"

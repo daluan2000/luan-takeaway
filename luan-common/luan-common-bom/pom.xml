@@ -5,11 +5,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.luan</groupId>
-	<artifactId>pig-common-bom</artifactId>
+	<artifactId>luan-common-bom</artifactId>
 	<version>${revision}</version>
 	<packaging>pom</packaging>
 
-	<name>pig-common-bom</name>
+	<name>luan-common-bom</name>
 	<url>pig cloud parent</url>
 	<description>pig cloud parent</description>
 
@@ -53,62 +53,62 @@
 		<dependencies>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-core</artifactId>
+				<artifactId>luan-common-core</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-datasource</artifactId>
+				<artifactId>luan-common-datasource</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-log</artifactId>
+				<artifactId>luan-common-log</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-mybatis</artifactId>
+				<artifactId>luan-common-mybatis</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-oss</artifactId>
+				<artifactId>luan-common-oss</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-security</artifactId>
+				<artifactId>luan-common-security</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-feign</artifactId>
+				<artifactId>luan-common-feign</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-swagger</artifactId>
+				<artifactId>luan-common-swagger</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-xss</artifactId>
+				<artifactId>luan-common-xss</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-excel</artifactId>
+				<artifactId>luan-common-excel</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-common-websocket</artifactId>
+				<artifactId>luan-common-websocket</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>pig-upms-api</artifactId>
+				<artifactId>luan-upms-api</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>

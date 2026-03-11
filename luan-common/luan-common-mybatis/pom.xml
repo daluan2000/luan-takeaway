@@ -20,11 +20,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common-mybatis</artifactId>
+    <artifactId>luan-common-mybatis</artifactId>
     <packaging>jar</packaging>
 
     <description>pig mybatis 封装</description>
@@ -70,7 +70,7 @@
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
     </dependencies>
 </project>

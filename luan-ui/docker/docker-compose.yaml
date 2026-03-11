@@ -1,14 +1,14 @@
 services:
-  pig-ui:
+  luan-ui:
     build:
       context: .
     restart: always
-    container_name: pig-ui
-    image: pig-ui
+    container_name: luan-ui
+    image: luan-ui
     networks:
       - spring_cloud_default
     external_links:
-      - pig-gateway
+      - luan-gateway
     ports:
       - 80:80
 

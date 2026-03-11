@@ -1,8 +1,8 @@
 FROM registry.cn-hangzhou.aliyuncs.com/dockerhub_mirror/java:21-anolis
 
-WORKDIR /pig-takeaway-order-biz
+WORKDIR /luan-takeaway-order-biz
 
-ARG JAR_FILE=target/pig-takeaway-order-biz-exec.jar
+ARG JAR_FILE=target/luan-takeaway-order-biz-exec.jar
 
 COPY ${JAR_FILE} app.jar
 

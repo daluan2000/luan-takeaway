@@ -5,11 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common-oss</artifactId>
+    <artifactId>luan-common-oss</artifactId>
     <packaging>jar</packaging>
 
     <description>pig 文件系统依赖</description>

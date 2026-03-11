@@ -2,6 +2,13 @@ package com.luan.takeaway.takeaway.user.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.luan.takeaway.admin.api.dto.WsPushMessageDTO;
+import com.luan.takeaway.admin.api.feign.RemoteWsPushService;
+import com.luan.takeaway.takeaway.user.dto.ws.MerchantAuditResultWsMessage;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.luan.takeaway.common.core.constant.CommonConstants;
+import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
@@ -12,6 +19,7 @@ import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
 import com.luan.takeaway.takeaway.user.service.WmMerchantService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -28,11 +36,16 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class WmMerchantServiceImpl implements WmMerchantService {
 
 	private final WmMerchantUserExtMapper wmMerchantUserExtMapper;
 
 	private final WmAddressMapper wmAddressMapper;
+
+	private final RemoteWsPushService remoteWsPushService;
+
+	private final ObjectMapper objectMapper;
 
 	@Override
 	public WmMerchantDTO createMerchant(WmMerchantDTO merchantDTO) {
@@ -104,12 +117,56 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 				return;
 			}
 
-			wmMerchantUserExtMapper.update(null,
+			int updatedRows = wmMerchantUserExtMapper.update(null,
 					Wrappers.<WmMerchantUserExt>lambdaUpdate()
 						.set(WmMerchantUserExt::getAuditStatus, TakeawayStatusConstants.Merchant.AUDIT_APPROVED)
 						.eq(WmMerchantUserExt::getId, merchantId)
 						.eq(WmMerchantUserExt::getAuditStatus, TakeawayStatusConstants.Merchant.AUDIT_PENDING));
+
+			if (updatedRows <= 0) {
+				return;
+			}
+
+			WmMerchantUserExt merchant = wmMerchantUserExtMapper.selectById(merchantId);
+			if (merchant == null || merchant.getUserId() == null) {
+				return;
+			}
+
+			MerchantAuditResultWsMessage wsMessage = MerchantAuditResultWsMessage.approved(merchantId,
+					merchant.getUserId());
+			try {
+				String messageText = objectMapper.writeValueAsString(wsMessage);
+				pushAuditResultWithRetry(merchantId, merchant.getUserId(), messageText);
+			}
+			catch (JsonProcessingException e) {
+				log.error("商家审核结果消息序列化失败, merchantId={}", merchantId, e);
+			}
+			catch (Exception e) {
+				log.error("商家审核结果消息推送异常, merchantId={}, userId={}", merchantId, merchant.getUserId(), e);
+			}
 		});
+	}
+
+	private void pushAuditResultWithRetry(Long merchantId, Long userId, String messageText) {
+		WsPushMessageDTO pushMessageDTO = new WsPushMessageDTO().setMessageText(messageText)
+			.setSessionKeys(Collections.singletonList(String.valueOf(userId)));
+
+		try {
+			R<Boolean> response = remoteWsPushService.push(pushMessageDTO);
+			if (isPushSuccess(response)) {
+				log.info("商家审核结果消息推送成功, merchantId={}, userId={}", merchantId, userId);
+				return;
+			}
+			log.warn("商家审核结果消息推送失败, merchantId={}, userId={}, response={}", merchantId, userId, response);
+		}
+		catch (Exception e) {
+			log.warn("商家审核结果消息推送异常, merchantId={}, userId={}, message={}", merchantId, userId, e.getMessage());
+		}
+	}
+
+	private boolean isPushSuccess(R<Boolean> response) {
+		return response != null && response.getCode() == CommonConstants.SUCCESS
+				&& Boolean.TRUE.equals(response.getData());
 	}
 
 	@Override

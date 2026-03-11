@@ -20,13 +20,13 @@ MODULES=(
 )
 
 JARS=(
-  "luan-gateway/target/pig-gateway-exec.jar"
-  "luan-auth/target/pig-auth-exec.jar"
-  "luan-upms/luan-upms-biz/target/pig-upms-biz-exec.jar"
-  "luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz/target/pig-takeaway-user-biz-exec.jar"
-  "luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz/target/pig-takeaway-dish-biz-exec.jar"
-  "luan-takeaway/luan-takeaway-order/luan-takeaway-order-biz/target/pig-takeaway-order-biz-exec.jar"
-  "luan-takeaway/luan-takeaway-pay/luan-takeaway-pay-biz/target/pig-takeaway-pay-biz-exec.jar"
+  "luan-gateway/target/luan-gateway-exec.jar"
+  "luan-auth/target/luan-auth-exec.jar"
+  "luan-upms/luan-upms-biz/target/luan-upms-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz/target/luan-takeaway-user-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz/target/luan-takeaway-dish-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-order/luan-takeaway-order-biz/target/luan-takeaway-order-biz-exec.jar"
+  "luan-takeaway/luan-takeaway-pay/luan-takeaway-pay-biz/target/luan-takeaway-pay-biz-exec.jar"
 )
 
 PL="$(IFS=,; echo "${MODULES[*]}")"

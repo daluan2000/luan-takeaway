@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: pig-takeaway-pay
+    name: @artifactId@
   cloud:
     nacos:
       username: @nacos.username@

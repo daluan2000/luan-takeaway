@@ -24,7 +24,7 @@
 		<version>${revision}</version>
 	</parent>
 
-	<artifactId>pig-upms</artifactId>
+	<artifactId>luan-upms</artifactId>
 
 	<description>pig 通用用户权限管理聚合模块</description>
 	<packaging>pom</packaging>

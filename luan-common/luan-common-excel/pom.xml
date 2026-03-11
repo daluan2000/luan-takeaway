@@ -22,11 +22,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>pig-common</artifactId>
+        <artifactId>luan-common</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>pig-common-excel</artifactId>
+    <artifactId>luan-common-excel</artifactId>
     <packaging>jar</packaging>
 
     <description>excel 导入导出处理模块</description>
@@ -35,9 +35,9 @@
         <!--核心依赖,提供字典查询能力-->
         <dependency>
             <groupId>com.luan</groupId>
-            <artifactId>pig-common-core</artifactId>
+            <artifactId>luan-common-core</artifactId>
         </dependency>
-        <!-- excel 导入导出工具类：https://github.com/pig-mesh/excel-spring-boot-starter-->
+        <!-- excel 导入导出工具类：https://github.com/luan-mesh/excel-spring-boot-starter-->
         <dependency>
             <groupId>com.pig4cloud.excel</groupId>
             <artifactId>excel-spring-boot-starter</artifactId>
