@@ -1,138 +1,389 @@
-> **🚀 Spring Boot 4.0 版本来了**
->
-> 分支 `boot4` 基于 Spring Boot 4.0 + Spring Cloud 2025.1 进行开发。
 
-<p align="center">
- <img src="https://img.shields.io/badge/Pig-3.9-success.svg" alt="Build Status">
- <img src="https://img.shields.io/badge/Spring%20Cloud-2025-blue.svg" alt="Coverage Status">
- <img src="https://img.shields.io/badge/Spring%20Boot-3.5-blue.svg" alt="Downloads">
- <img src="https://img.shields.io/badge/Vue-3.5-blue.svg" alt="Downloads">
- <img src="https://img.shields.io/github/license/pig-mesh/pig"/>
- <img src="https://gitcode.com/pig-mesh/pig/star/badge.svg"/>
-</p>
 
-## 系统说明
+# Luan Takeaway System
 
-- 基于 Spring Cloud 、Spring Boot、 OAuth2 的 RBAC **企业级快速开发平台**， 同时支持微服务架构和单体架构
-- 提供 Spring Authorization Server 的生产级实践方案，支持多种安全授权模式
-- 提供对常见容器化方案支持 Kubernetes、Rancher2 、KubeSphere、EDAS、SAE 支持
+一个基于 **Spring Boot + Spring Cloud** 的外卖系统示例项目，支持 **微服务架构** 与 **单体架构** 两种运行模式，适用于微服务学习、系统架构实践以及业务系统开发参考。
 
-#### 使用文档
+前端工程位于 `luan-ui`，基于 **Vue3 + Typescript + Vite** 构建。
 
-PIG 提供了详尽的部署文档 👉 [wiki.pig4cloud.com](https://wiki.pig4cloud.com)，涵盖开发环境配置、服务端启动、前端运行等关键步骤。
 
-重要的事情说三遍：
+# 1 项目概述
 
-- 🔥 [ 配套文档 wiki.pig4cloud.com](https://wiki.pig4cloud.com)
-- 🔥 [ 配套文档 wiki.pig4cloud.com](https://wiki.pig4cloud.com)
-- 🔥 [ 配套文档 wiki.pig4cloud.com](https://wiki.pig4cloud.com)
+本项目基于以下技术栈构建：
 
-#### 其他产品
+* Spring Boot
+* Spring Cloud
+* Nacos
+* Redis
+* MySQL
+* Vue3 + Typescript + Vite
 
-- 👉🏻 [PIGX 在线体验](http://home.pig4cloud.com:38081)
+系统在保持 **模块化业务边界** 的前提下，支持两种运行模式：
 
-- 👉🏻 [自研BPMN工作流引擎](http://home.pig4cloud.com:38082)
+1. **微服务模式**，多个服务独立部署：
 
-- 👉🏻 [大模型 RAG 知识库](http://home.pig4cloud.com:38083)
-
-## 微信群 [禁广告]
-
-<img src='https://minio.pigx.vip/oss/202412/1735262426.png' alt='1735262426'/>
-
-## 快速开始
-
-#### Docker 快速体验
-
-当前仓库内置的 `docker-compose.yml` 已将 `pig-register` 切换为官方 `nacos/nacos-server` 容器运行（服务名保持 `pig-register` 以兼容其他模块的 `NACOS_HOST` 配置）。
-
-```shell
-# 可用内存大于4G
-curl -o docker-compose.yaml https://try.pig4cloud.com
-# 等待5分钟
-docker compose up
+```
+luan-gateway  网关服务
+luan-auth  认证服务
+luan-upms  用户权限管理服务
+luan-takeaway-user 外卖业务用户管理服务
+luan-takeaway-dish 菜品管理服务
+luan-takeaway-order 订单管理服务
+luan-takeaway-pay 支付管理服务
 ```
 
-### 核心依赖
 
-| 依赖                         | 版本     |
-|-----------------------------|--------|
-| Spring Boot                 | 3.5.9  |
-| Spring Cloud                | 2025   |
-| Spring Cloud Alibaba        | 2025   |
-| Spring Authorization Server | 1.5.2  |
-| Mybatis Plus                | 3.5.15 |
-| Vue                         | 3.5    |
-| Element Plus                | 2.8    |
+2. **单体模式**
 
-### 模块说明
+通过 `luan-boot` 聚合所有业务模块，以 **单进程方式运行**，实现微服务与单体架构的“无缝切换”。
 
-```lua
-pig-ui  -- https://gitee.com/log4j/pig-ui
 
-pig
-├── pig-boot -- 单体模式启动器[9999]
-├── pig-auth -- 授权服务提供[3000]
-└── pig-common -- 系统公共模块
-     ├── pig-common-bom -- 全局依赖管理控制
-     ├── pig-common-core -- 公共工具类核心包
-     ├── pig-common-datasource -- 动态数据源包
-     ├── pig-common-log -- 日志服务
-     ├── pig-common-oss -- 文件上传工具类
-     ├── pig-common-mybatis -- mybatis 扩展封装
-     ├── pig-common-seata -- 分布式事务
-     ├── pig-common-websocket -- websocket 封装
-     ├── pig-common-security -- 安全工具类
-     ├── pig-common-swagger -- 接口文档
-     ├── pig-common-feign -- feign 扩展封装
-     └── pig-common-xss -- xss 安全封装
-├── pig-register -- Nacos Server[8848]
-├── pig-gateway -- Spring Cloud Gateway网关[9999]
-└── pig-upms -- 通用用户权限管理模块
-     └── pig-upms-api -- 通用用户权限管理系统公共api模块
-     └── pig-upms-biz -- 通用用户权限管理系统业务处理模块[4000]
+# 2 系统架构
+
+系统整体架构如下：
+
+```
+        Client / Browser
+               │
+               │
+           Gateway
+               │
+     ┌─────────┼─────────┐
+     │         │         │
+   Auth       UPMS   Takeaway Services
+                        │
+        ┌───────────────┼────────────────┼──────────────┐
+        │               │                │              │
+     User Service   Dish Service    Order Service   Pay Service
+                                                                 
 ```
 
-## 免费公开课
+系统依赖的基础组件：
+- **Nacos**：服务注册与配置中心
+- **MySQL**：业务数据库
+- **Redis**：缓存与分布式锁
 
-<table>
-  <tr>
-    <td><a href="https://www.bilibili.com/video/av45084065" target="_blank"><img src="https://foruda.gitee.com/images/1731647304254897555/88a9c2fa_441246.jpeg"></a></td>
-    <td><a href="https://www.bilibili.com/video/av77344954" target="_blank"><img src="https://foruda.gitee.com/images/1731647324953921510/39689640_441246.jpeg"></a></td>
-  </tr>
-    <tr>
-    <td><a href="https://www.bilibili.com/video/BV1J5411476V" target="_blank"><img src="https://foruda.gitee.com/images/1731647357502030768/7f31f392_441246.jpeg"></a></td>
-    <td><a href="https://www.bilibili.com/video/BV14p4y197K5" target="_blank"><img src="https://foruda.gitee.com/images/1731647375444479120/2b8fd494_441246.jpeg"></a></td>
-  </tr>
-</table>
 
-## 开源共建
 
-### 开源协议
+# 3 业务模块说明
 
-pig 开源软件遵循 [Apache 2.0 协议](https://www.apache.org/licenses/LICENSE-2.0.html)。
-允许商业使用，但务必保留类作者、Copyright 信息。
+## 3.1 平台基础能力
 
-![](https://foruda.gitee.com/images/1731647419204307063/91217172_441246.jpeg)
+认证授权（`luan-auth`）提供系统统一认证能力：
+* Token签发
+* 验证码校验
 
-### 其他说明
 
-1. 欢迎提交 [PR](https://dwz.cn/2KURd5Vf)，注意对应提交对应 `dev` 分支
-   代码规范 [spring-javaformat](https://github.com/spring-io/spring-javaformat)
 
-   <details>
-    <summary>代码规范说明</summary>
+权限管理（`luan-upms`）系统管理能力：
 
-    1. 由于 <a href="https://github.com/spring-io/spring-javaformat" target="_blank">spring-javaformat</a>
-       强制所有代码按照指定格式排版，未按此要求提交的代码将不能通过合并（打包）
-    2. 如果使用 IntelliJ IDEA
-       开发，请安装自动格式化软件 <a href="https://repo1.maven.org/maven2/io/spring/javaformat/spring-javaformat-intellij-idea-plugin/" target="_blank">
-       spring-javaformat-intellij-idea-plugin</a>
-    3. 其他开发工具，请参考 <a href="https://github.com/spring-io/spring-javaformat" target="_blank">
-       spring-javaformat</a>
-       说明，或`提交代码前`在项目根目录运行下列命令（需要开发者电脑支持`mvn`命令）进行代码格式化
-       ```
-       mvn spring-javaformat:apply
-       ```
-   </details>
+* 用户管理
+* 角色管理
+* 菜单权限
+* 操作日志
 
-2. 欢迎提交 [issue](https://gitee.com/log4j/pig/issues)，请写清楚遇到问题的原因、开发环境、复显步骤。
+
+
+网关服务（`luan-gateway`）系统统一入口：
+* 路由转发
+* 网关过滤器
+* 统一异常处理
+* 接口限流
+
+
+公共组件（`luan-common`）所有服务共享的基础能力：
+* 安全组件
+* MyBatis 封装
+* Feign 调用
+* 日志组件
+* Swagger 文档
+* WebSocket
+
+
+# 3.2 外卖业务域（`luan-takeaway`）
+
+外卖业务按领域划分为多个服务。
+
+用户域（`luan-takeaway-user`）负责外卖业务用户相关能力：
+* 商家管理
+* 客户管理
+* 骑手管理
+
+
+菜品域（`luan-takeaway-dish`）负责菜品相关能力：
+* 菜品维护
+* 菜品上下架
+* 库存管理
+
+
+
+订单域（`luan-takeaway-order`）负责订单核心业务：
+* 创建订单
+* 订单状态流转
+* 订单查询
+
+
+
+支付域（`luan-takeaway-pay`）负责支付流程：
+* 模拟支付
+* 支付状态更新
+
+# 4 典型业务流程
+
+系统最小可用业务闭环如下：
+1. 商家入驻或维护店铺信息
+2. 商家上架菜品
+3. 用户浏览并下单
+4. 用户完成支付
+5. 商家接单
+6. 骑手配送
+7. 订单完成
+
+
+# 5 微服务划分
+
+基础中间件：
+
+| 服务           | 说明                 |
+| ------------ | ------------------ |
+| pig-register | Nacos（注册中心 + 配置中心） |
+| pig-mysql    | MySQL 数据库          |
+| pig-redis    | Redis 缓存           |
+
+
+mysql中包含两个数据库：
+```
+luan （业务数据库）
+pig_config （微服务配置数据，提供nacos使用）
+```
+
+
+
+核心服务：
+| 服务                 | 说明              |
+| ------------------ | --------------- |
+| pig-gateway        | 系统网关（默认端口 9999） |
+| pig-auth           | 认证中心            |
+| pig-upms           | 系统管理服务          |
+| pig-takeaway-user  | 用户服务            |
+| pig-takeaway-dish  | 菜品服务            |
+| pig-takeaway-order | 订单服务            |
+| pig-takeaway-pay   | 支付服务            |
+
+
+
+# 6 项目启动
+
+项目支持 **微服务模式** 与 **单体模式** 两种启动方式。
+
+
+# 6.1 微服务模式启动
+
+**如果是linux系统并且已安装docker**，系统提供了一键启动脚本：
+```bash
+# 启动中间件
+./start-middlewares.sh
+
+# 启动 Java 微服务
+./start-java-services.sh
+```
+
+先执行`./start-middlewares.sh`，会自动拉取官网的mysql、redis、nacos镜像，创建容器并初始化，自动执行初始化sql脚本。
+
+后执行`start-java-services.sh` 会自动使用mvn编译打包所有java代码，然后使用docker讲每个微服务的jar包转为镜像，创建对应微服务容器并启动。
+
+查看中间件状态：
+
+```bash
+docker compose ps pig-mysql pig-redis pig-register
+```
+
+查看微服务状态：
+
+```bash
+docker compose ps pig-gateway pig-auth pig-upms pig-takeaway-user pig-takeaway-dish pig-takeaway-order pig-takeaway-pay
+```
+
+停止 Java 服务：
+
+```bash
+./stop-java-services.sh
+```
+
+停止中间件：
+
+```bash
+./stop-middlewares.sh
+```
+
+**如果是其他情况**，需自行配置微服务、mysql、redis、nacos端口，并自行执行初始化sql脚本：
+```
+db/luan.sql
+db/luan_config.sql
+```
+
+# 6.2 单体模式启动
+
+单体模式由 `luan-boot` 聚合运行，直接运行该项目即可，系统也提供了一键运行脚本（linux）`./start.sh`
+其实现方式是在 `luan-boot` 的 `pom.xml` 中直接聚合认证、权限和外卖各业务模块依赖，让原本拆分的 Controller、Service、Mapper 一起加载到同一个 Spring Boot 应用上下文中。
+运行时再通过关闭 Nacos 的服务发现与配置能力，并统一使用 `/admin` 单入口和单端口，使Feign顺着入口“回调自己”，把原本多服务部署的系统收敛为单 JVM 进程运行。
+
+单体模式依然需要：
+* MySQL
+* Redis
+
+配置与微服务模式相同，依然建议使用Docker启动mysql redis：
+
+```bash
+docker compose up -d pig-mysql pig-redis
+```
+
+# 6.3 前端启动
+
+进入前端工程：
+
+```
+luan-ui
+```
+
+微服务模式：
+
+```bash
+npm run dev
+```
+
+单体模式：
+
+```bash
+npm run dev:mono
+```
+
+
+# 7 业务技术实现
+
+## 7.1 Redis 分布式锁
+
+应用场景：**菜品库存扣减**
+
+高并发下单场景：
+
+```
+库存 = 10
+
+用户A -> 查询库存 = 10
+用户B -> 查询库存 = 10
+
+A扣减 -> 9
+B扣减 -> 8
+```
+
+可能导致：
+
+* 超卖
+* 库存负数
+
+解决方案：**Redis 分布式锁**
+
+流程：
+
+```
+1 获取 redis 锁 (dishId)
+2 查询库存
+3 扣减库存
+4 创建订单
+5 释放锁
+```
+
+
+## 7.2 Redis 缓存
+
+适用于 **读多写少数据**（如菜品信息）。
+
+查询流程：
+
+```
+1 查询 Redis
+2 未命中 -> 查询 MySQL
+3 写入 Redis
+```
+
+
+### 缓存击穿
+
+Hot Key 过期导致大量请求访问数据库。
+
+解决方案：
+
+```
+互斥锁 + rebuild
+```
+
+流程：
+
+```
+1 Redis 未命中
+2 获取锁
+3 查询数据库
+4 写入缓存
+5 释放锁
+```
+
+
+### 缓存穿透
+
+恶意请求不存在的数据：
+
+```
+dishId = 999999
+```
+
+解决：
+
+缓存空值：
+
+```
+dish:999999 -> null
+ttl = 60s
+```
+
+
+### 缓存雪崩
+
+大量缓存同时过期。
+
+解决方案：
+
+```
+TTL = baseTTL + random(0~300)
+```
+
+
+## 7.3 RabbitMQ 异步处理
+
+用于 **服务解耦与异步处理**。
+
+
+### 订单事件异步处理
+
+订单创建后，通过 MQ 触发后续业务流程。
+
+
+
+### 订单超时自动取消
+
+用户下单后 **30分钟未支付自动取消**。
+
+流程：
+
+```
+创建订单
+    │
+发送延迟消息 (30min)
+    │
+消费者监听
+    │
+检查订单状态
+    │
+未支付 -> 取消订单
+```
+
