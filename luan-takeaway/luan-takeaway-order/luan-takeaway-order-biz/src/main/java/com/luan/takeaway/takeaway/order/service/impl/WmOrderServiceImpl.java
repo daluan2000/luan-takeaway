@@ -101,6 +101,9 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 
 		DeductStockRequest deductRequest = new DeductStockRequest();
 		deductRequest.setMerchantUserId(request.getMerchantUserId());
+		// 传递订单号用于下游库存异步落库的幂等控制：
+		// Dish 服务消费 MQ 后会基于 orderNo 写入消费完成标记，避免重复消息导致重复扣减数据库库存。
+		deductRequest.setOrderNo(order.getOrderNo());
 		deductRequest.setItems(request.getItems());
 		R<Boolean> deductResp = dishApi.deductStock(deductRequest);
 		Boolean deductSuccess = unwrap(deductResp, "扣减库存失败");

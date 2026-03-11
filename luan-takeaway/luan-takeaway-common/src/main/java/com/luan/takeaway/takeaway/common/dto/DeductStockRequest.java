@@ -17,6 +17,9 @@ public class DeductStockRequest {
 	@Schema(description = "商家用户ID")
 	private Long merchantUserId;
 
+	@Schema(description = "订单号")
+	private String orderNo;
+
 	@Schema(description = "扣减菜品项")
 	private List<DishPurchaseItemDTO> items;
 
