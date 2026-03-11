@@ -18,8 +18,8 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.pig4cloud</groupId>
-	<artifactId>pig</artifactId>
+	<groupId>com.luan</groupId>
+	<artifactId>takeaway</artifactId>
 	<name>${project.artifactId}</name>
 	<version>${revision}</version>
 	<packaging>pom</packaging>
@@ -97,7 +97,7 @@
 		<dependencies>
 			<!--pig 公共版本定义-->
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-bom</artifactId>
 				<version>${project.version}</version>
 				<type>pom</type>

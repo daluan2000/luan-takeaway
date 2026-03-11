@@ -1,3 +1,3 @@
-com.pig4cloud.pig.common.websocket.config.WebSocketAutoConfiguration
-com.pig4cloud.pig.common.websocket.config.RedisMessageDistributorConfiguration
-com.pig4cloud.pig.common.websocket.config.LocalMessageDistributorConfiguration
+com.luan.takeaway.common.websocket.config.WebSocketAutoConfiguration
+com.luan.takeaway.common.websocket.config.RedisMessageDistributorConfiguration
+com.luan.takeaway.common.websocket.config.LocalMessageDistributorConfiguration

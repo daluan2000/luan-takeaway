@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.pig4cloud</groupId>
+        <groupId>com.luan</groupId>
         <artifactId>pig-common</artifactId>
         <version>${revision}</version>
     </parent>
@@ -33,7 +33,7 @@
     <dependencies>
         <!--工具类核心包-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-core</artifactId>
         </dependency>
         <dependency>
@@ -46,7 +46,7 @@
         </dependency>
         <!--UPMS接口模块-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-upms-api</artifactId>
         </dependency>
         <!--安全依赖获取上下文信息-->

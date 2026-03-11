@@ -19,9 +19,9 @@
   -->
 
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.pig4cloud.pig.admin.mapper.SysRoleMapper">
+<mapper namespace="com.luan.takeaway.admin.mapper.SysRoleMapper">
 	<!-- 通用查询映射结果 -->
-	<resultMap id="BaseResultMap" type="com.pig4cloud.pig.admin.api.entity.SysRole">
+	<resultMap id="BaseResultMap" type="com.luan.takeaway.admin.api.entity.SysRole">
 		<id column="role_id" property="roleId"/>
 		<result column="role_name" property="roleName"/>
 		<result column="role_code" property="roleCode"/>

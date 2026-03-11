@@ -5,7 +5,7 @@
             "name": "Spring Boot-PigBootApplication<pig-boot>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "mainClass": "com.pig4cloud.pig.PigBootApplication",
+            "mainClass": "com.luan.takeaway.PigBootApplication",
             "projectName": "pig-boot",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
@@ -15,7 +15,7 @@
             "name": "Spring Boot-PigAuthApplication<pig-auth>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "mainClass": "com.pig4cloud.pig.auth.PigAuthApplication",
+            "mainClass": "com.luan.takeaway.auth.PigAuthApplication",
             "projectName": "pig-auth",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
@@ -25,7 +25,7 @@
             "name": "Spring Boot-PigGatewayApplication<pig-gateway>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "mainClass": "com.pig4cloud.pig.gateway.PigGatewayApplication",
+            "mainClass": "com.luan.takeaway.gateway.PigGatewayApplication",
             "projectName": "pig-gateway",
             "args": "",
             "envFile": "${workspaceFolder}/.env"

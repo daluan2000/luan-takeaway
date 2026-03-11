@@ -1,5 +1,5 @@
-com.pig4cloud.pig.common.core.config.JacksonConfiguration
-com.pig4cloud.pig.common.core.config.RedisTemplateConfiguration
-com.pig4cloud.pig.common.core.config.RestTemplateConfiguration
-com.pig4cloud.pig.common.core.util.SpringContextHolder
-com.pig4cloud.pig.common.core.config.WebMvcConfiguration
+com.luan.takeaway.common.core.config.JacksonConfiguration
+com.luan.takeaway.common.core.config.RedisTemplateConfiguration
+com.luan.takeaway.common.core.config.RestTemplateConfiguration
+com.luan.takeaway.common.core.util.SpringContextHolder
+com.luan.takeaway.common.core.config.WebMvcConfiguration

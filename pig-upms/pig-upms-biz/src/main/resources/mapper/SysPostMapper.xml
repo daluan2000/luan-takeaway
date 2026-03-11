@@ -20,9 +20,9 @@
 
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.pig4cloud.pig.admin.mapper.SysPostMapper">
+<mapper namespace="com.luan.takeaway.admin.mapper.SysPostMapper">
 
-	<resultMap id="sysPostMap" type="com.pig4cloud.pig.admin.api.entity.SysPost">
+	<resultMap id="sysPostMap" type="com.luan.takeaway.admin.api.entity.SysPost">
 		<id property="postId" column="post_id"/>
 		<result property="postCode" column="post_code"/>
 		<result property="postName" column="post_name"/>
@@ -34,7 +34,7 @@
 	</resultMap>
 
 	<!-- 通过用户ID，查询岗位信息-->
-	<select id="listPostsByUserId" resultType="com.pig4cloud.pig.admin.api.entity.SysPost">
+	<select id="listPostsByUserId" resultType="com.luan.takeaway.admin.api.entity.SysPost">
 		SELECT p.post_id,
 			   p.post_name,
 			   p.post_code,

@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.pig4cloud</groupId>
+        <groupId>com.luan</groupId>
         <artifactId>pig-takeaway-user</artifactId>
         <version>${revision}</version>
     </parent>
@@ -13,27 +13,27 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-takeaway-user-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-takeaway-common</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-feign</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-log</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-swagger</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-security</artifactId>
         </dependency>
         <dependency>

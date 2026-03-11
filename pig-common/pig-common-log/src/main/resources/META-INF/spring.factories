@@ -1,2 +1,2 @@
 org.springframework.boot.env.EnvironmentPostProcessor=\
-    com.pig4cloud.pig.common.log.init.ApplicationLoggerInitializer
+    com.luan.takeaway.common.log.init.ApplicationLoggerInitializer

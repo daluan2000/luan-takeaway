@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.pig4cloud</groupId>
+        <groupId>com.luan</groupId>
         <artifactId>pig-upms</artifactId>
         <version>${revision}</version>
     </parent>
@@ -32,32 +32,32 @@
     <dependencies>
         <!--upms api、model 模块-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-upms-api</artifactId>
         </dependency>
         <!--文件管理-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-oss</artifactId>
         </dependency>
         <!--feign 调用-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-feign</artifactId>
         </dependency>
         <!--安全模块-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-security</artifactId>
         </dependency>
         <!--日志处理-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-log</artifactId>
         </dependency>
         <!--接口文档-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-swagger</artifactId>
         </dependency>
         <!-- orm 模块-->
@@ -86,7 +86,7 @@
         </dependency>
         <!--xss 过滤-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-xss</artifactId>
         </dependency>
         <!--undertow容器-->

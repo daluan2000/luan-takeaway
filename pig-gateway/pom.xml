@@ -13,8 +13,8 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>com.pig4cloud</groupId>
-		<artifactId>pig</artifactId>
+		<groupId>com.luan</groupId>
+		<artifactId>takeaway</artifactId>
 		<version>${revision}</version>
 	</parent>
 
@@ -55,7 +55,7 @@
 		</dependency>
 		<!-- 工具包依赖 -->
 		<dependency>
-			<groupId>com.pig4cloud</groupId>
+			<groupId>com.luan</groupId>
 			<artifactId>pig-common-core</artifactId>
 		</dependency>
 		<!--接口文档 -->

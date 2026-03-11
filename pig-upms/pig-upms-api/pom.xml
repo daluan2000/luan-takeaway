@@ -19,7 +19,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.pig4cloud</groupId>
+        <groupId>com.luan</groupId>
         <artifactId>pig-upms</artifactId>
         <version>${revision}</version>
     </parent>
@@ -33,22 +33,22 @@
     <dependencies>
         <!--core 工具类-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-core</artifactId>
         </dependency>
         <!--feign 注解依赖-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-feign</artifactId>
         </dependency>
         <!--mybatis 依赖-->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-mybatis</artifactId>
         </dependency>
         <!-- excel 导入导出 -->
         <dependency>
-            <groupId>com.pig4cloud</groupId>
+            <groupId>com.luan</groupId>
             <artifactId>pig-common-excel</artifactId>
         </dependency>
     </dependencies>

@@ -1,3 +1,3 @@
-com.pig4cloud.pig.common.feign.PigFeignAutoConfiguration
-com.pig4cloud.pig.common.feign.sentinel.SentinelAutoConfiguration
-com.pig4cloud.pig.common.feign.sentinel.handle.GlobalBizExceptionHandler
+com.luan.takeaway.common.feign.PigFeignAutoConfiguration
+com.luan.takeaway.common.feign.sentinel.SentinelAutoConfiguration
+com.luan.takeaway.common.feign.sentinel.handle.GlobalBizExceptionHandler

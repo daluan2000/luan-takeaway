@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.pig4cloud</groupId>
+	<groupId>com.luan</groupId>
 	<artifactId>pig-common-bom</artifactId>
 	<version>${revision}</version>
 	<packaging>pom</packaging>
@@ -52,62 +52,62 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-core</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-datasource</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-log</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-mybatis</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-oss</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-security</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-feign</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-swagger</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-xss</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-excel</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-common-websocket</artifactId>
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
-				<groupId>com.pig4cloud</groupId>
+				<groupId>com.luan</groupId>
 				<artifactId>pig-upms-api</artifactId>
 				<version>${revision}</version>
 			</dependency>
