@@ -9,7 +9,6 @@
 - `pig-gateway`：统一网关（路由、限流、请求预处理）
 - `pig-auth`：认证授权中心（OAuth2）
 - `pig-upms`：用户/角色/菜单/日志等权限管理
-- `pig-visual`：监控可视化模块
 - `pig-common`：公共基础能力（安全、Feign、MyBatis、日志、XSS 等）
 - `pig-boot`：单体启动聚合器
 

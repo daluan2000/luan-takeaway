@@ -133,23 +133,6 @@ services:
     networks:
       - spring_cloud_default
 
-  pig-monitor:
-    build:
-      context: ./pig-visual/pig-monitor
-    restart: "no"
-    ports:
-      - 5001:5001
-    container_name: pig-monitor
-    hostname: pig-monitor
-    image: pig-monitor
-    environment:
-      NACOS_HOST: pig-register
-    depends_on:
-      pig-register:
-        condition: service_started
-    networks:
-      - spring_cloud_default
-
   pig-takeaway-user:
     build:
       context: ./pig-takeaway/pig-takeaway-user/pig-takeaway-user-biz
