@@ -6,9 +6,11 @@
 				<el-avatar 
 					:size="56" 
 					shape="circle" 
-					:src="baseURL + userData.avatar"
+					:src="avatarSrc"
 					class="ring-1 ring-gray-100" 
-				/>
+				>
+					{{ (userData.name || userData.username || '?').slice(0, 1) }}
+				</el-avatar>
 				<div>
 					<h3 class="text-lg font-semibold text-gray-800 mb-2">{{ userData.name }}</h3>
 					<div class="flex items-center gap-2 text-sm">
@@ -92,6 +94,20 @@ const ROLE_EXTENSION_CHECKS = [
 	{ roleCode: 'ROLE_DELIVERY', roleName: '骑手', checker: currentRider },
 	{ roleCode: 'ROLE_CUSTOMER', roleName: '客户', checker: currentCustomer },
 ];
+
+const baseURL = import.meta.env.VITE_API_URL || '';
+
+const joinUrl = (prefix: string, path: string) => {
+	if (!prefix) return path;
+	return `${prefix.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+};
+
+const avatarSrc = computed(() => {
+	const avatar = userData.value?.avatar;
+	if (!avatar) return '';
+	if (/^https?:\/\//i.test(avatar) || avatar.startsWith('data:')) return avatar;
+	return joinUrl(baseURL, avatar);
+});
 
 setInterval(() => {
 	date.value = new Date();

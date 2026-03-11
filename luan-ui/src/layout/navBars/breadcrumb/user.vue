@@ -49,7 +49,9 @@
 		</div>
 		<el-dropdown :show-timeout="70" :hide-timeout="50" @command="onHandleCommandClick">
 			<span class="layout-navbars-breadcrumb-user-link">
-				<img :src="userInfos.user.avatar" class="layout-navbars-breadcrumb-user-link-photo mr5" />
+				<el-avatar :size="25" :src="topAvatarSrc" class="layout-navbars-breadcrumb-user-link-photo mr5">
+					{{ avatarFallbackText }}
+				</el-avatar>
 				{{ userInfos.user.username }}
 				<el-icon class="el-icon--right">
 					<ele-ArrowDown />
@@ -217,6 +219,24 @@ const rollback = (msg: string) => {
 
 const isDot = computed(() => {
 	return useMsg().getAllMsg().length > 0;
+});
+
+const baseURL = import.meta.env.VITE_API_URL || '';
+
+const joinUrl = (prefix: string, path: string) => {
+	if (!prefix) return path;
+	return `${prefix.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+};
+
+const topAvatarSrc = computed(() => {
+	const avatar = userInfos.value?.user?.avatar;
+	if (!avatar) return '';
+	if (/^https?:\/\//i.test(avatar) || avatar.startsWith('data:')) return avatar;
+	return joinUrl(baseURL, avatar);
+});
+
+const avatarFallbackText = computed(() => {
+	return (userInfos.value?.user?.username || userInfos.value?.user?.name || '?').slice(0, 1);
 });
 
 // 页面加载时

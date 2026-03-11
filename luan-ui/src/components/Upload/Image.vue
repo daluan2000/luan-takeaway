@@ -117,6 +117,12 @@ const headers = computed(() => {
 	};
 });
 
+const toFullUrl = (url) => {
+	if (!url) return '';
+	if (/^https?:\/\//i.test(url) || url.startsWith('data:')) return url;
+	return `${baseURL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
+};
+
 // 是否显示提示
 const showTip = computed(() => {
 	return props.isShowTip && (props.fileType || props.fileSize);
@@ -132,7 +138,9 @@ watch(
 			// 然后将数组转为对象数组
 			fileList.value = list.map((item) => {
 				if (typeof item === 'string') {
-					item = { name: item, url: item };
+					item = { name: item, url: toFullUrl(item) };
+				} else if (item?.url) {
+					item.url = toFullUrl(item.url);
 				}
 				return item;
 			});

@@ -6,6 +6,11 @@
           <el-row :gutter="20">
             <el-col :span="24" class="mb20">
               <el-form-item prop="avatar">
+                <div class="personal-avatar-preview">
+                  <el-avatar :size="72" :src="personalAvatarSrc">
+                    {{ personalAvatarFallbackText }}
+                  </el-avatar>
+                </div>
                 <ImageUpload v-model="formData.avatar" borderRadius="50%">
                   <template #empty>
                     <el-icon>
@@ -229,6 +234,25 @@ const open = () => {
 };
 
 const loading = ref(false);
+
+const baseURL = import.meta.env.VITE_API_URL || '';
+
+const joinUrl = (prefix: string, path: string) => {
+  if (!prefix) return path;
+  return `${prefix.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+};
+
+const personalAvatarSrc = computed(() => {
+  const avatar = formData.value?.avatar;
+  if (!avatar) return '';
+  if (/^https?:\/\//i.test(avatar) || avatar.startsWith('data:')) return avatar;
+  return joinUrl(baseURL, avatar);
+});
+
+const personalAvatarFallbackText = computed(() => {
+  return (formData.value?.name || formData.value?.username || '?').slice(0, 1);
+});
+
 const initUserInfo = (userId: any) => {
   loading.value = true;
   getObj(userId)
@@ -459,5 +483,9 @@ defineExpose({
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.personal-avatar-preview {
+  margin-bottom: 12px;
 }
 </style>
