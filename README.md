@@ -20,7 +20,7 @@
 
 [![演示视频封面](./assets/demo-cover.jpg)](https://www.bilibili.com/video/BV1B3c6zcEqh)
 
-外链地址：`https://www.bilibili.com/video/BV1xxxxxxxxxx/`（请替换为你的真实视频链接）
+
 
 ## 1 项目概述
 
