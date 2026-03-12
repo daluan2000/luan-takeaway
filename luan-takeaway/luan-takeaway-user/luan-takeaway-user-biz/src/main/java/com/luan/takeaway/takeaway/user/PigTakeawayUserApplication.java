@@ -14,7 +14,7 @@ import org.springframework.context.annotation.FullyQualifiedAnnotationBeanNameGe
 @EnablePigFeignClients
 @EnableDiscoveryClient
 @AutoConfigurationPackage(basePackages = "com.luan.takeaway.takeaway")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.luan.takeaway.takeaway")
 public class PigTakeawayUserApplication {
 
 	public static void main(String[] args) {

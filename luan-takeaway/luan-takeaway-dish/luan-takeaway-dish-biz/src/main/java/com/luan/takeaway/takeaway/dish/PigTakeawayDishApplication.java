@@ -11,7 +11,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @EnablePigResourceServer
 @EnableDiscoveryClient
 @AutoConfigurationPackage(basePackages = "com.luan.takeaway.takeaway")
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.luan.takeaway.takeaway")
 public class PigTakeawayDishApplication {
 
 	public static void main(String[] args) {
