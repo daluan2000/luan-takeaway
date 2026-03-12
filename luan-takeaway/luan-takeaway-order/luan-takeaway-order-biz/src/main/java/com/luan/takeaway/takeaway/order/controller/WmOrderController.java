@@ -72,7 +72,7 @@ public class WmOrderController {
 	}
 
 	@PostMapping(TakeawayApiConstants.ORDER_PATH + "/service/{orderId}/delivery-start/{deliveryUserId}")
-	@Operation(summary = "开始配送")
+	@Operation(summary = "抢单并开始配送")
 	public R<Boolean> deliveryStart(@PathVariable("orderId") Long orderId,
 			@PathVariable("deliveryUserId") Long deliveryUserId) {
 		return R.ok(wmOrderService.deliveryStart(orderId, deliveryUserId));

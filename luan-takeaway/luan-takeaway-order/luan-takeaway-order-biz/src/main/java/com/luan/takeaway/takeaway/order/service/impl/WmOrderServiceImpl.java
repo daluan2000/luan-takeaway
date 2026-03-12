@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luan.takeaway.common.core.util.R;
+import com.luan.takeaway.common.core.util.RedisUtils;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
 import com.luan.takeaway.takeaway.common.dto.DishPurchaseItemDTO;
@@ -38,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -314,16 +316,42 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 
 	@Override
 	public boolean deliveryStart(Long orderId, Long deliveryUserId) {
-		WmOrder order = mustGet(orderId);
-		if (!TakeawayStatusConstants.Order.MERCHANT_ACCEPTED.equals(order.getOrderStatus())) {
-			throw new IllegalStateException("仅商家已接单订单可开始配送");
+		// 锁 key 按订单维度构造，确保“同一个订单”的抢单流程在同一时刻只允许一个线程进入。
+		String lockKey = "takeaway:order:delivery:start:lock:" + orderId;
+		// lock value 使用随机串，便于 releaseLock 做 value 比对，避免误删掉其他线程/实例持有的锁。
+		String lockValue = UUID.randomUUID().toString();
+
+		// 锁超时设置为 10 秒：
+		// 1) 足够覆盖一次“查订单 + 更新状态”的数据库操作；
+		// 2) 即使服务异常退出，也能依赖过期时间自动释放，避免死锁。
+		boolean locked = RedisUtils.getLock(lockKey, lockValue, 10);
+		if (!locked) {
+			// 没抢到锁说明当前订单正在被其他骑手并发处理，直接失败并提示前端重试。
+			throw new IllegalStateException("当前订单正在被其他骑手抢单，请稍后重试");
 		}
-		WmOrder update = new WmOrder();
-		update.setId(orderId);
-		update.setDeliveryUserId(deliveryUserId);
-		update.setOrderStatus(TakeawayStatusConstants.Order.DELIVERING);
-		update.setDeliveryStartTime(LocalDateTime.now());
-		return updateById(update);
+
+		try {
+			// 拿到锁后再查最新订单状态，防止使用旧数据做业务判断。
+			WmOrder order = mustGet(orderId);
+			if (!TakeawayStatusConstants.Order.MERCHANT_ACCEPTED.equals(order.getOrderStatus())) {
+				// 只有“商家已接单”状态允许骑手开始配送。
+				// 当前状态若已变更（例如已被其他骑手抢走），这里会直接阻断流程。
+				throw new IllegalStateException("仅商家已接单订单可开始配送");
+			}
+
+			// 状态迁移：商家已接单 -> 配送中，同时写入骑手 ID 和配送开始时间。
+			WmOrder update = new WmOrder();
+			update.setId(orderId);
+			update.setDeliveryUserId(deliveryUserId);
+			update.setOrderStatus(TakeawayStatusConstants.Order.DELIVERING);
+			update.setDeliveryStartTime(LocalDateTime.now());
+			return updateById(update);
+		}
+		finally {
+			// 无论业务成功/失败都尝试释放锁。
+			// releaseLock 内部通过 Lua 做“key + value”原子校验后删除，避免误释放他人的锁。
+			RedisUtils.releaseLock(lockKey, lockValue);
+		}
 	}
 
 	@Override
