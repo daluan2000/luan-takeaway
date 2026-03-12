@@ -83,6 +83,7 @@ import mittBus from '/@/utils/mitt';
 import { Session, Local } from '/@/utils/storage';
 import { formatAxis } from '/@/utils/formatTime';
 import { useMsg } from '/@/stores/msg';
+import { resolveApiResourceUrl } from '/@/utils/url';
 
 // 引入组件
 const GlobalWebsocket = defineAsyncComponent(() => import('/@/components/Websocket/index.vue'));
@@ -221,22 +222,12 @@ const isDot = computed(() => {
 	return useMsg().getAllMsg().length > 0;
 });
 
-const baseURL = import.meta.env.VITE_API_URL || '';
-
-const joinUrl = (prefix: string, path: string) => {
-	if (!prefix) return path;
-	return `${prefix.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
-};
-
 const topAvatarSrc = computed(() => {
-	const avatar = userInfos.value?.user?.avatar;
-	if (!avatar) return '';
-	if (/^https?:\/\//i.test(avatar) || avatar.startsWith('data:')) return avatar;
-	return joinUrl(baseURL, avatar);
+	return resolveApiResourceUrl(userInfos.value?.user?.avatar);
 });
 
 const avatarFallbackText = computed(() => {
-	return (userInfos.value?.user?.username || userInfos.value?.user?.name || '?').slice(0, 1);
+	return (userInfos.value?.user?.username || '?').slice(0, 1);
 });
 
 // 页面加载时

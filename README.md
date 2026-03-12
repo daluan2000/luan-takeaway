@@ -14,6 +14,14 @@
 - gitee: [https://gitee.com/daluan/luan-takeaway](https://gitee.com/daluan/luan-takeaway)
 - github: [https://github.com/daluan2000/luan-takeaway](https://github.com/daluan2000/luan-takeaway)
 
+## 演示视频
+
+点击下方封面可跳转到外链视频：
+
+[![演示视频封面](./assets/demo-cover.jpg)](https://www.bilibili.com/video/BV1B3c6zcEqh)
+
+外链地址：`https://www.bilibili.com/video/BV1xxxxxxxxxx/`（请替换为你的真实视频链接）
+
 ## 1 项目概述
 
 本项目基于以下技术栈构建：

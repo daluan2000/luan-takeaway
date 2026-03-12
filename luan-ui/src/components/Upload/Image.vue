@@ -46,6 +46,7 @@ import { ElMessage, ElLoading, ElImageViewer } from 'element-plus';
 import Sortable from 'sortablejs';
 import { Session } from '/@/utils/storage';
 import { useI18n } from 'vue-i18n';
+import { resolveApiResourceUrl } from '/@/utils/url';
 
 const { t } = useI18n();
 
@@ -118,9 +119,7 @@ const headers = computed(() => {
 });
 
 const toFullUrl = (url) => {
-	if (!url) return '';
-	if (/^https?:\/\//i.test(url) || url.startsWith('data:')) return url;
-	return `${baseURL.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
+	return resolveApiResourceUrl(url, baseURL);
 };
 
 // 是否显示提示
@@ -214,7 +213,7 @@ const handleExceed = () => {
 // 上传成功回调
 const handleUploadSuccess = (res, file) => {
 	if (res.code === 0) {
-		uploadList.value.push({ name: res.data.fileName, url: baseURL + res.data.url });
+		uploadList.value.push({ name: res.data.fileName, url: toFullUrl(res.data.url) });
 		uploadedSuccessfully();
 	} else {
 		number.value--;

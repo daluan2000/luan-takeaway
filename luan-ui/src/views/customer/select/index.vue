@@ -62,9 +62,9 @@
 								<div class="dish-image-wrapper">
 									<el-image
 										v-if="dish.dishImage"
-										:src="dish.dishImage"
+										:src="resolveDishImageSrc(dish.dishImage)"
 										fit="cover"
-										:preview-src-list="[dish.dishImage]"
+										:preview-src-list="[resolveDishImageSrc(dish.dishImage)]"
 										preview-teleported
 										class="dish-image"
 									/>
@@ -136,6 +136,7 @@ import { pageList as pageDish } from '/@/api/takeaway/dish';
 import { listMerchantByRegion } from '/@/api/takeaway/merchant';
 import { createOrder } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
+import { resolveApiResourceUrl } from '/@/utils/url';
 
 interface AddressItem {
 	id?: string | number;
@@ -168,6 +169,10 @@ interface DishItem {
 	stock?: number;
 	saleStatus?: string;
 }
+
+const resolveDishImageSrc = (image?: string) => {
+	return resolveApiResourceUrl(image);
+};
 
 const normalizeId = (value: unknown): string | undefined => {
 	if (value === null || value === undefined || value === '') {

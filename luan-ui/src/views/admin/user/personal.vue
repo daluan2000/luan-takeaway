@@ -5,7 +5,7 @@
         <el-form :model="formData" :rules="ruleForm" label-width="100px" class="mt30" ref="formdataRef">
           <el-row :gutter="20">
             <el-col :span="24" class="mb20">
-              <el-form-item prop="avatar">
+              <el-form-item prop="avatar" class="avatar-upload-item">
                 <div class="personal-avatar-preview">
                   <el-avatar :size="72" :src="personalAvatarSrc">
                     {{ personalAvatarFallbackText }}
@@ -103,6 +103,7 @@ import {rule} from '/@/utils/validate';
 import other from '/@/utils/other';
 import {Session} from '/@/utils/storage';
 import {useI18n} from 'vue-i18n';
+import { resolveApiResourceUrl } from '/@/utils/url';
 
 const {t} = useI18n();
 
@@ -235,22 +236,12 @@ const open = () => {
 
 const loading = ref(false);
 
-const baseURL = import.meta.env.VITE_API_URL || '';
-
-const joinUrl = (prefix: string, path: string) => {
-  if (!prefix) return path;
-  return `${prefix.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
-};
-
 const personalAvatarSrc = computed(() => {
-  const avatar = formData.value?.avatar;
-  if (!avatar) return '';
-  if (/^https?:\/\//i.test(avatar) || avatar.startsWith('data:')) return avatar;
-  return joinUrl(baseURL, avatar);
+  return resolveApiResourceUrl(formData.value?.avatar);
 });
 
 const personalAvatarFallbackText = computed(() => {
-  return (formData.value?.name || formData.value?.username || '?').slice(0, 1);
+  return (formData.value?.username || '?').slice(0, 1);
 });
 
 const initUserInfo = (userId: any) => {
@@ -486,6 +477,14 @@ defineExpose({
 }
 
 .personal-avatar-preview {
-  margin-bottom: 12px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.avatar-upload-item :deep(.el-form-item__content) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 1;
 }
 </style>

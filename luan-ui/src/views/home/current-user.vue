@@ -9,7 +9,7 @@
 					:src="avatarSrc"
 					class="ring-1 ring-gray-100" 
 				>
-					{{ (userData.name || userData.username || '?').slice(0, 1) }}
+					{{ (userData.username || '?').slice(0, 1) }}
 				</el-avatar>
 				<div>
 					<h3 class="text-lg font-semibold text-gray-800 mb-2">{{ userData.name }}</h3>
@@ -69,6 +69,9 @@ import { useMessage } from '/@/hooks/message';
 import { currentMerchant } from '/@/api/takeaway/merchant';
 import { currentRider } from '/@/api/takeaway/delivery';
 import { currentCustomer } from '/@/api/takeaway/customer';
+import { resolveApiResourceUrl } from '/@/utils/url';
+
+const userStore = useUserInfo();
 
 const date = ref(new Date());
 
@@ -95,18 +98,8 @@ const ROLE_EXTENSION_CHECKS = [
 	{ roleCode: 'ROLE_CUSTOMER', roleName: '客户', checker: currentCustomer },
 ];
 
-const baseURL = import.meta.env.VITE_API_URL || '';
-
-const joinUrl = (prefix: string, path: string) => {
-	if (!prefix) return path;
-	return `${prefix.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
-};
-
 const avatarSrc = computed(() => {
-	const avatar = userData.value?.avatar;
-	if (!avatar) return '';
-	if (/^https?:\/\//i.test(avatar) || avatar.startsWith('data:')) return avatar;
-	return joinUrl(baseURL, avatar);
+	return resolveApiResourceUrl(userData.value?.avatar);
 });
 
 setInterval(() => {
@@ -114,10 +107,22 @@ setInterval(() => {
 }, 1000);
 
 onMounted(() => {
-	const data = useUserInfo().userInfos;
+	const data = userStore.userInfos;
 	getRoleData();
-	initUserInfo(data.user.userId);
+	if (data?.user?.userId) {
+		initUserInfo(data.user.userId);
+	}
 });
+
+watch(
+	() => userStore.userInfos?.time,
+	() => {
+		const userId = userStore.userInfos?.user?.userId;
+		if (userId) {
+			initUserInfo(userId);
+		}
+	}
+);
 
 /**
  * 根据用户 ID 初始化用户信息。

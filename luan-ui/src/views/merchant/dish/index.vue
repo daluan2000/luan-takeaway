@@ -28,7 +28,14 @@
 				<el-table :data="state.dataList" v-loading="state.loading" border style="width: 100%" :cell-style="tableStyle.cellStyle" :header-cell-style="tableStyle.headerCellStyle">
 					<el-table-column label="菜品图片" width="100">
 						<template #default="scope">
-							<el-image v-if="scope.row.dishImage" :src="scope.row.dishImage" fit="cover" :preview-src-list="[scope.row.dishImage]" preview-teleported class="dish-image" />
+							<el-image
+								v-if="scope.row.dishImage"
+								:src="resolveImageSrc(scope.row.dishImage)"
+								fit="cover"
+								:preview-src-list="[resolveImageSrc(scope.row.dishImage)]"
+								preview-teleported
+								class="dish-image"
+							/>
 							<span v-else class="no-image">未上传</span>
 						</template>
 					</el-table-column>
@@ -106,6 +113,7 @@ import { useTable, type BasicTableProps } from '/@/hooks/table';
 import { addObj, delObj, pageList, putObj, saleOff, saleOn } from '/@/api/takeaway/dish';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useUserInfo } from '/@/stores/userInfo';
+import { resolveApiResourceUrl } from '/@/utils/url';
 
 interface DishForm {
 	id?: number;
@@ -152,6 +160,10 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 });
 
 const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTable(state);
+
+const resolveImageSrc = (image?: string) => {
+	return resolveApiResourceUrl(image);
+};
 
 const currentMerchantUserId = computed(() => {
 	return useUserInfo().userInfos?.user?.userId as number | undefined;
