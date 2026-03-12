@@ -1,6 +1,5 @@
 package com.luan.takeaway.takeaway.dish.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.log.annotation.SysLog;
@@ -32,14 +31,7 @@ public class WmDishController {
 	@GetMapping(TakeawayApiConstants.DISH_PATH + "/page")
 	@Operation(summary = "分页查询菜品")
 	public R<Page<WmDish>> page(@ParameterObject Page<WmDish> page, @ParameterObject WmDish query) {
-		return R.ok(wmDishService.page(page,
-				Wrappers.<WmDish>lambdaQuery()
-					.eq(query.getMerchantUserId() != null, WmDish::getMerchantUserId, query.getMerchantUserId())
-					.like(query.getDishName() != null && !query.getDishName().isBlank(), WmDish::getDishName,
-							query.getDishName())
-					.eq(query.getSaleStatus() != null && !query.getSaleStatus().isBlank(), WmDish::getSaleStatus,
-							query.getSaleStatus())
-					.orderByDesc(WmDish::getCreateTime)));
+		return R.ok(wmDishService.pageByQuery(page, query));
 	}
 
 	@PostMapping(TakeawayApiConstants.DISH_PATH)

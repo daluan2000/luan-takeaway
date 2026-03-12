@@ -2,26 +2,29 @@ package com.luan.takeaway.takeaway.user.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luan.takeaway.admin.api.dto.WsPushMessageDTO;
 import com.luan.takeaway.admin.api.feign.RemoteWsPushService;
-import com.luan.takeaway.takeaway.user.dto.ws.MerchantAuditResultWsMessage;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luan.takeaway.common.core.constant.CommonConstants;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
+import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.entity.WmAddress;
 import com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt;
 import com.luan.takeaway.takeaway.common.mapper.WmAddressMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
+import com.luan.takeaway.takeaway.user.dto.ws.MerchantAuditResultWsMessage;
 import com.luan.takeaway.takeaway.user.message.MerchantAuditResultMqPublisher;
 import com.luan.takeaway.takeaway.user.service.WmMerchantService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -40,6 +43,34 @@ import java.util.stream.Collectors;
 @Slf4j
 public class WmMerchantServiceImpl implements WmMerchantService {
 
+	// 商户缓存版本号，写操作后递增，用于让老的查询缓存“逻辑过期”。
+	private static final String MERCHANT_CACHE_VERSION_KEY = "takeaway:merchant:cache:version";
+
+	// 当前登录用户的商户信息缓存 key 前缀。
+	private static final String MERCHANT_CURRENT_CACHE_KEY_PREFIX = "takeaway:merchant:current:";
+
+	// 【防击穿】当前用户商户信息锁 key 前缀。
+	private static final String MERCHANT_CURRENT_LOCK_KEY_PREFIX = "takeaway:merchant:current:lock:";
+
+	// 地域列表查询缓存 key 前缀。
+	private static final String MERCHANT_LIST_CACHE_KEY_PREFIX = "takeaway:merchant:list:";
+
+	// 【防击穿】地域列表查询锁 key 前缀。
+	private static final String MERCHANT_LIST_LOCK_KEY_PREFIX = "takeaway:merchant:list:lock:";
+
+	// 分页查询缓存 key 前缀。
+	private static final String MERCHANT_PAGE_CACHE_KEY_PREFIX = "takeaway:merchant:page:";
+
+	// 【防击穿】分页查询锁 key 前缀。
+	private static final String MERCHANT_PAGE_LOCK_KEY_PREFIX = "takeaway:merchant:page:lock:";
+
+	// 商户缓存统一策略（这套策略会在个体/分页/列表查询里复用）：
+	// - 【防雪崩】基础 TTL 20 分钟 + 抖动 5 分钟
+	// - 【防穿透】空值缓存 2 分钟
+	// - 【防击穿】锁 10 秒 + 重试 3 次
+	private static final RedisSafeCacheService.CachePolicy MERCHANT_CACHE_POLICY = RedisSafeCacheService.CachePolicy
+		.of(20 * 60, 5 * 60, 2 * 60, 10, 3, 50);
+
 	private final WmMerchantUserExtMapper wmMerchantUserExtMapper;
 
 	private final WmAddressMapper wmAddressMapper;
@@ -50,6 +81,10 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 
 	private final MerchantAuditResultMqPublisher merchantAuditResultMqPublisher;
 
+	private final StringRedisTemplate stringRedisTemplate;
+
+	private final RedisSafeCacheService redisSafeCacheService;
+
 	@Override
 	public WmMerchantDTO createMerchant(WmMerchantDTO merchantDTO) {
 		PigUser currentUser = SecurityUtils.getUser();
@@ -58,8 +93,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		}
 		Long userId = currentUser.getId();
 
-		Long existCount = wmMerchantUserExtMapper.selectCount(
-				Wrappers.<WmMerchantUserExt>lambdaQuery().eq(WmMerchantUserExt::getUserId, userId));
+		Long existCount = wmMerchantUserExtMapper
+			.selectCount(Wrappers.<WmMerchantUserExt>lambdaQuery().eq(WmMerchantUserExt::getUserId, userId));
 		if (existCount != null && existCount > 0) {
 			throw new IllegalStateException("当前用户已存在商家信息");
 		}
@@ -83,6 +118,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		WmMerchantDTO result = new WmMerchantDTO();
 		BeanUtils.copyProperties(merchant, result);
 		fillAddress(result);
+		bumpMerchantCacheVersion();
 		return result;
 	}
 
@@ -105,6 +141,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		boolean saved = wmMerchantUserExtMapper.insert(merchant) > 0;
 		if (saved && merchant.getId() != null) {
 			scheduleAutoApprove(merchant.getId());
+			// 新增商户后提升缓存版本，避免旧列表继续返回过期数据。
+			bumpMerchantCacheVersion();
 		}
 		return saved;
 	}
@@ -129,6 +167,9 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 			if (updatedRows <= 0) {
 				return;
 			}
+
+			// 自动审核通过后同样会改变查询结果，必须刷新版本。
+			bumpMerchantCacheVersion();
 
 			WmMerchantUserExt merchant = wmMerchantUserExtMapper.selectById(merchantId);
 			if (merchant == null || merchant.getUserId() == null) {
@@ -183,7 +224,11 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		WmMerchantUserExt merchant = new WmMerchantUserExt();
 		merchant.setId(id);
 		merchant.setAuditStatus(auditStatus);
-		return wmMerchantUserExtMapper.updateById(merchant) > 0;
+		boolean updated = wmMerchantUserExtMapper.updateById(merchant) > 0;
+		if (updated) {
+			bumpMerchantCacheVersion();
+		}
+		return updated;
 	}
 
 	@Override
@@ -197,6 +242,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		boolean updated = wmMerchantUserExtMapper.updateById(merchant) > 0;
 		if (updated) {
 			scheduleAutoApprove(merchantDTO.getId());
+			bumpMerchantCacheVersion();
 		}
 		return updated;
 	}
@@ -207,61 +253,49 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		if (currentUser == null || currentUser.getId() == null) {
 			throw new IllegalStateException("当前登录用户不存在");
 		}
-		WmMerchantUserExt merchant = wmMerchantUserExtMapper
-			.selectOne(Wrappers.<WmMerchantUserExt>lambdaQuery().eq(WmMerchantUserExt::getUserId, currentUser.getId()));
-		WmMerchantDTO result = new WmMerchantDTO();
-		if (merchant == null) {
-			result.setNoExist(Boolean.TRUE);
-			return result;
-		}
-		BeanUtils.copyProperties(merchant, result);
-		result.setNoExist(Boolean.FALSE);
-		fillAddress(result);
-		return result;
+
+		long version = getMerchantCacheVersion();
+		String cacheKey = MERCHANT_CURRENT_CACHE_KEY_PREFIX + version + ":" + currentUser.getId();
+		String lockKey = MERCHANT_CURRENT_LOCK_KEY_PREFIX + version + ":" + currentUser.getId();
+
+		// 当前用户商户个体查询：直接复用统一组件，三件事都一起兜住
+		// 【防穿透】空值缓存、【防击穿】互斥锁、【防雪崩】随机 TTL。
+		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, WmMerchantDTO.class,
+				() -> loadCurrentByUserId(currentUser.getId()), MERCHANT_CACHE_POLICY);
 	}
 
 	@Override
 	public Page<WmMerchantDTO> page(Page<WmMerchantDTO> page, Long userId, String auditStatus, String businessStatus) {
-		Page<WmMerchantUserExt> entityPage = wmMerchantUserExtMapper.selectPage(new Page<>(page.getCurrent(), page.getSize()),
-				Wrappers.<WmMerchantUserExt>lambdaQuery()
-					.eq(userId != null, WmMerchantUserExt::getUserId, userId)
-					.eq(auditStatus != null && !auditStatus.isBlank(), WmMerchantUserExt::getAuditStatus, auditStatus)
-					.eq(businessStatus != null && !businessStatus.isBlank(), WmMerchantUserExt::getBusinessStatus,
-							businessStatus)
-					.orderByDesc(WmMerchantUserExt::getCreateTime));
+		long version = getMerchantCacheVersion();
+		String safeUserId = userId == null ? "_" : String.valueOf(userId);
+		String safeAuditStatus = StringUtils.hasText(auditStatus) ? auditStatus.trim() : "_";
+		String safeBusinessStatus = StringUtils.hasText(businessStatus) ? businessStatus.trim() : "_";
 
-		List<WmMerchantDTO> dtoList = toDtoListWithAddress(entityPage.getRecords());
-		Page<WmMerchantDTO> result = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
-		result.setRecords(dtoList);
-		return result;
+		String cacheKey = MERCHANT_PAGE_CACHE_KEY_PREFIX + version + ":" + page.getCurrent() + ":" + page.getSize() + ":"
+				+ safeUserId + ":" + safeAuditStatus + ":" + safeBusinessStatus;
+		String lockKey = MERCHANT_PAGE_LOCK_KEY_PREFIX + cacheKey;
+
+		JavaType pageType = objectMapper.getTypeFactory().constructParametricType(Page.class, WmMerchantDTO.class);
+		// 分页查询同样走统一缓存保护，避免同条件请求高并发时把 DB 挤爆。
+		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, pageType,
+				() -> loadMerchantPageFromDb(page, userId, auditStatus, businessStatus), MERCHANT_CACHE_POLICY);
 	}
 
 	@Override
 	public List<WmMerchantDTO> listByRegion(String province, String city, String district) {
-		if (!StringUtils.hasText(province)) {
-			List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper.selectList(
-					Wrappers.<WmMerchantUserExt>lambdaQuery().orderByDesc(WmMerchantUserExt::getCreateTime));
-			return toDtoListWithAddress(merchants);
-		}
+		long version = getMerchantCacheVersion();
+		String safeProvince = StringUtils.hasText(province) ? province.trim() : "_";
+		String safeCity = StringUtils.hasText(city) ? city.trim() : "_";
+		String safeDistrict = StringUtils.hasText(district) ? district.trim() : "_";
 
-		List<WmAddress> addresses = wmAddressMapper.selectList(Wrappers.<WmAddress>lambdaQuery()
-			.eq(WmAddress::getProvince, province)
-			.eq(StringUtils.hasText(city), WmAddress::getCity, city)
-			.eq(StringUtils.hasText(city) && StringUtils.hasText(district), WmAddress::getDistrict, district));
+		String cacheKey = MERCHANT_LIST_CACHE_KEY_PREFIX + version + ":" + safeProvince + ":" + safeCity + ":"
+				+ safeDistrict;
+		String lockKey = MERCHANT_LIST_LOCK_KEY_PREFIX + cacheKey;
 
-		if (addresses.isEmpty()) {
-			return Collections.emptyList();
-		}
-
-		List<Long> addressIds = addresses.stream().map(WmAddress::getId).filter(Objects::nonNull).collect(Collectors.toList());
-		if (addressIds.isEmpty()) {
-			return Collections.emptyList();
-		}
-
-		List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery()
-			.in(WmMerchantUserExt::getStoreAddressId, addressIds)
-			.orderByDesc(WmMerchantUserExt::getCreateTime));
-		return toDtoListWithAddress(merchants);
+		JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, WmMerchantDTO.class);
+		// 地域列表查询也复用统一组件，和个体/分页一套规则。
+		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, listType,
+				() -> loadMerchantListByRegionFromDb(province, city, district), MERCHANT_CACHE_POLICY);
 	}
 
 	private List<WmMerchantDTO> toDtoListWithAddress(List<WmMerchantUserExt> merchants) {
@@ -311,7 +345,92 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		WmMerchantUserExt merchant = new WmMerchantUserExt();
 		merchant.setId(id);
 		merchant.setBusinessStatus(businessStatus);
-		return wmMerchantUserExtMapper.updateById(merchant) > 0;
+		boolean updated = wmMerchantUserExtMapper.updateById(merchant) > 0;
+		if (updated) {
+			bumpMerchantCacheVersion();
+		}
+		return updated;
+	}
+
+	private WmMerchantDTO loadCurrentByUserId(Long userId) {
+		WmMerchantUserExt merchant = wmMerchantUserExtMapper
+			.selectOne(Wrappers.<WmMerchantUserExt>lambdaQuery().eq(WmMerchantUserExt::getUserId, userId));
+		WmMerchantDTO result = new WmMerchantDTO();
+		if (merchant == null) {
+			result.setNoExist(Boolean.TRUE);
+			return result;
+		}
+		BeanUtils.copyProperties(merchant, result);
+		result.setNoExist(Boolean.FALSE);
+		fillAddress(result);
+		return result;
+	}
+
+	private Page<WmMerchantDTO> loadMerchantPageFromDb(Page<WmMerchantDTO> page, Long userId, String auditStatus,
+			String businessStatus) {
+		Page<WmMerchantUserExt> entityPage = wmMerchantUserExtMapper.selectPage(new Page<>(page.getCurrent(), page.getSize()),
+				Wrappers.<WmMerchantUserExt>lambdaQuery()
+					.eq(userId != null, WmMerchantUserExt::getUserId, userId)
+					.eq(auditStatus != null && !auditStatus.isBlank(), WmMerchantUserExt::getAuditStatus, auditStatus)
+					.eq(businessStatus != null && !businessStatus.isBlank(), WmMerchantUserExt::getBusinessStatus,
+							businessStatus)
+					.orderByDesc(WmMerchantUserExt::getCreateTime));
+
+		List<WmMerchantDTO> dtoList = toDtoListWithAddress(entityPage.getRecords());
+		Page<WmMerchantDTO> result = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
+		result.setRecords(dtoList);
+		return result;
+	}
+
+	private List<WmMerchantDTO> loadMerchantListByRegionFromDb(String province, String city, String district) {
+		if (!StringUtils.hasText(province)) {
+			List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper
+				.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery().orderByDesc(WmMerchantUserExt::getCreateTime));
+			return toDtoListWithAddress(merchants);
+		}
+
+		List<WmAddress> addresses = wmAddressMapper.selectList(Wrappers.<WmAddress>lambdaQuery()
+			.eq(WmAddress::getProvince, province)
+			.eq(StringUtils.hasText(city), WmAddress::getCity, city)
+			.eq(StringUtils.hasText(city) && StringUtils.hasText(district), WmAddress::getDistrict, district));
+
+		if (addresses.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<Long> addressIds = addresses.stream().map(WmAddress::getId).filter(Objects::nonNull).collect(Collectors.toList());
+		if (addressIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery()
+			.in(WmMerchantUserExt::getStoreAddressId, addressIds)
+			.orderByDesc(WmMerchantUserExt::getCreateTime));
+		return toDtoListWithAddress(merchants);
+	}
+
+	private long getMerchantCacheVersion() {
+		// 版本号缺失/异常时退化为 0，确保服务可用。
+		String value = stringRedisTemplate.opsForValue().get(MERCHANT_CACHE_VERSION_KEY);
+		if (!StringUtils.hasText(value)) {
+			return 0L;
+		}
+		try {
+			return Long.parseLong(value);
+		}
+		catch (NumberFormatException ex) {
+			return 0L;
+		}
+	}
+
+	private void bumpMerchantCacheVersion() {
+		try {
+			// 原子自增，配合“版本入 key”实现无扫描失效。
+			stringRedisTemplate.opsForValue().increment(MERCHANT_CACHE_VERSION_KEY);
+		}
+		catch (Exception ex) {
+			log.warn("更新商户缓存版本号失败", ex);
+		}
 	}
 
 }

@@ -1,9 +1,12 @@
 package com.luan.takeaway.takeaway.dish.service.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
 import com.luan.takeaway.takeaway.common.dto.DishPurchaseItemDTO;
@@ -24,8 +27,10 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 @Slf4j
@@ -34,6 +39,28 @@ import java.util.TreeMap;
 public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> implements WmDishService {
 
 	private static final String DISH_STOCK_CACHE_KEY_PREFIX = "takeaway:dish:stock:";
+
+	// 菜品个体缓存 key：用于按 merchantId + dishId 读取单个菜品信息。
+	private static final String DISH_ITEM_CACHE_KEY_PREFIX = "takeaway:dish:item:";
+
+	// 【防击穿】菜品个体锁 key：热点菜品缓存过期时，只让一个线程回源。
+	private static final String DISH_ITEM_LOCK_KEY_PREFIX = "takeaway:dish:item:lock:";
+
+	// 菜品分页缓存 key：缓存 pageByQuery 查询结果。
+	private static final String DISH_LIST_CACHE_KEY_PREFIX = "takeaway:dish:list:";
+
+	// 【防击穿】菜品分页锁 key：同一查询条件缓存失效时，避免并发打 DB。
+	private static final String DISH_LIST_LOCK_KEY_PREFIX = "takeaway:dish:list:lock:";
+
+	// 菜品缓存版本号：写操作后递增，实现“逻辑失效”（老 key 自动淘汰）。
+	private static final String DISH_CACHE_VERSION_KEY = "takeaway:dish:cache:version";
+
+	// 菜品缓存策略（统一交给 RedisSafeCacheService 生效）：
+	// - 【防雪崩】基础 TTL 30 分钟 + 抖动 10 分钟
+	// - 【防穿透】空值缓存 2 分钟
+	// - 【防击穿】锁 10 秒 + 重试 3 次
+	private static final RedisSafeCacheService.CachePolicy DISH_CACHE_POLICY = RedisSafeCacheService.CachePolicy
+		.of(30 * 60, 10 * 60, 2 * 60, 10, 3, 50);
 
 	private static final long REDIS_DEDUCT_SUCCESS = 1L;
 
@@ -66,6 +93,91 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 	private final RabbitTemplate rabbitTemplate;
 
 	private final ObjectMapper objectMapper;
+
+	private final RedisSafeCacheService redisSafeCacheService;
+
+	@Override
+	public Page<WmDish> pageByQuery(Page<WmDish> page, WmDish query) {
+		// 这里直接复用通用缓存组件：
+		// - 【防穿透】不存在的数据会走空值缓存
+		// - 【防击穿】同一个查询条件只会有一个线程回源
+		// - 【防雪崩】缓存 TTL 会自动加随机抖动
+		if (query == null) {
+			query = new WmDish();
+		}
+
+		long version = getDishCacheVersion();
+		String cacheKey = buildDishListCacheKey(page, query, version);
+		String lockKey = buildDishListLockKey(page, query, version);
+		JavaType pageType = objectMapper.getTypeFactory().constructParametricType(Page.class, WmDish.class);
+
+		WmDish finalQuery = query;
+		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, pageType,
+				// 仅在缓存未命中且当前线程拿到锁时才会执行数据库查询。
+				() -> page(page, Wrappers.<WmDish>lambdaQuery()
+					.eq(finalQuery.getMerchantUserId() != null, WmDish::getMerchantUserId, finalQuery.getMerchantUserId())
+					.like(finalQuery.getDishName() != null && !finalQuery.getDishName().isBlank(), WmDish::getDishName,
+							finalQuery.getDishName())
+					.eq(finalQuery.getSaleStatus() != null && !finalQuery.getSaleStatus().isBlank(), WmDish::getSaleStatus,
+							finalQuery.getSaleStatus())
+					.orderByDesc(WmDish::getCreateTime)),
+				DISH_CACHE_POLICY);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean save(WmDish entity) {
+		boolean saved = super.save(entity);
+		if (saved && entity != null) {
+			// 写后处理：
+			// 1) 删掉受影响的个体缓存
+			// 2) 版本号 +1，让老分页缓存自然失效
+			evictDishCaches(entity.getMerchantUserId(), entity.getId(), true);
+			bumpDishCacheVersion();
+		}
+		return saved;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean updateById(WmDish entity) {
+		WmDish oldDish = entity == null || entity.getId() == null ? null : getById(entity.getId());
+		boolean updated = super.updateById(entity);
+		if (updated && entity != null && entity.getId() != null) {
+			Long merchantUserId = entity.getMerchantUserId();
+			if (merchantUserId == null && oldDish != null) {
+				merchantUserId = oldDish.getMerchantUserId();
+			}
+			// 同步删缓存，避免改完菜品后还读到旧值。
+			evictDishCaches(merchantUserId, entity.getId(), true);
+			bumpDishCacheVersion();
+		}
+		return updated;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean removeById(java.io.Serializable id) {
+		if (id == null) {
+			return false;
+		}
+		Long dishId;
+		try {
+			dishId = Long.valueOf(String.valueOf(id));
+		}
+		catch (NumberFormatException ex) {
+			return super.removeById(id);
+		}
+
+		WmDish oldDish = getById(dishId);
+		boolean removed = super.removeById(id);
+		if (removed && oldDish != null) {
+			// 删除后把个体缓存删掉，同时升级列表版本。
+			evictDishCaches(oldDish.getMerchantUserId(), dishId, true);
+			bumpDishCacheVersion();
+		}
+		return removed;
+	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -208,6 +320,10 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 					updatedRows);
 			throw new IllegalStateException("异步库存落库失败");
 		}
+
+		evictDishItemCacheBatch(merchantUserId, buyCountMap.keySet());
+		// 库存落库后提升版本，保证分页缓存中的库存相关字段不陈旧。
+		bumpDishCacheVersion();
 		return true;
 	}
 
@@ -252,12 +368,28 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 
 	@Override
 	public List<WmDish> listByMerchantAndIds(Long merchantUserId, List<Long> ids) {
-		if (ids == null || ids.isEmpty()) {
+		if (merchantUserId == null || ids == null || ids.isEmpty()) {
 			return List.of();
 		}
-		return list(Wrappers.<WmDish>lambdaQuery()
-			.eq(WmDish::getMerchantUserId, merchantUserId)
-			.in(WmDish::getId, ids));
+
+		List<Long> uniqueIds = new ArrayList<>(new LinkedHashSet<>(ids));
+		if (uniqueIds.isEmpty()) {
+			return List.of();
+		}
+
+		// 个体查询也是同一套缓存保护，和分页保持一致：
+		// 【防穿透】空值缓存、【防击穿】互斥锁、【防雪崩】随机 TTL。
+		List<WmDish> finalResult = new ArrayList<>(uniqueIds.size());
+		for (Long dishId : uniqueIds) {
+			String cacheKey = buildDishItemCacheKey(merchantUserId, dishId);
+			String lockKey = buildDishItemLockKey(merchantUserId, dishId);
+			WmDish dish = redisSafeCacheService.queryWithProtect(cacheKey, lockKey, WmDish.class,
+					() -> getDishFromDb(merchantUserId, dishId), DISH_CACHE_POLICY);
+			if (dish != null) {
+				finalResult.add(dish);
+			}
+		}
+		return finalResult;
 	}
 
 	@Override
@@ -266,6 +398,86 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 			return null;
 		}
 		return "takeaway:dish:stock:consume:done:" + orderNo;
+	}
+
+	private WmDish getDishFromDb(Long merchantUserId, Long dishId) {
+		// 按商家隔离查询，避免跨商家串数据。
+		return getOne(Wrappers.<WmDish>lambdaQuery()
+			.eq(WmDish::getMerchantUserId, merchantUserId)
+			.eq(WmDish::getId, dishId)
+			.last("LIMIT 1"), false);
+	}
+
+	private String buildDishItemCacheKey(Long merchantUserId, Long dishId) {
+		return DISH_ITEM_CACHE_KEY_PREFIX + merchantUserId + ":" + dishId;
+	}
+
+	private String buildDishItemLockKey(Long merchantUserId, Long dishId) {
+		return DISH_ITEM_LOCK_KEY_PREFIX + merchantUserId + ":" + dishId;
+	}
+
+	private String buildDishListCacheKey(Page<WmDish> page, WmDish query, long version) {
+		// 把查询维度和版本号拼入 key，保证不同条件缓存互不污染。
+		String dishName = StringUtils.hasText(query.getDishName()) ? query.getDishName().trim() : "_";
+		String saleStatus = StringUtils.hasText(query.getSaleStatus()) ? query.getSaleStatus().trim() : "_";
+		String merchantId = query.getMerchantUserId() == null ? "_" : String.valueOf(query.getMerchantUserId());
+		return DISH_LIST_CACHE_KEY_PREFIX + version + ":" + page.getCurrent() + ":" + page.getSize() + ":" + merchantId
+				+ ":" + dishName + ":" + saleStatus;
+	}
+
+	private String buildDishListLockKey(Page<WmDish> page, WmDish query, long version) {
+		return DISH_LIST_LOCK_KEY_PREFIX + buildDishListCacheKey(page, query, version);
+	}
+
+	private void evictDishItemCacheBatch(Long merchantUserId, Set<Long> dishIds) {
+		if (merchantUserId == null || dishIds == null || dishIds.isEmpty()) {
+			return;
+		}
+		// 批量删除减少网络往返，适合 MQ 异步落库场景。
+		List<String> keys = new ArrayList<>(dishIds.size());
+		for (Long dishId : dishIds) {
+			keys.add(buildDishItemCacheKey(merchantUserId, dishId));
+			keys.add(buildDishItemLockKey(merchantUserId, dishId));
+		}
+		stringRedisTemplate.delete(keys);
+	}
+
+	private void evictDishCaches(Long merchantUserId, Long dishId, boolean removeStockCache) {
+		if (merchantUserId == null || dishId == null) {
+			return;
+		}
+		// 写后删缓存（而非更新缓存）策略：实现简单且一致性更稳健。
+		List<String> keys = new ArrayList<>(3);
+		keys.add(buildDishItemCacheKey(merchantUserId, dishId));
+		keys.add(buildDishItemLockKey(merchantUserId, dishId));
+		if (removeStockCache) {
+			keys.add(DISH_STOCK_CACHE_KEY_PREFIX + merchantUserId + ":" + dishId);
+		}
+		stringRedisTemplate.delete(keys);
+	}
+
+	private long getDishCacheVersion() {
+		// 版本号不存在时按 0 处理，保证首次启动可用。
+		String value = stringRedisTemplate.opsForValue().get(DISH_CACHE_VERSION_KEY);
+		if (!StringUtils.hasText(value)) {
+			return 0L;
+		}
+		try {
+			return Long.parseLong(value);
+		}
+		catch (NumberFormatException ex) {
+			return 0L;
+		}
+	}
+
+	private void bumpDishCacheVersion() {
+		try {
+			// 原子递增版本号，让旧列表缓存自然失效，无需扫描删除。
+			stringRedisTemplate.opsForValue().increment(DISH_CACHE_VERSION_KEY);
+		}
+		catch (Exception ex) {
+			log.warn("更新菜品缓存版本号失败", ex);
+		}
 	}
 
 }
