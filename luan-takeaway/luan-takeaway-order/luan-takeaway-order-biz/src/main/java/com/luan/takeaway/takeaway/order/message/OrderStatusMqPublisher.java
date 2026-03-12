@@ -1,4 +1,4 @@
-package com.luan.takeaway.takeaway.user.message;
+package com.luan.takeaway.takeaway.order.message;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 
 /**
- * 商家审核结果消息发布器。
+ * 订单状态通知 MQ 发布器。
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MerchantAuditResultMqPublisher {
+public class OrderStatusMqPublisher {
 
 	private final RabbitTemplate rabbitTemplate;
 
@@ -27,31 +27,32 @@ public class MerchantAuditResultMqPublisher {
 	@Value("${takeaway.ws.push.mq.enabled:true}")
 	private boolean mqEnabled;
 
-	public boolean publish(Long merchantId, Long userId, String messageText) {
-		// 与订单通知保持同一控制开关，便于统一管理 ws 推送链路。
+	public boolean publish(Long orderId, Long userId, String eventType, String messageText) {
+		// 通过开关可在本地联调或故障演练时快速关闭 MQ 推送，不影响主业务流程验证。
 		if (!mqEnabled) {
 			return false;
 		}
 
-		// 发布到 MQ 的统一载体：指定会话 + 业务消息内容。
-		// 这里会话 key 使用 userId 字符串，和 websocket 连接侧的会话标识保持一致。
+		// 统一封装成 WsPushMessageDTO，是为了和 upms 侧消费者协议保持一致。
+		// 业务方只需要告诉“推给谁(sessionKeys) + 推什么(messageText)”。
 		WsPushMessageDTO payload = new WsPushMessageDTO().setMessageText(messageText)
 			.setSessionKeys(Collections.singletonList(String.valueOf(userId)));
 
 		try {
-			// 使用字符串作为 MQ 消息体，降低上下游对象版本不一致导致的消费失败概率。
+			// MQ 里传字符串可以减少跨服务反序列化兼容问题（尤其是 DTO 版本演进时）。
 			String payloadText = objectMapper.writeValueAsString(payload);
 			rabbitTemplate.convertAndSend(WsPushMqConstants.EXCHANGE, WsPushMqConstants.ROUTING_KEY, payloadText);
-			log.info("商家审核结果MQ发送成功, merchantId={}, userId={}", merchantId, userId);
+			log.info("订单状态通知MQ发送成功, orderId={}, userId={}, eventType={}", orderId, userId, eventType);
 			return true;
 		}
 		catch (JsonProcessingException e) {
-			// 序列化失败通常不是环境问题，而是代码或数据结构问题，按 error 记录完整堆栈。
-			log.error("商家审核结果MQ消息序列化失败, merchantId={}, userId={}", merchantId, userId, e);
+			// 这类错误通常是对象结构异常或字段不可序列化，属于代码层问题，按 error 打印。
+			log.error("订单状态通知MQ消息序列化失败, orderId={}, userId={}, eventType={}", orderId, userId, eventType, e);
 		}
 		catch (Exception e) {
-			// MQ 短暂不可用等运行时异常：先告警，交给上层决定是否做补偿策略。
-			log.warn("商家审核结果MQ发送失败, merchantId={}, userId={}, message={}", merchantId, userId, e.getMessage());
+			// MQ 异常先记录告警并返回 false，由上层决定是否重试/补偿。
+			log.warn("订单状态通知MQ发送失败, orderId={}, userId={}, eventType={}, message={}", orderId, userId, eventType,
+					e.getMessage());
 		}
 
 		return false;

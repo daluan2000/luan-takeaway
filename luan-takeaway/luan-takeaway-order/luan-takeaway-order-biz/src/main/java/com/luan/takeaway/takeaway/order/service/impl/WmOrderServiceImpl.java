@@ -26,6 +26,8 @@ import com.luan.takeaway.takeaway.common.mapper.WmOrderItemMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderMapper;
 import com.luan.takeaway.takeaway.dish.api.DishApi;
 import com.luan.takeaway.takeaway.order.constant.OrderAutoCancelMqConstants;
+import com.luan.takeaway.takeaway.order.dto.ws.OrderStatusWsMessage;
+import com.luan.takeaway.takeaway.order.message.OrderStatusMqPublisher;
 import com.luan.takeaway.takeaway.order.mq.dto.OrderAutoCancelEvent;
 import com.luan.takeaway.takeaway.order.service.WmOrderService;
 import lombok.AllArgsConstructor;
@@ -74,6 +76,8 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 	 * JSON 序列化工具，用于构建延时消息体。
 	 */
 	private final ObjectMapper objectMapper;
+
+	private final OrderStatusMqPublisher orderStatusMqPublisher;
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -341,7 +345,12 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		update.setId(orderId);
 		update.setOrderStatus(TakeawayStatusConstants.Order.MERCHANT_ACCEPTED);
 		update.setAcceptTime(LocalDateTime.now());
-		return updateById(update);
+		boolean updated = updateById(update);
+		if (updated) {
+			// 状态真正落库成功后再发通知，避免出现“用户先收到推送，但数据库还是旧状态”的错觉。
+			pushOrderStatusByMq(OrderStatusWsMessage.merchantAccepted(orderId, order.getCustomerUserId()));
+		}
+		return updated;
 	}
 
 	@Override
@@ -375,7 +384,13 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			update.setDeliveryUserId(deliveryUserId);
 			update.setOrderStatus(TakeawayStatusConstants.Order.DELIVERING);
 			update.setDeliveryStartTime(LocalDateTime.now());
-			return updateById(update);
+			boolean updated = updateById(update);
+			if (updated) {
+				// 只有抢单成功（状态推进到配送中）才通知用户，避免并发抢单时重复推送。
+				pushOrderStatusByMq(
+						OrderStatusWsMessage.riderAccepted(orderId, order.getCustomerUserId(), deliveryUserId));
+			}
+			return updated;
 		}
 		finally {
 			// 无论业务成功/失败都尝试释放锁。
@@ -394,7 +409,13 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		update.setId(orderId);
 		update.setOrderStatus(TakeawayStatusConstants.Order.FINISHED);
 		update.setFinishTime(LocalDateTime.now());
-		return updateById(update);
+		boolean updated = updateById(update);
+		if (updated) {
+			// 配送完成通知同样依赖数据库状态变更结果，保持“先事实、后通知”的顺序。
+			pushOrderStatusByMq(
+					OrderStatusWsMessage.deliveryFinished(orderId, order.getCustomerUserId(), order.getDeliveryUserId()));
+		}
+		return updated;
 	}
 
 	@Override
@@ -455,6 +476,32 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			.plusNanos(OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS * 1_000_000L);
 		long deadlineTs = deadline.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		orderDTO.setAutoCancelDeadlineTs(deadlineTs);
+	}
+
+	private void pushOrderStatusByMq(OrderStatusWsMessage message) {
+		if (message == null || message.getUserId() == null) {
+			return;
+		}
+
+		try {
+			// 这里把业务对象转成 JSON 文本发给 MQ。
+			// upms 消费后不关心订单领域对象，只需要把该文本透传给前端即可。
+			String messageText = objectMapper.writeValueAsString(message);
+			if (orderStatusMqPublisher.publish(message.getOrderId(), message.getUserId(), message.getEventType(), messageText)) {
+				return;
+			}
+			// 与商家审核通知保持一致：当前阶段只记录失败，不在业务线程里做阻塞重试。
+			log.warn("订单状态通知MQ发送失败, orderId={}, userId={}, eventType={}", message.getOrderId(), message.getUserId(),
+					message.getEventType());
+		}
+		catch (JsonProcessingException e) {
+			log.error("订单状态通知消息序列化失败, orderId={}, userId={}, eventType={}", message.getOrderId(), message.getUserId(),
+					message.getEventType(), e);
+		}
+		catch (Exception e) {
+			log.warn("订单状态通知消息推送异常, orderId={}, userId={}, eventType={}, message={}", message.getOrderId(),
+					message.getUserId(), message.getEventType(), e.getMessage());
+		}
 	}
 
 	private void publishAutoCancelDelayEvent(WmOrder order) {

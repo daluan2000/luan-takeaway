@@ -5,10 +5,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.luan.takeaway.admin.api.dto.WsPushMessageDTO;
-import com.luan.takeaway.admin.api.feign.RemoteWsPushService;
-import com.luan.takeaway.common.core.constant.CommonConstants;
-import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
 import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
@@ -74,8 +70,6 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	private final WmMerchantUserExtMapper wmMerchantUserExtMapper;
 
 	private final WmAddressMapper wmAddressMapper;
-
-	private final RemoteWsPushService remoteWsPushService;
 
 	private final ObjectMapper objectMapper;
 
@@ -148,6 +142,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	}
 
 	private void scheduleAutoApprove(Long merchantId) {
+		// 审核通过这里使用异步延时，主要是模拟真实平台“审核中 -> 审核结果”的时间差。
+		// 这样前端更容易覆盖待审核态，也能提前暴露通知链路（MQ/WS）在异步场景下的问题。
 		int delaySeconds = ThreadLocalRandom.current().nextInt(3, 11);
 		CompletableFuture.runAsync(() -> {
 			try {
@@ -179,8 +175,10 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 			MerchantAuditResultWsMessage wsMessage = MerchantAuditResultWsMessage.approved(merchantId,
 					merchant.getUserId());
 			try {
+				// 业务消息先序列化为字符串，再作为 MQ 的 messageText。
+				// upms 侧消费后会继续按统一的 WsPushMessageDTO 协议下发给指定会话。
 				String messageText = objectMapper.writeValueAsString(wsMessage);
-				pushAuditResultWithRetry(merchantId, merchant.getUserId(), messageText);
+				pushAuditResultByMq(merchantId, merchant.getUserId(), messageText);
 			}
 			catch (JsonProcessingException e) {
 				log.error("商家审核结果消息序列化失败, merchantId={}", merchantId, e);
@@ -191,32 +189,14 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		});
 	}
 
-	private void pushAuditResultWithRetry(Long merchantId, Long userId, String messageText) {
+	private void pushAuditResultByMq(Long merchantId, Long userId, String messageText) {
+		// 这里明确只走 MQ：业务服务只负责“发布事件”，不直接承担 websocket 推送职责。
+		// 这样可以把推送能力收敛到 upms，避免多个服务各自维护 ws 连接和推送细节。
 		if (merchantAuditResultMqPublisher.publish(merchantId, userId, messageText)) {
 			return;
 		}
-
-		log.info("商家审核结果MQ未发送成功，回退为直连推送, merchantId={}, userId={}", merchantId, userId);
-
-		WsPushMessageDTO pushMessageDTO = new WsPushMessageDTO().setMessageText(messageText)
-			.setSessionKeys(Collections.singletonList(String.valueOf(userId)));
-
-		try {
-			R<Boolean> response = remoteWsPushService.push(pushMessageDTO);
-			if (isPushSuccess(response)) {
-				log.info("商家审核结果消息推送成功, merchantId={}, userId={}", merchantId, userId);
-				return;
-			}
-			log.warn("商家审核结果消息推送失败, merchantId={}, userId={}, response={}", merchantId, userId, response);
-		}
-		catch (Exception e) {
-			log.warn("商家审核结果消息推送异常, merchantId={}, userId={}, message={}", merchantId, userId, e.getMessage());
-		}
-	}
-
-	private boolean isPushSuccess(R<Boolean> response) {
-		return response != null && response.getCode() == CommonConstants.SUCCESS
-				&& Boolean.TRUE.equals(response.getData());
+		// 当前策略是不再走 Feign 直推兜底，发送失败只记录日志，方便后续做统一重试/补偿。
+		log.warn("商家审核结果MQ发送失败, merchantId={}, userId={}", merchantId, userId);
 	}
 
 	@Override
