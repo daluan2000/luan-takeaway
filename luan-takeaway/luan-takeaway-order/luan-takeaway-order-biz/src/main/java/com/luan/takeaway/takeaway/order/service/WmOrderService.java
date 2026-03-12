@@ -24,4 +24,14 @@ public interface WmOrderService extends IService<WmOrder> {
 
 	boolean cancel(Long orderId);
 
+	/**
+	 * 自动取消待支付订单。
+	 *
+	 * 该方法用于延时消息消费者调用，内部应使用“状态条件更新”保证幂等：
+	 * 仅当订单仍处于待支付状态时才会更新为已取消。
+	 * @param orderId 订单ID
+	 * @return true 表示本次确实发生了状态变更；false 表示订单已支付或已非待支付状态
+	 */
+	boolean autoCancelIfUnpaid(Long orderId);
+
 }

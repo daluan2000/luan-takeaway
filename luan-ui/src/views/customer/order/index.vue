@@ -52,9 +52,10 @@
 					</el-table-column>
 					<el-table-column label="订单状态" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.orderStatus">
 						<template #default="scope">
-							<el-tag :type="getStatusTagType(scope.row.orderStatus)">
-								{{ getStatusLabel(scope.row.orderStatus) }}
+							<el-tag :type="getStatusTagType(scope.row)">
+								{{ getStatusLabel(scope.row) }}
 							</el-tag>
+							<div v-if="showCountdown(scope.row)" class="countdown-text">剩余：{{ getCountdownText(scope.row) }}</div>
 						</template>
 					</el-table-column>
 					<el-table-column label="菜品明细" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.orderItems" show-overflow-tooltip>
@@ -81,7 +82,7 @@
 					<el-table-column prop="remark" label="备注" :min-width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.remark" show-overflow-tooltip />
 					<el-table-column label="操作" :width="TAKEAWAY_ORDER_TABLE_COL_WIDTH.customerActions" fixed="right">
 						<template #default="scope">
-							<template v-if="scope.row.orderStatus === ORDER_STATUS.WAIT_PAY">
+							<template v-if="canPayOrder(scope.row)">
 								<el-button v-auth="'wm_customer_order_pay'" text type="primary" :loading="payingId === String(scope.row.id)" @click="handlePay(scope.row)">
 									去支付
 								</el-button>
@@ -109,6 +110,9 @@ import { mockPay } from '/@/api/takeaway/pay';
 import { useUserInfo } from '/@/stores/userInfo';
 import { TAKEAWAY_ORDER_TABLE_COL_WIDTH } from '/@/constants/takeawayOrderTable';
 import { getOrderTimelineText } from '/@/utils/takeawayOrderTime';
+
+// 默认兜底值：当历史数据未返回截止时间时，临时按 10 分钟展示。
+const DEFAULT_AUTO_CANCEL_MS = 10 * 60 * 1000;
 
 const ORDER_STATUS = {
 	WAIT_PAY: '0',
@@ -142,6 +146,9 @@ const queryRef = ref();
 const cancellingId = ref('');
 const payingId = ref('');
 const expandedTimeMap = reactive<Record<string, boolean>>({});
+// “当前时间”使用响应式变量承载，便于每秒触发一次倒计时重算和界面刷新。
+const nowTs = ref(Date.now());
+let countdownTimer: ReturnType<typeof setInterval> | undefined;
 
 const state: BasicTableProps = reactive<BasicTableProps>({
 	createdIsNeed: false,
@@ -180,11 +187,78 @@ const formatMoney = (value: unknown) => {
 	return amount.toFixed(2);
 };
 
-const getStatusLabel = (status: string) => {
+
+const parseTimeToTimestamp = (value: unknown) => {
+	// 后端时间可能是 "yyyy-MM-dd HH:mm:ss" 或 ISO 字符串，这里统一做兼容解析。
+	if (value === null || value === undefined || value === '') {
+		return undefined;
+	}
+	const rawText = String(value).trim();
+	if (!rawText) {
+		return undefined;
+	}
+	const normalized = rawText.includes('T') ? rawText : rawText.replace(' ', 'T');
+	const ts = new Date(normalized).getTime();
+	if (!Number.isNaN(ts)) {
+		return ts;
+	}
+	const fallbackTs = new Date(rawText).getTime();
+	return Number.isNaN(fallbackTs) ? undefined : fallbackTs;
+};
+
+const getExpireTimestamp = (row: Record<string, unknown>) => {
+	// 优先使用后端返回的绝对截止时间戳，保证刷新页面后倒计时依旧连续准确。
+	const deadlineTs = Number(row?.autoCancelDeadlineTs);
+	if (!Number.isNaN(deadlineTs) && deadlineTs > 0) {
+		return deadlineTs;
+	}
+
+	// 兼容兜底：若缺少截止时间字段，则按“下单时间 + 默认时长”估算。
+	const createTs = parseTimeToTimestamp(row?.createTime);
+	if (!createTs) {
+		return undefined;
+	}
+	return createTs + DEFAULT_AUTO_CANCEL_MS;
+};
+
+const getRemainingMs = (row: Record<string, unknown>) => {
+	// 负数代表已超时。
+	const expireTs = getExpireTimestamp(row);
+	if (!expireTs) {
+		return undefined;
+	}
+	return expireTs - nowTs.value;
+};
+
+const isWaitPayExpired = (row: Record<string, unknown>) => {
+	// 仅“待支付”订单参与超时判断，其他状态不做本地覆盖。
+	if (row?.orderStatus !== ORDER_STATUS.WAIT_PAY) {
+		return false;
+	}
+	const remaining = getRemainingMs(row);
+	if (remaining === undefined) {
+		return false;
+	}
+	return remaining <= 0;
+};
+
+const getDisplayStatus = (row: Record<string, unknown>) => {
+	// 前端展示层做一层兜底：倒计时到期后，即使列表还没刷新，也先显示为“已取消”。
+	// 这只是展示优化，最终状态仍以后端数据为准。
+	if (isWaitPayExpired(row)) {
+		return ORDER_STATUS.CANCELED;
+	}
+	return String(row?.orderStatus ?? '');
+};
+
+const getStatusLabel = (row: Record<string, unknown>) => {
+	const status = getDisplayStatus(row);
 	return statusLabelMap[status] || `未知状态(${status ?? '-'})`;
 };
 
-const getStatusTagType = (status: string) => {
+
+const getStatusTagType = (row: Record<string, unknown>) => {
+	const status = getDisplayStatus(row);
 	if (status === ORDER_STATUS.WAIT_PAY) return 'warning';
 	if (status === ORDER_STATUS.PAID) return 'primary';
 	if (status === ORDER_STATUS.MERCHANT_ACCEPTED) return 'info';
@@ -215,7 +289,44 @@ const getRowKey = (row: Record<string, unknown>) => {
 	return '';
 };
 
-const getOrderTimeText = (row: Record<string, unknown>) => getOrderTimelineText(row);
+const formatDuration = (ms: number) => {
+	// 将毫秒格式化为 mm:ss，便于用户直观看到剩余支付时间。
+	const safeMs = Math.max(ms, 0);
+	const totalSeconds = Math.floor(safeMs / 1000);
+	const minutes = Math.floor(totalSeconds / 60);
+	const seconds = totalSeconds % 60;
+	return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+const getCountdownText = (row: Record<string, unknown>) => {
+	// 已超时时固定显示 00:00，避免出现负值或闪烁。
+	if (isWaitPayExpired(row)) {
+		return '00:00';
+	}
+	const remaining = getRemainingMs(row);
+	if (remaining === undefined) {
+		return '-';
+	}
+	return formatDuration(remaining);
+};
+
+const showCountdown = (row: Record<string, unknown>) => {
+	// 仅待支付状态展示倒计时文案。
+	return getDisplayStatus(row) === ORDER_STATUS.WAIT_PAY;
+};
+
+const canPayOrder = (row: Record<string, unknown>) => {
+	// 支付和手动取消共用同一判定：只要前端已判断超时，就不再允许用户操作。
+	return getDisplayStatus(row) === ORDER_STATUS.WAIT_PAY;
+};
+
+const getOrderTimeText = (row: Record<string, unknown>) => {
+	const baseText = getOrderTimelineText(row);
+	if (!showCountdown(row)) {
+		return baseText;
+	}
+	return `${baseText}\n支付倒计时：${getCountdownText(row)}`;
+};
 
 const isTimeExpanded = (row: Record<string, unknown>) => {
 	const key = getRowKey(row);
@@ -243,7 +354,7 @@ const handleCancel = async (row: any) => {
 		useMessage().warning('订单ID不存在，无法取消');
 		return;
 	}
-	if (row.orderStatus !== ORDER_STATUS.WAIT_PAY) {
+	if (!canPayOrder(row)) {
 		useMessage().warning('仅待支付订单可取消');
 		return;
 	}
@@ -271,7 +382,7 @@ const handlePay = async (row: any) => {
 		useMessage().warning('订单ID不存在，无法支付');
 		return;
 	}
-	if (row.orderStatus !== ORDER_STATUS.WAIT_PAY) {
+	if (!canPayOrder(row)) {
 		useMessage().warning('仅待支付订单可支付');
 		return;
 	}
@@ -298,12 +409,24 @@ const handlePay = async (row: any) => {
 };
 
 onMounted(async () => {
+	// 每秒推进一次“当前时间”，驱动倒计时刷新。
+	countdownTimer = setInterval(() => {
+		nowTs.value = Date.now();
+	}, 1000);
+
 	state.queryForm.customerUserId = await resolveCurrentCustomerUserId();
 	if (!state.queryForm.customerUserId) {
 		useMessage().warning('未获取到当前客户身份，无法查询订单');
 		return;
 	}
 	getDataList();
+});
+
+onUnmounted(() => {
+	// 组件销毁时释放定时器，避免内存泄漏和无效计算。
+	if (countdownTimer) {
+		clearInterval(countdownTimer);
+	}
 });
 </script>
 
@@ -336,5 +459,11 @@ onMounted(async () => {
 	white-space: pre-line;
 	line-height: 1.6;
 	max-width: 360px;
+}
+
+.countdown-text {
+	margin-top: 4px;
+	font-size: 12px;
+	color: var(--el-color-warning);
 }
 </style>

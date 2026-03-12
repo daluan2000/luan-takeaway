@@ -38,4 +38,7 @@ public class OrderDTO extends WmOrder {
 	@Schema(description = "订单明细")
 	private List<WmOrderItem> orderItems;
 
+	@Schema(description = "订单自动取消截止时间戳(毫秒)")
+	private Long autoCancelDeadlineTs;
+
 }

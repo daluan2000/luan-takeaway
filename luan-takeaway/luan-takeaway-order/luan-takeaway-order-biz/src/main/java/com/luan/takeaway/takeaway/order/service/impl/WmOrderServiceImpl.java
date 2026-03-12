@@ -1,6 +1,8 @@
 package com.luan.takeaway.takeaway.order.service.impl;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luan.takeaway.common.core.util.R;
@@ -23,14 +25,19 @@ import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderItemMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderMapper;
 import com.luan.takeaway.takeaway.dish.api.DishApi;
+import com.luan.takeaway.takeaway.order.constant.OrderAutoCancelMqConstants;
+import com.luan.takeaway.takeaway.order.mq.dto.OrderAutoCancelEvent;
 import com.luan.takeaway.takeaway.order.service.WmOrderService;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.BeanUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
@@ -41,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> implements WmOrderService {
@@ -56,6 +64,16 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 	private final WmDeliveryUserExtMapper wmDeliveryUserExtMapper;
 
 	private final DishApi dishApi;
+
+	/**
+	 * RabbitMQ 消息发送模板。
+	 */
+	private final RabbitTemplate rabbitTemplate;
+
+	/**
+	 * JSON 序列化工具，用于构建延时消息体。
+	 */
+	private final ObjectMapper objectMapper;
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -99,7 +117,11 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		order.setPayAmount(totalAmount);
 		order.setOrderStatus(TakeawayStatusConstants.Order.WAIT_PAY);
 		order.setRemark(request.getRemark());
+		// 先落库再发延时消息，保证消息里的 orderId/orderNo 一定存在且可查询。
 		save(order);
+		// 下单后立刻发送“超时自动取消”延时消息。
+		// 若用户在 10 分钟内完成支付，消费者侧会因状态不匹配而跳过取消（幂等）。
+		publishAutoCancelDelayEvent(order);
 
 		DeductStockRequest deductRequest = new DeductStockRequest();
 		deductRequest.setMerchantUserId(request.getMerchantUserId());
@@ -135,6 +157,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		OrderDTO orderDTO = new OrderDTO();
 		BeanUtils.copyProperties(order, orderDTO);
 		orderDTO.setOrderItems(orderItems);
+		fillAutoCancelInfo(order, orderDTO);
 		return orderDTO;
 	}
 
@@ -181,6 +204,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		orderDTO.setCustomerAddress(customerAddress);
 		orderDTO.setMerchantAddress(merchantAddress);
 		orderDTO.setOrderItems(items);
+		fillAutoCancelInfo(order, orderDTO);
 		return orderDTO;
 	}
 
@@ -280,6 +304,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 				orderDTO.setMerchantAddress(merchantAddressMap.get(merchant.getStoreAddressId()));
 			}
 			orderDTO.setOrderItems(orderItemsMap.getOrDefault(order.getId(), java.util.Collections.emptyList()));
+			fillAutoCancelInfo(order, orderDTO);
 			return orderDTO;
 		}).toList();
 
@@ -290,15 +315,20 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 
 	@Override
 	public boolean markPaid(Long orderId) {
-		WmOrder order = mustGet(orderId);
-		if (!TakeawayStatusConstants.Order.WAIT_PAY.equals(order.getOrderStatus())) {
+		// 先校验订单是否存在，避免返回“仅待支付订单可支付”时掩盖“订单不存在”。
+		mustGet(orderId);
+		// 通过“带状态条件”的原子更新实现并发安全：
+		// 只有当前状态仍是 WAIT_PAY 时才允许置为 PAID。
+		// 这样可以避免与延时取消消费者并发更新时出现状态覆盖。
+		boolean updated = update(Wrappers.<WmOrder>lambdaUpdate()
+			.eq(WmOrder::getId, orderId)
+			.eq(WmOrder::getOrderStatus, TakeawayStatusConstants.Order.WAIT_PAY)
+			.set(WmOrder::getOrderStatus, TakeawayStatusConstants.Order.PAID)
+			.set(WmOrder::getPayTime, LocalDateTime.now()));
+		if (!updated) {
 			throw new IllegalStateException("仅待支付订单可支付");
 		}
-		WmOrder update = new WmOrder();
-		update.setId(orderId);
-		update.setOrderStatus(TakeawayStatusConstants.Order.PAID);
-		update.setPayTime(LocalDateTime.now());
-		return updateById(update);
+		return true;
 	}
 
 	@Override
@@ -380,6 +410,18 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		return updateById(update);
 	}
 
+	@Override
+	public boolean autoCancelIfUnpaid(Long orderId) {
+		// 自动取消采用幂等条件更新：
+		// 仅当订单仍为待支付时才转为已取消。
+		// 返回 false 代表订单已经支付/已取消/状态已推进，属于正常情况。
+		return update(Wrappers.<WmOrder>lambdaUpdate()
+			.eq(WmOrder::getId, orderId)
+			.eq(WmOrder::getOrderStatus, TakeawayStatusConstants.Order.WAIT_PAY)
+			.set(WmOrder::getOrderStatus, TakeawayStatusConstants.Order.CANCELED)
+			.set(WmOrder::getCancelTime, LocalDateTime.now()));
+	}
+
 	private WmOrder mustGet(Long orderId) {
 		WmOrder order = getById(orderId);
 		if (order == null) {
@@ -396,7 +438,50 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 	}
 
 	private String generateOrderNo() {
+		// 订单号组成：业务前缀 + 毫秒时间戳 + 随机数，兼顾可读性与低碰撞概率。
 		return "WM" + System.currentTimeMillis() + ThreadLocalRandom.current().nextInt(1000, 10000);
+	}
+
+	/**
+	 * 统一补充订单自动取消展示信息。
+	 *
+	 * - autoCancelDeadlineTs：用于前端刷新后也能继续准确倒计时。
+	 */
+	private void fillAutoCancelInfo(WmOrder order, OrderDTO orderDTO) {
+		if (order == null || order.getCreateTime() == null) {
+			return;
+		}
+		LocalDateTime deadline = order.getCreateTime()
+			.plusNanos(OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS * 1_000_000L);
+		long deadlineTs = deadline.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+		orderDTO.setAutoCancelDeadlineTs(deadlineTs);
+	}
+
+	private void publishAutoCancelDelayEvent(WmOrder order) {
+		// 消息体只携带必要字段：orderId 用于执行取消，orderNo/createTime 用于日志和审计。
+		OrderAutoCancelEvent event = new OrderAutoCancelEvent();
+		event.setOrderId(order.getId());
+		event.setOrderNo(order.getOrderNo());
+		event.setCreateTime(order.getCreateTime());
+		try {
+			// 使用“消息级 TTL”控制延时（10 分钟）。
+			// 消息先进入 delay queue，过期后由 dead-letter exchange 转发到消费队列。
+			rabbitTemplate.convertAndSend(OrderAutoCancelMqConstants.DELAY_EXCHANGE,
+					OrderAutoCancelMqConstants.DELAY_ROUTING_KEY, objectMapper.writeValueAsString(event), message -> {
+					message.getMessageProperties()
+						.setExpiration(String.valueOf(OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS));
+					return message;
+				});
+		}
+		catch (JsonProcessingException e) {
+			// 序列化失败通常为代码或对象结构问题，直接中断下单事务，避免“订单已创建但无超时保障”。
+			throw new IllegalStateException("发送订单自动取消消息失败", e);
+		}
+		catch (Exception e) {
+			// MQ 不可用时同样中断事务，确保“订单创建”和“超时保障”要么都成功，要么都失败。
+			log.error("发送订单自动取消消息失败, orderId={}, orderNo={}", order.getId(), order.getOrderNo(), e);
+			throw new IllegalStateException("发送订单自动取消消息失败", e);
+		}
 	}
 
 	private void validateDeliveryAddress(Long deliveryAddressId, Long customerUserId) {
