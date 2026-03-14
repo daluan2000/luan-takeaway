@@ -45,7 +45,7 @@ export function updateBusinessStatus(id: string | number, businessStatus: string
 	});
 }
 
-export function listMerchantByRegion(params?: { province?: string; city?: string; district?: string }) {
+export function listMerchantByRegion(params?: { province?: string; city?: string; district?: string; includeDishList?: boolean }) {
 	return request({
 		url: '/takeaway/user/merchant/list',
 		method: 'get',

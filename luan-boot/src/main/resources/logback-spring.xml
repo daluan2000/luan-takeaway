@@ -61,6 +61,9 @@
         <appender-ref ref="error"/>
     </logger>
 
+    <!-- AI 点餐链路调试日志 -->
+    <logger name="com.luan.takeaway.ai" level="DEBUG"/>
+
 
     <!-- Level: FATAL 0  ERROR 3  WARN 4  INFO 6  DEBUG 7 -->
     <root level="INFO">

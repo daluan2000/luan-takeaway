@@ -64,15 +64,17 @@ public class WmMerchantController {
 	@Operation(summary = "商家分页查询")
 	public R<Page<WmMerchantDTO>> page(@ParameterObject Page<WmMerchantDTO> page,
 			@RequestParam(required = false) Long userId, @RequestParam(required = false) String auditStatus,
-			@RequestParam(required = false) String businessStatus) {
-		return R.ok(wmMerchantService.page(page, userId, auditStatus, businessStatus));
+			@RequestParam(required = false) String businessStatus,
+			@RequestParam(required = false, defaultValue = "false") boolean includeDishList) {
+		return R.ok(wmMerchantService.page(page, userId, auditStatus, businessStatus, includeDishList));
 	}
 
 	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/list")
 	@Operation(summary = "按省市区查询商店列表")
 	public R<List<WmMerchantDTO>> list(@RequestParam(required = false) String province,
-			@RequestParam(required = false) String city, @RequestParam(required = false) String district) {
-		return R.ok(wmMerchantService.listByRegion(province, city, district));
+			@RequestParam(required = false) String city, @RequestParam(required = false) String district,
+			@RequestParam(required = false, defaultValue = "false") boolean includeDishList) {
+		return R.ok(wmMerchantService.listByRegion(province, city, district, includeDishList));
 	}
 
 	@PostMapping(TakeawayApiConstants.MERCHANT_PATH + "/{id}/business/{businessStatus}")

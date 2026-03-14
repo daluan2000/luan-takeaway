@@ -2,8 +2,9 @@ package com.luan.takeaway.ai.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luan.takeaway.ai.api.dto.RecommendationItem;
-import com.luan.takeaway.ai.api.feign.DishToolClient;
-import com.luan.takeaway.ai.api.feign.OrderToolClient;
+import com.luan.takeaway.takeaway.dish.api.RemoteDishService;
+import com.luan.takeaway.takeaway.merchant.api.RemoteMerchantService;
+import com.luan.takeaway.takeaway.order.api.RemoteOrderService;
 import com.luan.takeaway.ai.model.IntentResult;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
@@ -16,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,9 +31,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ToolCallingService {
 
-	private final DishToolClient dishToolClient;
+	private final RemoteDishService remoteDishService;
 
-	private final OrderToolClient orderToolClient;
+	private final RemoteMerchantService remoteMerchantService;
+
+	private final RemoteOrderService remoteOrderService;
+
+	private final OpenAiIntentRecognizer openAiIntentRecognizer;
 
 	public List<RecommendationItem> recommend(IntentResult intent, Long merchantUserId, int limit, boolean strictMode) {
 		List<WmDish> candidates = searchDishCandidates(intent, merchantUserId);
@@ -50,10 +54,22 @@ public class ToolCallingService {
 		}
 
 		scored.sort(Comparator.comparing(RecommendationItem::getScore).reversed());
-		if (scored.size() > limit) {
-			return new ArrayList<>(scored.subList(0, limit));
+		if (scored.isEmpty()) {
+			return scored;
 		}
-		return scored;
+
+		int rerankPoolSize = Math.min(scored.size(), Math.max(limit * 4, 12));
+		List<RecommendationItem> rerankPool = new ArrayList<>(scored.subList(0, rerankPoolSize));
+		try {
+			List<RecommendationItem> reranked = openAiIntentRecognizer.rerankRecommendations(intent, rerankPool, limit);
+			log.debug("LLM 二次筛选完成, poolSize={}, finalSize={}", rerankPool.size(), reranked.size());
+			return reranked;
+		}
+		catch (Exception e) {
+			String reason = e.getMessage() != null && !e.getMessage().isBlank() ? e.getMessage()
+					: e.getClass().getSimpleName();
+			throw new IllegalStateException("LLM 二次筛选失败: " + reason, e);
+		}
 	}
 
 	public String buildSummary(IntentResult intent, List<RecommendationItem> recommendations) {
@@ -85,7 +101,7 @@ public class ToolCallingService {
 		Set<Long> dedup = new LinkedHashSet<>();
 
 		for (long page = 1; page <= 3; page++) {
-			R<Page<WmDish>> response = dishToolClient.page(page, 30,
+			R<Page<WmDish>> response = remoteDishService.page(page, 30,
 					intent.getCategory() != null ? intent.getCategory() : firstKeyword(intent.getKeywords()), merchantUserId,
 					TakeawayStatusConstants.Dish.SALE_ON);
 			if (response == null || response.getData() == null || response.getData().getRecords() == null) {
@@ -98,23 +114,22 @@ public class ToolCallingService {
 			}
 		}
 
-		if (!result.isEmpty()) {
-			return result;
-		}
-
-		for (long page = 1; page <= 2; page++) {
-			R<Page<WmDish>> response = dishToolClient.page(page, 30, null, merchantUserId,
-					TakeawayStatusConstants.Dish.SALE_ON);
-			if (response == null || response.getData() == null || response.getData().getRecords() == null) {
-				continue;
-			}
-			for (WmDish dish : response.getData().getRecords()) {
-				if (dish != null && dish.getId() != null && dedup.add(dish.getId())) {
-					result.add(dish);
+		if (result.isEmpty()) {
+			for (long page = 1; page <= 2; page++) {
+				R<Page<WmDish>> response = remoteDishService.page(page, 30, null, merchantUserId,
+						TakeawayStatusConstants.Dish.SALE_ON);
+				if (response == null || response.getData() == null || response.getData().getRecords() == null) {
+					continue;
+				}
+				for (WmDish dish : response.getData().getRecords()) {
+					if (dish != null && dish.getId() != null && dedup.add(dish.getId())) {
+						result.add(dish);
+					}
 				}
 			}
 		}
-		return result;
+
+		return retainOpenMerchantDishes(result);
 	}
 
 	private String firstKeyword(List<String> keywords) {
@@ -122,6 +137,41 @@ public class ToolCallingService {
 			return null;
 		}
 		return keywords.get(0);
+	}
+
+	private List<WmDish> retainOpenMerchantDishes(List<WmDish> dishes) {
+		if (dishes == null || dishes.isEmpty()) {
+			return List.of();
+		}
+
+		Map<Long, Boolean> openStatusCache = new HashMap<>();
+		List<WmDish> filtered = new ArrayList<>(dishes.size());
+		for (WmDish dish : dishes) {
+			if (dish == null || dish.getMerchantUserId() == null) {
+				continue;
+			}
+			Long merchantId = dish.getMerchantUserId();
+			boolean isOpen = openStatusCache.computeIfAbsent(merchantId, this::isMerchantOpen);
+			if (isOpen) {
+				filtered.add(dish);
+			}
+		}
+		return filtered;
+	}
+
+	private boolean isMerchantOpen(Long merchantUserId) {
+		try {
+			R<Page<com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt>> response = remoteMerchantService.page(1, 1,
+					merchantUserId, null, TakeawayStatusConstants.Merchant.BUSINESS_OPEN, false);
+			return response != null
+					&& response.getData() != null
+					&& response.getData().getRecords() != null
+					&& !response.getData().getRecords().isEmpty();
+		}
+		catch (Exception ex) {
+			log.warn("校验商家营业状态失败, merchantUserId={}", merchantUserId, ex);
+			return false;
+		}
 	}
 
 	private Double scoreDish(WmDish dish, IntentResult intent, Map<String, Integer> historyPreference, boolean strictMode) {
@@ -216,7 +266,7 @@ public class ToolCallingService {
 			return counter;
 		}
 		try {
-			R<Page<OrderDTO>> response = orderToolClient.page(1, 10, user.getId(), null, null, null);
+			R<Page<OrderDTO>> response = remoteOrderService.page(1, 10, user.getId(), null, null, null);
 			if (response == null || response.getData() == null || response.getData().getRecords() == null) {
 				return counter;
 			}

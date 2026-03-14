@@ -49,3 +49,20 @@ takeaway:
     push:
       mq:
         enabled: ${TAKEAWAY_WS_PUSH_MQ_ENABLED:true}
+
+ai:
+  assistant:
+    max-recommendation: 5
+    llm:
+      enabled: ${AI_LLM_ENABLED:true}
+      source: ${AI_LLM_SOURCE:local}
+      base-url: ${AI_LLM_BASE_URL:http://127.0.0.1:11434/v1}
+      api-key: ${AI_LLM_API_KEY:}
+      model: ${AI_LLM_MODEL:qwen2.5:7b}
+      local-base-url: ${AI_LLM_LOCAL_BASE_URL:http://127.0.0.1:8000/v1}
+      local-api-key: ${AI_LLM_LOCAL_API_KEY:EMPTY}
+      local-model: ${AI_LLM_LOCAL_MODEL:qwen3.5-4b}
+      remote-base-url: ${AI_LLM_REMOTE_BASE_URL:}
+      remote-api-key: ${AI_LLM_REMOTE_API_KEY:}
+      remote-model: ${AI_LLM_REMOTE_MODEL:}
+      timeout-ms: ${AI_LLM_TIMEOUT_MS:30000}

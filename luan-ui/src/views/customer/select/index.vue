@@ -132,7 +132,6 @@
 import { useMessage } from '/@/hooks/message';
 import { listAddress } from '/@/api/takeaway/address';
 import { currentCustomer } from '/@/api/takeaway/customer';
-import { pageList as pageDish } from '/@/api/takeaway/dish';
 import { listMerchantByRegion } from '/@/api/takeaway/merchant';
 import { createOrder } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
@@ -159,6 +158,7 @@ interface MerchantItem {
 	city?: string;
 	district?: string;
 	detailAddress?: string;
+	dishList?: DishItem[];
 }
 
 interface DishItem {
@@ -458,6 +458,7 @@ const loadData = async () => {
 		const merchantRes = await listMerchantByRegion({
 			province: currentAddress.province,
 			city: queryCity,
+			includeDishList: true,
 		});
 
 		const allMerchants: MerchantItem[] = merchantRes?.data || [];
@@ -470,29 +471,20 @@ const loadData = async () => {
 			distanceMap[key] = calcDistanceKm(currentAddress, merchant.address);
 		});
 
-		await Promise.all(
-			openMerchants.map(async (merchant) => {
-				const merchantUserId = normalizeId(merchant.userId);
-				if (!merchantUserId) {
-					return;
+		openMerchants.forEach((merchant) => {
+			const merchantUserId = normalizeId(merchant.userId);
+			if (!merchantUserId) return;
+			const records: DishItem[] = merchant.dishList || [];
+			dishMap[merchantUserId] = records.filter((item) => String(item.saleStatus) === dishSaleOnValue.value);
+			remarkMap[merchantUserId] = '';
+			const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
+			dishMap[merchantUserId].forEach((dish) => {
+				const dishId = normalizeId(dish.id);
+				if (dishId) {
+					merchantQuantity[dishId] = 0;
 				}
-				const dishRes = await pageDish({
-					current: 1,
-					size: 500,
-					merchantUserId,
-				});
-				const records: DishItem[] = dishRes?.data?.records || [];
-				dishMap[merchantUserId] = records.filter((item) => String(item.saleStatus) === dishSaleOnValue.value);
-				remarkMap[merchantUserId] = '';
-				const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
-				dishMap[merchantUserId].forEach((dish) => {
-					const dishId = normalizeId(dish.id);
-					if (dishId) {
-						merchantQuantity[dishId] = 0;
-					}
-				});
-			})
-		);
+			});
+		});
 	} catch (error: any) {
 		useMessage().error(error?.msg || error?.response?.data?.msg || '加载失败');
 	} finally {
@@ -604,13 +596,21 @@ onMounted(() => {
 
 .dish-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 	gap: 10px;
 	margin-top: 8px;
 }
 
 .dish-card {
 	border-radius: 8px;
+	min-height: 248px;
+}
+
+.dish-card :deep(.el-card__body) {
+	padding: 12px;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
 }
 
 .merchant-remark-panel {
@@ -660,6 +660,7 @@ onMounted(() => {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+	flex: 1;
 }
 
 .dish-name {

@@ -17,9 +17,10 @@ public interface WmMerchantService {
 
 	WmMerchantDTO current();
 
-	Page<WmMerchantDTO> page(Page<WmMerchantDTO> page, Long userId, String auditStatus, String businessStatus);
+	Page<WmMerchantDTO> page(Page<WmMerchantDTO> page, Long userId, String auditStatus, String businessStatus,
+			boolean includeDishList);
 
-	List<WmMerchantDTO> listByRegion(String province, String city, String district);
+	List<WmMerchantDTO> listByRegion(String province, String city, String district, boolean includeDishList);
 
 	boolean updateBusinessStatus(Long id, String businessStatus);
 

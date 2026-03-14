@@ -29,21 +29,24 @@ public class AiAssistantFacadeService {
 		int limit = request.getLimit() == null || request.getLimit() <= 0 ? properties.getMaxRecommendation()
 				: request.getLimit();
 
-		IntentResult intent = intentRecognitionService.recognize(request.getMessage());
+		IntentMode mode = intentRecognitionService.decideMode(request.getMessage());
+		IntentResult intent;
 		List<RecommendationItem> recommendations;
 		List<String> knowledgeEvidence;
 		String decisionPath;
 		String summary;
 
-		if (intent.getMode() == IntentMode.RAG) {
-			RagRecommendationService.RagOutput ragOutput = ragRecommendationService.recommend(intent,
+		if (mode == IntentMode.RAG) {
+			RagRecommendationService.RagOutput ragOutput = ragRecommendationService.recommend(request.getMessage(),
 					request.getMerchantUserId(), limit);
+			intent = ragOutput.intent();
 			recommendations = ragOutput.recommendations();
 			knowledgeEvidence = ragOutput.knowledgeEvidence();
 			decisionPath = "rag";
 			summary = ragOutput.summary();
 		}
 		else {
+			intent = intentRecognitionService.extractToolIntent(request.getMessage());
 			recommendations = toolCallingService.recommend(intent, request.getMerchantUserId(), limit, true);
 			knowledgeEvidence = List.of();
 			decisionPath = "tool-calling";

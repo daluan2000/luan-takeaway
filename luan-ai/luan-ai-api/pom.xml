@@ -35,5 +35,10 @@
             <artifactId>luan-takeaway-order-api</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.luan</groupId>
+            <artifactId>luan-takeaway-user-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

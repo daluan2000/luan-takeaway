@@ -16,26 +16,28 @@ public class RagRecommendationService {
 
 	private final KnowledgeRetriever knowledgeRetriever;
 
+	private final IntentRecognitionService intentRecognitionService;
+
 	private final ToolCallingService toolCallingService;
 
-	public RagOutput recommend(IntentResult intent, Long merchantUserId, int limit) {
-		List<KnowledgeSnippet> snippets = knowledgeRetriever.retrieve(intent.getOriginalQuery(), 3);
-		List<RecommendationItem> recommendations = toolCallingService.recommend(intent, merchantUserId, limit, false);
+	public RagOutput recommend(String query, Long merchantUserId, int limit) {
+		List<KnowledgeSnippet> snippets = knowledgeRetriever.retrieve(query, 3);
 		List<String> evidence = snippets.stream()
 				.map(snippet -> String.format("%s（score=%.1f）：%s", snippet.getTitle(), snippet.getScore(), snippet.getContent()))
 				.collect(Collectors.toList());
+		String ragAdvice = intentRecognitionService.generateRagAdvice(query, evidence);
 
-		String summary = buildSummary(snippets, recommendations);
-		return new RagOutput(recommendations, evidence, summary);
+		IntentResult intent = intentRecognitionService.extractRagIntent(query, ragAdvice);
+		List<RecommendationItem> recommendations = toolCallingService.recommend(intent, merchantUserId, limit, false);
+
+		String summary = buildSummary(ragAdvice, recommendations);
+		return new RagOutput(recommendations, evidence, summary, intent);
 	}
 
-	private String buildSummary(List<KnowledgeSnippet> snippets, List<RecommendationItem> recommendations) {
+	private String buildSummary(String ragAdvice, List<RecommendationItem> recommendations) {
 		List<String> lines = new ArrayList<>();
-		if (!snippets.isEmpty()) {
-			lines.add("根据你的描述，我先做了语义知识匹配：");
-			for (KnowledgeSnippet snippet : snippets) {
-				lines.add("- " + snippet.getContent());
-			}
+		if (ragAdvice != null && !ragAdvice.isBlank()) {
+			lines.add(ragAdvice.trim());
 		}
 		if (recommendations.isEmpty()) {
 			lines.add("当前没有检索到足够匹配的菜品，建议换个关键词再试一次。\n");
@@ -50,7 +52,8 @@ public class RagRecommendationService {
 		return String.join("\n", lines);
 	}
 
-	public record RagOutput(List<RecommendationItem> recommendations, List<String> knowledgeEvidence, String summary) {
+	public record RagOutput(List<RecommendationItem> recommendations, List<String> knowledgeEvidence, String summary,
+			IntentResult intent) {
 	}
 
 }

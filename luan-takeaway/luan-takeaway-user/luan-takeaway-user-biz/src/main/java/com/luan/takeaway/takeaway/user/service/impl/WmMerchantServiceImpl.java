@@ -6,14 +6,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.luan.takeaway.admin.api.util.ParamResolver;
+import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
 import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.entity.WmAddress;
+import com.luan.takeaway.takeaway.common.entity.WmDish;
 import com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt;
 import com.luan.takeaway.takeaway.common.mapper.WmAddressMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
+import com.luan.takeaway.takeaway.merchant.api.MerchantDishApi;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
 import com.luan.takeaway.takeaway.user.dto.ws.MerchantAuditResultWsMessage;
 import com.luan.takeaway.takeaway.user.message.MerchantAuditResultMqPublisher;
@@ -85,6 +88,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	private final StringRedisTemplate stringRedisTemplate;
 
 	private final RedisSafeCacheService redisSafeCacheService;
+
+	private final MerchantDishApi merchantDishApi;
 
 	@Override
 	public WmMerchantDTO createMerchant(WmMerchantDTO merchantDTO) {
@@ -253,37 +258,41 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	}
 
 	@Override
-	public Page<WmMerchantDTO> page(Page<WmMerchantDTO> page, Long userId, String auditStatus, String businessStatus) {
+	public Page<WmMerchantDTO> page(Page<WmMerchantDTO> page, Long userId, String auditStatus, String businessStatus,
+			boolean includeDishList) {
 		long version = getMerchantCacheVersion();
 		String safeUserId = userId == null ? "_" : String.valueOf(userId);
 		String safeAuditStatus = StringUtils.hasText(auditStatus) ? auditStatus.trim() : "_";
 		String safeBusinessStatus = StringUtils.hasText(businessStatus) ? businessStatus.trim() : "_";
+		String safeIncludeDishList = includeDishList ? "1" : "0";
 
 		String cacheKey = MERCHANT_PAGE_CACHE_KEY_PREFIX + version + ":" + page.getCurrent() + ":" + page.getSize() + ":"
-				+ safeUserId + ":" + safeAuditStatus + ":" + safeBusinessStatus;
+				+ safeUserId + ":" + safeAuditStatus + ":" + safeBusinessStatus + ":" + safeIncludeDishList;
 		String lockKey = MERCHANT_PAGE_LOCK_KEY_PREFIX + cacheKey;
 
 		JavaType pageType = objectMapper.getTypeFactory().constructParametricType(Page.class, WmMerchantDTO.class);
 		// 分页查询同样走统一缓存保护，避免同条件请求高并发时把 DB 挤爆。
 		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, pageType,
-				() -> loadMerchantPageFromDb(page, userId, auditStatus, businessStatus), MERCHANT_CACHE_POLICY);
+				() -> loadMerchantPageFromDb(page, userId, auditStatus, businessStatus, includeDishList),
+				MERCHANT_CACHE_POLICY);
 	}
 
 	@Override
-	public List<WmMerchantDTO> listByRegion(String province, String city, String district) {
+	public List<WmMerchantDTO> listByRegion(String province, String city, String district, boolean includeDishList) {
 		long version = getMerchantCacheVersion();
 		String safeProvince = StringUtils.hasText(province) ? province.trim() : "_";
 		String safeCity = StringUtils.hasText(city) ? city.trim() : "_";
 		String safeDistrict = StringUtils.hasText(district) ? district.trim() : "_";
+		String safeIncludeDishList = includeDishList ? "1" : "0";
 
 		String cacheKey = MERCHANT_LIST_CACHE_KEY_PREFIX + version + ":" + safeProvince + ":" + safeCity + ":"
-				+ safeDistrict;
+				+ safeDistrict + ":" + safeIncludeDishList;
 		String lockKey = MERCHANT_LIST_LOCK_KEY_PREFIX + cacheKey;
 
 		JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, WmMerchantDTO.class);
 		// 地域列表查询也复用统一组件，和个体/分页一套规则。
 		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, listType,
-				() -> loadMerchantListByRegionFromDb(province, city, district), MERCHANT_CACHE_POLICY);
+				() -> loadMerchantListByRegionFromDb(province, city, district, includeDishList), MERCHANT_CACHE_POLICY);
 	}
 
 	private List<WmMerchantDTO> toDtoListWithAddress(List<WmMerchantUserExt> merchants) {
@@ -355,7 +364,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	}
 
 	private Page<WmMerchantDTO> loadMerchantPageFromDb(Page<WmMerchantDTO> page, Long userId, String auditStatus,
-			String businessStatus) {
+			String businessStatus, boolean includeDishList) {
 		Page<WmMerchantUserExt> entityPage = wmMerchantUserExtMapper.selectPage(new Page<>(page.getCurrent(), page.getSize()),
 				Wrappers.<WmMerchantUserExt>lambdaQuery()
 					.eq(userId != null, WmMerchantUserExt::getUserId, userId)
@@ -365,16 +374,25 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 					.orderByDesc(WmMerchantUserExt::getCreateTime));
 
 		List<WmMerchantDTO> dtoList = toDtoListWithAddress(entityPage.getRecords());
+		if (includeDishList) {
+			fillDishList(dtoList);
+		}
 		Page<WmMerchantDTO> result = new Page<>(entityPage.getCurrent(), entityPage.getSize(), entityPage.getTotal());
 		result.setRecords(dtoList);
 		return result;
 	}
 
-	private List<WmMerchantDTO> loadMerchantListByRegionFromDb(String province, String city, String district) {
+	private List<WmMerchantDTO> loadMerchantListByRegionFromDb(String province, String city, String district,
+			boolean includeDishList) {
+		List<WmMerchantDTO> result;
 		if (!StringUtils.hasText(province)) {
 			List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper
 				.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery().orderByDesc(WmMerchantUserExt::getCreateTime));
-			return toDtoListWithAddress(merchants);
+			result = toDtoListWithAddress(merchants);
+			if (includeDishList) {
+				fillDishList(result);
+			}
+			return result;
 		}
 
 		List<WmAddress> addresses = wmAddressMapper.selectList(Wrappers.<WmAddress>lambdaQuery()
@@ -394,7 +412,36 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery()
 			.in(WmMerchantUserExt::getStoreAddressId, addressIds)
 			.orderByDesc(WmMerchantUserExt::getCreateTime));
-		return toDtoListWithAddress(merchants);
+		result = toDtoListWithAddress(merchants);
+		if (includeDishList) {
+			fillDishList(result);
+		}
+		return result;
+	}
+
+	private void fillDishList(List<WmMerchantDTO> merchants) {
+		if (merchants == null || merchants.isEmpty()) {
+			return;
+		}
+		for (WmMerchantDTO merchant : merchants) {
+			if (merchant == null || merchant.getUserId() == null) {
+				continue;
+			}
+			try {
+				R<Page<WmDish>> response = merchantDishApi.page(1, 50, null, merchant.getUserId(),
+						TakeawayStatusConstants.Dish.SALE_ON);
+				if (response != null && response.getData() != null && response.getData().getRecords() != null) {
+					merchant.setDishList(response.getData().getRecords());
+				}
+				else {
+					merchant.setDishList(Collections.emptyList());
+				}
+			}
+			catch (Exception ex) {
+				log.warn("加载商家菜品列表失败, merchantUserId={}", merchant.getUserId(), ex);
+				merchant.setDishList(Collections.emptyList());
+			}
+		}
 	}
 
 	private long getMerchantCacheVersion() {

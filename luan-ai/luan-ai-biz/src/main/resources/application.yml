@@ -35,4 +35,4 @@ ai:
       remote-base-url: ${AI_LLM_REMOTE_BASE_URL:}
       remote-api-key: ${AI_LLM_REMOTE_API_KEY:}
       remote-model: ${AI_LLM_REMOTE_MODEL:}
-      timeout-ms: ${AI_LLM_TIMEOUT_MS:3000}
+      timeout-ms: ${AI_LLM_TIMEOUT_MS:30000}
