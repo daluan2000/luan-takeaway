@@ -12,6 +12,7 @@ fi
 MODULES=(
   "luan-gateway"
   "luan-auth"
+  "luan-ai/luan-ai-biz"
   "luan-upms/luan-upms-biz"
   "luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz"
   "luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz"
@@ -22,6 +23,7 @@ MODULES=(
 JARS=(
   "luan-gateway/target/luan-gateway-exec.jar"
   "luan-auth/target/luan-auth-exec.jar"
+  "luan-ai/luan-ai-biz/target/luan-ai-biz-exec.jar"
   "luan-upms/luan-upms-biz/target/luan-upms-biz-exec.jar"
   "luan-takeaway/luan-takeaway-user/luan-takeaway-user-biz/target/luan-takeaway-user-biz-exec.jar"
   "luan-takeaway/luan-takeaway-dish/luan-takeaway-dish-biz/target/luan-takeaway-dish-biz-exec.jar"

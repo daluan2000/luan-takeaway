@@ -1,0 +1,38 @@
+server:
+  port: 4505
+
+spring:
+  application:
+    name: @artifactId@
+  cloud:
+    nacos:
+      username: @nacos.username@
+      password: @nacos.password@
+      discovery:
+        server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+  config:
+    import:
+      - optional:nacos:application-@profiles.active@.yml
+      - optional:nacos:${spring.application.name}-@profiles.active@.yml
+
+ai:
+  assistant:
+    max-recommendation: 5
+    llm:
+      enabled: ${AI_LLM_ENABLED:false}
+      source: ${AI_LLM_SOURCE:local}
+      # 兼容旧配置（未配置 local/remote 时作为兜底）
+      base-url: ${AI_LLM_BASE_URL:http://127.0.0.1:11434/v1}
+      api-key: ${AI_LLM_API_KEY:}
+      model: ${AI_LLM_MODEL:qwen2.5:7b}
+      # 本地模型配置（默认使用本机 vLLM OpenAI 兼容接口）
+      local-base-url: ${AI_LLM_LOCAL_BASE_URL:http://127.0.0.1:8000/v1}
+      local-api-key: ${AI_LLM_LOCAL_API_KEY:EMPTY}
+      local-model: ${AI_LLM_LOCAL_MODEL:qwen3.5-4b}
+      # 远程模型配置（按需开启）
+      remote-base-url: ${AI_LLM_REMOTE_BASE_URL:}
+      remote-api-key: ${AI_LLM_REMOTE_API_KEY:}
+      remote-model: ${AI_LLM_REMOTE_MODEL:}
+      timeout-ms: ${AI_LLM_TIMEOUT_MS:3000}

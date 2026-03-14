@@ -124,6 +124,35 @@ services:
     networks:
       - spring_cloud_default
 
+  luan-ai:
+    build:
+      context: ./luan-ai/luan-ai-biz
+    restart: "no"
+    image: luan-ai
+    container_name: luan-ai
+    hostname: luan-ai
+    environment:
+      REDIS_HOST: luan-redis
+      NACOS_HOST: luan-register
+      AI_LLM_ENABLED: "true"
+      AI_LLM_SOURCE: ${AI_LLM_SOURCE:-local}
+      AI_LLM_LOCAL_BASE_URL: ${AI_LLM_LOCAL_BASE_URL:-http://host.docker.internal:8000/v1}
+      AI_LLM_LOCAL_MODEL: ${AI_LLM_LOCAL_MODEL:-qwen3.5-4b}
+      AI_LLM_LOCAL_API_KEY: ${AI_LLM_LOCAL_API_KEY:-EMPTY}
+      AI_LLM_REMOTE_BASE_URL: ${AI_LLM_REMOTE_BASE_URL:-}
+      AI_LLM_REMOTE_MODEL: ${AI_LLM_REMOTE_MODEL:-}
+      AI_LLM_REMOTE_API_KEY: ${AI_LLM_REMOTE_API_KEY:-}
+      AI_LLM_TIMEOUT_MS: ${AI_LLM_TIMEOUT_MS:-5000}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      luan-redis:
+        condition: service_started
+      luan-register:
+        condition: service_started
+    networks:
+      - spring_cloud_default
+
   luan-upms:
     build:
       context: ./luan-upms/luan-upms-biz

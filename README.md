@@ -40,6 +40,7 @@
 ```
 luan-gateway  网关服务
 luan-auth  认证服务
+luan-ai  AI 点餐助手服务
 luan-upms  用户权限管理服务
 luan-takeaway-user 外卖业务用户管理服务
 luan-takeaway-dish 菜品管理服务
@@ -152,6 +153,7 @@ luan_config （微服务配置数据，提供nacos使用）
 | ------------------ | --------------- |
 | luan-gateway        | 系统网关（默认端口 9999） |
 | luan-auth           | 认证中心            |
+| luan-ai             | AI 点餐助手服务        |
 | luan-upms           | 系统管理服务          |
 | luan-takeaway-user  | 用户服务            |
 | luan-takeaway-dish  | 菜品服务            |
@@ -189,7 +191,7 @@ docker compose ps luan-mysql luan-redis luan-register
 查看微服务状态：
 
 ```bash
-docker compose ps luan-gateway luan-auth luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
+docker compose ps luan-gateway luan-auth luan-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
 ```
 
 停止 Java 服务：
@@ -253,6 +255,48 @@ npm run dev
 ```bash
 npm run dev:mono
 ```
+
+### 6.4 本地 vLLM 启动（可选）
+
+如果希望 `luan-ai` 使用本地模型，可先启动 vLLM 的 OpenAI 兼容接口。
+
+默认脚本已配置模型路径：`/home/luan/workplace/LLM_CTA/models/Qwen3.5-4B`。
+为避免部分 `Qwen3.5` 在图捕获阶段启动失败，脚本默认开启 `--enforce-eager`，并默认 `max_model_len=4096`。
+
+启动：
+
+```bash
+./start-vllm.sh
+```
+
+停止：
+
+```bash
+./stop-vllm.sh
+```
+
+默认服务地址为 `http://127.0.0.1:8000/v1`。如果 `luan-ai` 运行在 Docker 容器中，建议把 `AI_LLM_BASE_URL` 配置为 `http://host.docker.internal:8000/v1`。
+
+示例环境变量：
+
+```bash
+AI_LLM_ENABLED=true
+AI_LLM_SOURCE=local
+AI_LLM_LOCAL_BASE_URL=http://host.docker.internal:8000/v1
+AI_LLM_LOCAL_MODEL=qwen3.5-4b
+AI_LLM_LOCAL_API_KEY=EMPTY
+```
+
+如果要切换为远程接口：
+
+```bash
+AI_LLM_SOURCE=remote
+AI_LLM_REMOTE_BASE_URL=https://your-remote-endpoint/v1
+AI_LLM_REMOTE_MODEL=your-remote-model
+AI_LLM_REMOTE_API_KEY=your-api-key
+```
+
+说明：`AI_LLM_BASE_URL / AI_LLM_MODEL / AI_LLM_API_KEY` 旧参数仍可用，作为 `local/remote` 未配置时的兜底。
 
 
 ## 7 业务技术实现

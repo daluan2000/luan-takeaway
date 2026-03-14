@@ -1,0 +1,3 @@
+com.luan.takeaway.ai.api.feign.AiAssistantApi
+com.luan.takeaway.ai.api.feign.DishToolClient
+com.luan.takeaway.ai.api.feign.OrderToolClient
