@@ -6,22 +6,23 @@
 		<groupId>com.luan</groupId>
 		<artifactId>takeaway</artifactId>
 		<version>${revision}</version>
+		<relativePath>../../pom.xml</relativePath>
 	</parent>
 
-	<artifactId>luan-ai</artifactId>
+	<artifactId>luan-takeaway-ai</artifactId>
 	<packaging>pom</packaging>
 	<description>AI 点餐助手聚合模块</description>
 
 	<modules>
-		<module>luan-ai-api</module>
-		<module>luan-ai-biz</module>
+		<module>luan-takeaway-ai-api</module>
+		<module>luan-takeaway-ai-biz</module>
 	</modules>
 
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
 				<groupId>com.luan</groupId>
-				<artifactId>luan-ai-api</artifactId>
+				<artifactId>luan-takeaway-ai-api</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 		</dependencies>

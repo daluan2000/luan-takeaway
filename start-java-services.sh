@@ -42,9 +42,9 @@ for ((attempt = 1; attempt <= MAX_RETRIES; attempt++)); do
 done
 
 echo
-echo "启动 Java 微服务(每次强制重建镜像): luan-gateway, luan-auth, luan-ai, luan-upms, luan-takeaway-user, luan-takeaway-dish, luan-takeaway-order, luan-takeaway-pay"
-docker compose up -d --build --force-recreate --no-deps luan-gateway luan-auth luan-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
+echo "启动 Java 微服务(每次强制重建镜像): luan-gateway, luan-auth, luan-takeaway-ai, luan-upms, luan-takeaway-user, luan-takeaway-dish, luan-takeaway-order, luan-takeaway-pay"
+docker compose up -d --build --force-recreate --no-deps luan-gateway luan-auth luan-takeaway-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
 
 echo
 echo "Java 微服务已启动，查看状态:"
-echo "docker compose ps luan-gateway luan-auth luan-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay"
+echo "docker compose ps luan-gateway luan-auth luan-takeaway-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay"

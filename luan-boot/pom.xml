@@ -63,7 +63,7 @@
 		<!--可选：AI 点餐助手服务模块 -->
 		<dependency>
 			<groupId>com.luan</groupId>
-			<artifactId>luan-ai-biz</artifactId>
+			<artifactId>luan-takeaway-ai-biz</artifactId>
 			<version>${revision}</version>
 		</dependency>
 

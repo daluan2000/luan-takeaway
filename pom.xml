@@ -89,7 +89,6 @@
 		<module>luan-gateway</module>
 		<module>luan-auth</module>
 		<module>luan-auth-api</module>
-		<module>luan-ai</module>
 		<module>luan-upms</module>
 		<module>luan-takeaway</module>
 		<module>luan-common</module>

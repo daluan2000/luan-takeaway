@@ -14,9 +14,9 @@ if ! docker compose version >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "停止 Java 微服务: luan-gateway, luan-auth, luan-ai, luan-upms, luan-takeaway-user, luan-takeaway-dish, luan-takeaway-order, luan-takeaway-pay"
-docker compose stop luan-gateway luan-auth luan-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
+echo "停止 Java 微服务: luan-gateway, luan-auth, luan-takeaway-ai, luan-upms, luan-takeaway-user, luan-takeaway-dish, luan-takeaway-order, luan-takeaway-pay"
+docker compose stop luan-gateway luan-auth luan-takeaway-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay
 
 echo
 echo "Java 微服务已停止，查看状态:"
-echo "docker compose ps luan-gateway luan-auth luan-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay"
+echo "docker compose ps luan-gateway luan-auth luan-takeaway-ai luan-upms luan-takeaway-user luan-takeaway-dish luan-takeaway-order luan-takeaway-pay"

@@ -14,6 +14,7 @@
 
     <modules>
         <module>luan-takeaway-common</module>
+        <module>luan-takeaway-ai</module>
         <module>luan-takeaway-user</module>
         <module>luan-takeaway-dish</module>
         <module>luan-takeaway-order</module>
@@ -25,6 +26,11 @@
             <dependency>
                 <groupId>com.luan</groupId>
                 <artifactId>luan-takeaway-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.luan</groupId>
+                <artifactId>luan-takeaway-ai-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

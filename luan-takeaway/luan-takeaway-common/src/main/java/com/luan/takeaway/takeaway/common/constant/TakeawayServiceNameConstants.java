@@ -10,4 +10,6 @@ public interface TakeawayServiceNameConstants {
 
 	String TAKEAWAY_PAY_SERVICE = "luan-takeaway-pay";
 
+	String TAKEAWAY_AI_SERVICE = "luan-takeaway-ai-biz";
+
 }

@@ -4,11 +4,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.luan</groupId>
-        <artifactId>luan-ai</artifactId>
+        <artifactId>luan-takeaway-ai</artifactId>
         <version>${revision}</version>
     </parent>
 
-    <artifactId>luan-ai-api</artifactId>
+    <artifactId>luan-takeaway-ai-api</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>

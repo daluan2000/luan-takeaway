@@ -2,7 +2,7 @@
 
 ---
 
-### 一、整体架构（建议直接新增 `luan-ai` 服务） 🤖
+### 一、整体架构（建议直接新增 `luan-takeaway-ai` 服务） 🤖
 
 在现有网关后新增一个 AI 服务：
 
@@ -11,7 +11,7 @@
    ↓
 Gateway
    ↓
-luan-ai
+luan-takeaway-ai
    ↓
 LLM 意图识别层
    ↓
@@ -26,7 +26,7 @@ LLM 意图识别层
 这个服务建议独立成一个微服务：
 
 ```text
-luan-ai
+luan-takeaway-ai
 ```
 
 它不直接持有业务数据，而是调用你已有服务：

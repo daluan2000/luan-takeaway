@@ -124,13 +124,13 @@ services:
     networks:
       - spring_cloud_default
 
-  luan-ai:
+  luan-takeaway-ai:
     build:
-      context: ./luan-ai/luan-ai-biz
+      context: ./luan-takeaway/luan-takeaway-ai/luan-takeaway-ai-biz
     restart: "no"
-    image: luan-ai
-    container_name: luan-ai
-    hostname: luan-ai
+    image: luan-takeaway-ai
+    container_name: luan-takeaway-ai
+    hostname: luan-takeaway-ai
     environment:
       REDIS_HOST: luan-redis
       NACOS_HOST: luan-register

@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-SERVICES=("luan-gateway" "luan-auth" "luan-ai" "luan-upms" "luan-takeaway-user" "luan-takeaway-dish" "luan-takeaway-order" "luan-takeaway-pay")
+SERVICES=("luan-gateway" "luan-auth" "luan-takeaway-ai" "luan-upms" "luan-takeaway-user" "luan-takeaway-dish" "luan-takeaway-order" "luan-takeaway-pay")
 
 echo "查看 Java 微服务日志: ${SERVICES[*]}"
 if [[ "$FOLLOW" == true ]]; then
