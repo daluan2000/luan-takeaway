@@ -36,15 +36,13 @@
 
 					<el-form-item label="在线状态" prop="onlineStatus">
 						<el-select v-model="form.onlineStatus" placeholder="请选择在线状态" style="width: 100%">
-							<el-option label="离线" value="0" />
-							<el-option label="在线" value="1" />
+							<el-option v-for="item in onlineStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
 						</el-select>
 					</el-form-item>
 
 					<el-form-item label="在职状态" prop="employmentStatus">
 						<el-select v-model="form.employmentStatus" placeholder="请选择在职状态" style="width: 100%">
-							<el-option label="离职" value="0" />
-							<el-option label="在职" value="1" />
+							<el-option v-for="item in employmentStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
 						</el-select>
 					</el-form-item>
 
@@ -63,11 +61,19 @@
 import { useMessage } from '/@/hooks/message';
 import { currentRider, saveRider, updateRider } from '/@/api/takeaway/delivery';
 import { useUserInfo } from '/@/stores/userInfo';
+import { useDict } from '/@/hooks/dict';
 
 const formRef = ref();
 const loading = ref(false);
 const submitting = ref(false);
 const isCreateMode = ref(true);
+const { takeaway_delivery_online_status, takeaway_delivery_employment_status } = useDict(
+	'takeaway_delivery_online_status',
+	'takeaway_delivery_employment_status'
+);
+
+const onlineStatusOptions = computed(() => takeaway_delivery_online_status.value || []);
+const employmentStatusOptions = computed(() => takeaway_delivery_employment_status.value || []);
 
 const form = reactive({
 	id: undefined as number | undefined,

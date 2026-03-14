@@ -21,7 +21,7 @@
 				<el-form :inline="true" :model="queryForm" @keyup.enter="loadData">
 					<el-form-item label="订单状态" prop="status">
 						<el-select v-model="queryForm.status" placeholder="请选择状态" clearable style="width: 220px" @change="onStatusChange">
-							<el-option v-for="item in ORDER_STATUS_OPTIONS" :key="item.value" :label="item.label" :value="item.value" />
+							<el-option v-for="item in displayStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
 						</el-select>
 					</el-form-item>
 					<el-form-item>
@@ -124,6 +124,7 @@ import { useUserInfo } from '/@/stores/userInfo';
 import type { Pagination, TableStyle } from '/@/hooks/table';
 import { TAKEAWAY_ORDER_TABLE_COL_WIDTH } from '/@/constants/takeawayOrderTable';
 import { getOrderTimelineText } from '/@/utils/takeawayOrderTime';
+import { useDict } from '/@/hooks/dict';
 
 interface AddressItem {
 	province?: string;
@@ -166,14 +167,18 @@ const ORDER_STATUS_OPTIONS = [
 	{ label: '配送已完成', value: ORDER_STATUS.FINISHED },
 ];
 
-const STATUS_LABEL_MAP: Record<string, string> = {
-	'0': '待支付',
-	'1': '已支付',
-	'2': '商家已接单',
-	'3': '配送中',
-	'4': '已完成',
-	'5': '已取消',
-};
+const { takeaway_order_status } = useDict('takeaway_order_status');
+
+const statusOptionsFromDict = computed(() => {
+	const all = takeaway_order_status.value || [];
+	return all
+		.filter((item: any) => String(item.value) === ORDER_STATUS.DELIVERING || String(item.value) === ORDER_STATUS.FINISHED)
+		.map((item: any) => ({ label: item.label, value: String(item.value) }));
+});
+
+const displayStatusOptions = computed(() => {
+	return statusOptionsFromDict.value.length ? statusOptionsFromDict.value : ORDER_STATUS_OPTIONS;
+});
 
 const loading = ref(false);
 const riderReady = ref(false);
@@ -255,7 +260,10 @@ const formatMoney = (value: unknown) => {
 	return amount.toFixed(2);
 };
 
-const getStatusLabel = (status: string) => STATUS_LABEL_MAP[status] || `未知状态(${status ?? '-'})`;
+const getStatusLabel = (status: string) => {
+	const target = (takeaway_order_status.value || []).find((item: any) => String(item.value) === String(status));
+	return target?.label || `未知状态(${status ?? '-'})`;
+};
 
 const getStatusTagType = (status: string) => {
 	if (status === ORDER_STATUS.DELIVERING) return 'warning';

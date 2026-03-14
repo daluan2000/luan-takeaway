@@ -137,6 +137,7 @@ import { listMerchantByRegion } from '/@/api/takeaway/merchant';
 import { createOrder } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
 import { resolveApiResourceUrl } from '/@/utils/url';
+import { useDict } from '/@/hooks/dict';
 
 interface AddressItem {
 	id?: string | number;
@@ -192,6 +193,22 @@ const remarkMap = reactive<Record<string, string>>({});
 const submittingMap = reactive<Record<string, boolean>>({});
 const currentCustomerUserId = ref<string | undefined>();
 const currentDeliveryAddressId = ref<string | undefined>();
+const { takeaway_merchant_business_status, takeaway_dish_sale_status } = useDict(
+	'takeaway_merchant_business_status',
+	'takeaway_dish_sale_status'
+);
+
+const businessOpenValue = computed(() => {
+	const options = takeaway_merchant_business_status.value || [];
+	const target = options.find((item: any) => item.label === '营业' || String(item.value) === '1');
+	return String((target || { value: '1' }).value);
+});
+
+const dishSaleOnValue = computed(() => {
+	const options = takeaway_dish_sale_status.value || [];
+	const target = options.find((item: any) => item.label === '上架' || String(item.value) === '1');
+	return String((target || { value: '1' }).value);
+});
 
 const cardTitle = computed(() => {
 	return currentDisplayRegion.value ? `${currentDisplayRegion.value}营业商店与菜品` : '同城营业商店与菜品';
@@ -444,7 +461,7 @@ const loadData = async () => {
 		});
 
 		const allMerchants: MerchantItem[] = merchantRes?.data || [];
-		const openMerchants = allMerchants.filter((item) => item.businessStatus === '1');
+		const openMerchants = allMerchants.filter((item) => String(item.businessStatus) === businessOpenValue.value);
 		merchantList.value = openMerchants;
 
 		openMerchants.forEach((merchant) => {
@@ -465,7 +482,7 @@ const loadData = async () => {
 					merchantUserId,
 				});
 				const records: DishItem[] = dishRes?.data?.records || [];
-				dishMap[merchantUserId] = records.filter((item) => item.saleStatus === '1');
+				dishMap[merchantUserId] = records.filter((item) => String(item.saleStatus) === dishSaleOnValue.value);
 				remarkMap[merchantUserId] = '';
 				const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
 				dishMap[merchantUserId].forEach((dish) => {

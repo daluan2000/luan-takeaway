@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.luan.takeaway.admin.api.util.ParamResolver;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
 import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
@@ -38,6 +39,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Slf4j
 public class WmMerchantServiceImpl implements WmMerchantService {
+
+	private static final String PARAM_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS =
+			"TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS";
+
+	private static final String PARAM_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS =
+			"TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS";
 
 	// 商户缓存版本号，写操作后递增，用于让老的查询缓存“逻辑过期”。
 	private static final String MERCHANT_CACHE_VERSION_KEY = "takeaway:merchant:cache:version";
@@ -144,7 +151,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 	private void scheduleAutoApprove(Long merchantId) {
 		// 审核通过这里使用异步延时，主要是模拟真实平台“审核中 -> 审核结果”的时间差。
 		// 这样前端更容易覆盖待审核态，也能提前暴露通知链路（MQ/WS）在异步场景下的问题。
-		int delaySeconds = ThreadLocalRandom.current().nextInt(3, 11);
+		int[] delayRange = getAutoAuditDelayRangeSeconds();
+		int delaySeconds = ThreadLocalRandom.current().nextInt(delayRange[0], delayRange[1] + 1);
 		CompletableFuture.runAsync(() -> {
 			try {
 				TimeUnit.SECONDS.sleep(delaySeconds);
@@ -411,6 +419,28 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		catch (Exception ex) {
 			log.warn("更新商户缓存版本号失败", ex);
 		}
+	}
+
+	private int[] getAutoAuditDelayRangeSeconds() {
+		Long minVal = ParamResolver.getLong(PARAM_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS, 3L);
+		Long maxVal = ParamResolver.getLong(PARAM_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS, 10L);
+
+		int min = minVal == null ? 3 : minVal.intValue();
+		int max = maxVal == null ? 10 : maxVal.intValue();
+
+		if (min <= 0) {
+			min = 3;
+		}
+		if (max <= 0) {
+			max = 10;
+		}
+		if (max < min) {
+			max = min;
+		}
+		if (max > 300) {
+			max = 300;
+		}
+		return new int[] { min, max };
 	}
 
 }

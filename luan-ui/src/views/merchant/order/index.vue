@@ -12,7 +12,7 @@
 				<el-form ref="queryRef" :inline="true" :model="state.queryForm" @keyup.enter="getDataList">
 					<el-form-item label="订单状态" prop="status">
 						<el-select v-model="state.queryForm.status" placeholder="请选择状态" clearable style="width: 220px">
-							<el-option v-for="item in ORDER_STATUS_OPTIONS" :key="item.value || 'all'" :label="item.label" :value="item.value" />
+							<el-option v-for="item in orderStatusOptions" :key="item.value || 'all'" :label="item.label" :value="item.value" />
 						</el-select>
 					</el-form-item>
 					<el-form-item>
@@ -109,6 +109,7 @@ import { merchantAcceptOrder, pageList } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
 import { TAKEAWAY_ORDER_TABLE_COL_WIDTH } from '/@/constants/takeawayOrderTable';
 import { getOrderTimelineText } from '/@/utils/takeawayOrderTime';
+import { useDict } from '/@/hooks/dict';
 
 const ORDER_STATUS = {
 	WAIT_PAY: '0',
@@ -121,22 +122,17 @@ const ORDER_STATUS = {
 
 const ORDER_STATUS_OPTIONS = [
 	{ label: '全部', value: '' },
-	{ label: '待支付', value: ORDER_STATUS.WAIT_PAY },
-	{ label: '已支付', value: ORDER_STATUS.PAID },
-	{ label: '商家已接单', value: ORDER_STATUS.MERCHANT_ACCEPTED },
-	{ label: '配送中', value: ORDER_STATUS.DELIVERING },
-	{ label: '已完成', value: ORDER_STATUS.FINISHED },
-	{ label: '已取消', value: ORDER_STATUS.CANCELED },
 ];
 
-const statusLabelMap: Record<string, string> = {
-	[ORDER_STATUS.WAIT_PAY]: '待支付',
-	[ORDER_STATUS.PAID]: '已支付',
-	[ORDER_STATUS.MERCHANT_ACCEPTED]: '商家已接单',
-	[ORDER_STATUS.DELIVERING]: '配送中',
-	[ORDER_STATUS.FINISHED]: '已完成',
-	[ORDER_STATUS.CANCELED]: '已取消',
-};
+const { takeaway_order_status } = useDict('takeaway_order_status');
+
+const orderStatusOptions = computed(() => {
+	const dictOptions = (takeaway_order_status.value || []).map((item: any) => ({
+		label: item.label,
+		value: String(item.value),
+	}));
+	return [...ORDER_STATUS_OPTIONS, ...dictOptions];
+});
 
 const queryRef = ref();
 const acceptingId = ref('');
@@ -170,7 +166,8 @@ const formatMoney = (value: unknown) => {
 };
 
 const getStatusLabel = (status: string) => {
-	return statusLabelMap[status] || `未知状态(${status ?? '-'})`;
+	const target = (takeaway_order_status.value || []).find((item: any) => String(item.value) === String(status));
+	return target?.label || `未知状态(${status ?? '-'})`;
 };
 
 const getStatusTagType = (status: string) => {

@@ -19,7 +19,7 @@
 
 				<el-alert
 					v-if="!isCreateMode && form.auditStatus === '0'"
-					title="当前为待审状态，系统将于3-10秒内自动审批，页面会在收到通知后自动刷新"
+					:title="auditPendingAlertText"
 					type="info"
 					show-icon
 					:closable="false"
@@ -47,15 +47,12 @@
 
 					<el-form-item label="营业状态" prop="businessStatus">
 						<el-select v-model="form.businessStatus" placeholder="请选择营业状态" style="width: 100%">
-							<el-option label="营业" value="1" />
-							<el-option label="休息" value="0" />
+							<el-option v-for="item in businessStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
 						</el-select>
 					</el-form-item>
 
 					<el-form-item label="审核状态" v-if="!isCreateMode">
-						<el-tag v-if="form.auditStatus === '1'" type="success">通过</el-tag>
-						<el-tag v-else-if="form.auditStatus === '2'" type="danger">驳回</el-tag>
-						<el-tag v-else type="warning">待审</el-tag>
+						<el-tag :type="getAuditStatusTagType(form.auditStatus)">{{ getAuditStatusLabel(form.auditStatus) }}</el-tag>
 					</el-form-item>
 
 					<el-form-item>
@@ -73,9 +70,16 @@
 import { useMessage } from '/@/hooks/message';
 import { listAddress } from '/@/api/takeaway/address';
 import { applyMerchant, currentMerchant, updateMerchant } from '/@/api/takeaway/merchant';
+import { getPublicValue } from '/@/api/admin/param';
 import { useMsg } from '/@/stores/msg';
 import { useUserInfo } from '/@/stores/userInfo';
 import { useRouter } from 'vue-router';
+import { useDict } from '/@/hooks/dict';
+
+const PARAM_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS = 'TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS';
+const PARAM_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS = 'TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS';
+const DEFAULT_AUDIT_DELAY_MIN_SECONDS = 3;
+const DEFAULT_AUDIT_DELAY_MAX_SECONDS = 10;
 
 const formRef = ref();
 const router = useRouter();
@@ -85,6 +89,30 @@ const isCreateMode = ref(true);
 const addressOptions = ref<Array<{ label: string; value: string }>>([]);
 const msgStore = useMsg();
 const currentMerchantUserId = computed(() => Number(useUserInfo().userInfos?.user?.userId || 0));
+const { takeaway_merchant_business_status, takeaway_merchant_audit_status } = useDict(
+	'takeaway_merchant_business_status',
+	'takeaway_merchant_audit_status'
+);
+
+const businessStatusOptions = computed(() => takeaway_merchant_business_status.value || []);
+const auditStatusOptions = computed(() => takeaway_merchant_audit_status.value || []);
+const auditDelayMinSeconds = ref(DEFAULT_AUDIT_DELAY_MIN_SECONDS);
+const auditDelayMaxSeconds = ref(DEFAULT_AUDIT_DELAY_MAX_SECONDS);
+
+const auditPendingAlertText = computed(() => {
+	return `当前为待审状态，系统将于${auditDelayMinSeconds.value}-${auditDelayMaxSeconds.value}秒内自动审批，页面会在收到通知后自动刷新`;
+});
+
+const getAuditStatusLabel = (status?: string) => {
+	const target = auditStatusOptions.value.find((item: any) => String(item.value) === String(status || ''));
+	return target?.label || status || '-';
+};
+
+const getAuditStatusTagType = (status?: string) => {
+	if (status === '1') return 'success';
+	if (status === '2') return 'danger';
+	return 'warning';
+};
 
 const form = reactive({
 	id: undefined as number | undefined,
@@ -165,6 +193,32 @@ const resetForm = () => {
 	form.storeAddressId = '';
 	form.businessStatus = '1';
 	form.auditStatus = '0';
+};
+
+const normalizePositiveInt = (value: unknown, fallback: number) => {
+	const num = Number(value);
+	if (!Number.isFinite(num) || num <= 0) {
+		return fallback;
+	}
+	return Math.floor(num);
+};
+
+const loadAuditDelayRange = async () => {
+	try {
+		const [minRes, maxRes] = await Promise.all([
+			getPublicValue(PARAM_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS),
+			getPublicValue(PARAM_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS),
+		]);
+
+		const minValue = normalizePositiveInt(minRes?.data, DEFAULT_AUDIT_DELAY_MIN_SECONDS);
+		const maxValue = normalizePositiveInt(maxRes?.data, DEFAULT_AUDIT_DELAY_MAX_SECONDS);
+
+		auditDelayMinSeconds.value = minValue;
+		auditDelayMaxSeconds.value = maxValue < minValue ? minValue : maxValue;
+	} catch {
+		auditDelayMinSeconds.value = DEFAULT_AUDIT_DELAY_MIN_SECONDS;
+		auditDelayMaxSeconds.value = DEFAULT_AUDIT_DELAY_MAX_SECONDS;
+	}
 };
 
 const loadCurrent = async (showLoading = true) => {
@@ -291,6 +345,7 @@ const handleSubmit = async () => {
 };
 
 onMounted(async () => {
+	loadAuditDelayRange();
 	loadAddressOptions();
 	await loadCurrent();
 });

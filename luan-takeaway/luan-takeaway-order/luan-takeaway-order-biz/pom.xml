@@ -26,6 +26,10 @@
         </dependency>
         <dependency>
             <groupId>com.luan</groupId>
+            <artifactId>luan-upms-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.luan</groupId>
             <artifactId>luan-common-feign</artifactId>
         </dependency>
         <dependency>

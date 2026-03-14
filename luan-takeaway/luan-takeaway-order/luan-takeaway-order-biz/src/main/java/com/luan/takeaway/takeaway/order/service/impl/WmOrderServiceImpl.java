@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.luan.takeaway.admin.api.util.ParamResolver;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.core.util.RedisUtils;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
@@ -54,6 +55,10 @@ import java.util.UUID;
 @Service
 @AllArgsConstructor
 public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> implements WmOrderService {
+
+	private static final String PARAM_ORDER_AUTO_CANCEL_MS = "TAKEAWAY_ORDER_AUTO_CANCEL_MS";
+
+	private static final String PARAM_DELIVERY_START_LOCK_SECONDS = "TAKEAWAY_ORDER_DELIVERY_LOCK_SECONDS";
 
 	private final WmOrderItemMapper wmOrderItemMapper;
 
@@ -363,7 +368,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		// 锁超时设置为 10 秒：
 		// 1) 足够覆盖一次“查订单 + 更新状态”的数据库操作；
 		// 2) 即使服务异常退出，也能依赖过期时间自动释放，避免死锁。
-		boolean locked = RedisUtils.getLock(lockKey, lockValue, 10);
+		boolean locked = RedisUtils.getLock(lockKey, lockValue, getDeliveryStartLockSeconds());
 		if (!locked) {
 			// 没抢到锁说明当前订单正在被其他骑手并发处理，直接失败并提示前端重试。
 			throw new IllegalStateException("当前订单正在被其他骑手抢单，请稍后重试");
@@ -472,8 +477,8 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		if (order == null || order.getCreateTime() == null) {
 			return;
 		}
-		LocalDateTime deadline = order.getCreateTime()
-			.plusNanos(OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS * 1_000_000L);
+		long autoCancelDelayMs = getOrderAutoCancelDelayMs();
+		LocalDateTime deadline = order.getCreateTime().plusNanos(autoCancelDelayMs * 1_000_000L);
 		long deadlineTs = deadline.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
 		orderDTO.setAutoCancelDeadlineTs(deadlineTs);
 	}
@@ -505,6 +510,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 	}
 
 	private void publishAutoCancelDelayEvent(WmOrder order) {
+		long autoCancelDelayMs = getOrderAutoCancelDelayMs();
 		// 消息体只携带必要字段：orderId 用于执行取消，orderNo/createTime 用于日志和审计。
 		OrderAutoCancelEvent event = new OrderAutoCancelEvent();
 		event.setOrderId(order.getId());
@@ -515,8 +521,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 			// 消息先进入 delay queue，过期后由 dead-letter exchange 转发到消费队列。
 			rabbitTemplate.convertAndSend(OrderAutoCancelMqConstants.DELAY_EXCHANGE,
 					OrderAutoCancelMqConstants.DELAY_ROUTING_KEY, objectMapper.writeValueAsString(event), message -> {
-					message.getMessageProperties()
-						.setExpiration(String.valueOf(OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS));
+					message.getMessageProperties().setExpiration(String.valueOf(autoCancelDelayMs));
 					return message;
 				});
 		}
@@ -539,6 +544,25 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		if (!customerUserId.equals(address.getUserId())) {
 			throw new IllegalArgumentException("收货地址不属于当前下单用户");
 		}
+	}
+
+	private long getOrderAutoCancelDelayMs() {
+		Long resolved = ParamResolver.getLong(PARAM_ORDER_AUTO_CANCEL_MS, OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS);
+		if (resolved == null || resolved <= 0L) {
+			return OrderAutoCancelMqConstants.AUTO_CANCEL_DELAY_MS;
+		}
+		return resolved;
+	}
+
+	private int getDeliveryStartLockSeconds() {
+		Long resolved = ParamResolver.getLong(PARAM_DELIVERY_START_LOCK_SECONDS, 10L);
+		if (resolved == null || resolved <= 0L) {
+			return 10;
+		}
+		if (resolved > 300L) {
+			return 300;
+		}
+		return resolved.intValue();
 	}
 
 }

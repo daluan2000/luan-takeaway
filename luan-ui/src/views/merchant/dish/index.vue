@@ -15,8 +15,7 @@
 					</el-form-item>
 					<el-form-item label="销售状态" prop="saleStatus">
 						<el-select v-model="state.queryForm.saleStatus" placeholder="请选择状态" clearable style="width: 180px">
-							<el-option label="上架" value="1" />
-							<el-option label="下架" value="0" />
+							<el-option v-for="item in saleStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
 						</el-select>
 					</el-form-item>
 					<el-form-item>
@@ -45,8 +44,7 @@
 					<el-table-column prop="stock" label="库存" width="80" />
 					<el-table-column label="销售状态" width="90">
 						<template #default="scope">
-							<el-tag v-if="scope.row.saleStatus === '1'" type="success">上架</el-tag>
-							<el-tag v-else type="info">下架</el-tag>
+							<el-tag :type="scope.row.saleStatus === '1' ? 'success' : 'info'">{{ getSaleStatusLabel(scope.row.saleStatus) }}</el-tag>
 						</template>
 					</el-table-column>
 					<el-table-column prop="createTime" label="创建时间" min-width="160" show-overflow-tooltip />
@@ -93,8 +91,7 @@
 
 				<el-form-item label="销售状态" prop="saleStatus">
 					<el-radio-group v-model="form.saleStatus">
-						<el-radio label="1">上架</el-radio>
-						<el-radio label="0">下架</el-radio>
+						<el-radio v-for="item in saleStatusOptions" :key="item.value" :label="item.value">{{ item.label }}</el-radio>
 					</el-radio-group>
 				</el-form-item>
 			</el-form>
@@ -114,6 +111,7 @@ import { addObj, delObj, pageList, putObj, saleOff, saleOn } from '/@/api/takeaw
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useUserInfo } from '/@/stores/userInfo';
 import { resolveApiResourceUrl } from '/@/utils/url';
+import { useDict } from '/@/hooks/dict';
 
 interface DishForm {
 	id?: number;
@@ -130,6 +128,8 @@ const queryRef = ref();
 const formRef = ref();
 const dialogVisible = ref(false);
 const submitting = ref(false);
+
+const { takeaway_dish_sale_status } = useDict('takeaway_dish_sale_status');
 
 const form = reactive<DishForm>({
 	id: undefined,
@@ -160,6 +160,13 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 });
 
 const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTable(state);
+
+const saleStatusOptions = computed(() => takeaway_dish_sale_status.value || []);
+
+const getSaleStatusLabel = (status: string) => {
+	const target = saleStatusOptions.value.find((item: any) => String(item.value) === String(status));
+	return target?.label || status || '-';
+};
 
 const resolveImageSrc = (image?: string) => {
 	return resolveApiResourceUrl(image);

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.luan.takeaway.admin.api.util.ParamResolver;
 import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
@@ -37,6 +38,8 @@ import java.util.TreeMap;
 @Service
 @AllArgsConstructor
 public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> implements WmDishService {
+
+	private static final String PARAM_DISH_DB_LOCK_WAIT_TIMEOUT_SECONDS = "TAKEAWAY_DISH_DB_LOCK_WAIT_TIMEOUT_SECONDS";
 
 	private static final String DISH_STOCK_CACHE_KEY_PREFIX = "takeaway:dish:stock:";
 
@@ -313,7 +316,7 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 		}
 
 		// 限制数据库行锁等待时间，防止消费线程长时间阻塞导致堆积。
-		jdbcTemplate.execute("SET innodb_lock_wait_timeout = 3");
+		jdbcTemplate.execute("SET innodb_lock_wait_timeout = " + getDbLockWaitTimeoutSeconds());
 		int updatedRows = executeBatchDeductSql(buyCountMap, merchantUserId);
 		if (updatedRows != buyCountMap.size()) {
 			log.error("异步落库库存扣减失败, merchantUserId={}, requestItems={}, updatedRows={}", merchantUserId, buyCountMap,
@@ -478,6 +481,17 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 		catch (Exception ex) {
 			log.warn("更新菜品缓存版本号失败", ex);
 		}
+	}
+
+	private int getDbLockWaitTimeoutSeconds() {
+		Long resolved = ParamResolver.getLong(PARAM_DISH_DB_LOCK_WAIT_TIMEOUT_SECONDS, 3L);
+		if (resolved == null || resolved <= 0L) {
+			return 3;
+		}
+		if (resolved > 120L) {
+			return 120;
+		}
+		return resolved.intValue();
 	}
 
 }

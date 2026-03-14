@@ -126,6 +126,7 @@ import { useUserInfo } from '/@/stores/userInfo';
 import type { Pagination, TableStyle } from '/@/hooks/table';
 import { TAKEAWAY_ORDER_TABLE_COL_WIDTH } from '/@/constants/takeawayOrderTable';
 import { getOrderTimelineText } from '/@/utils/takeawayOrderTime';
+import { useDict } from '/@/hooks/dict';
 
 interface AddressItem {
 	id?: string | number;
@@ -172,14 +173,7 @@ const ORDER_STATUS = {
 	MERCHANT_ACCEPTED: '2',
 } as const;
 
-const STATUS_LABEL_MAP: Record<string, string> = {
-	'0': '待支付',
-	'1': '已支付',
-	'2': '商家已接单',
-	'3': '配送中',
-	'4': '已完成',
-	'5': '已取消',
-};
+const { takeaway_order_status } = useDict('takeaway_order_status');
 
 const loading = ref(false);
 const acceptingId = ref('');
@@ -280,7 +274,10 @@ const formatMoney = (value: unknown) => {
 	return amount.toFixed(2);
 };
 
-const getStatusLabel = (status: string) => STATUS_LABEL_MAP[status] || `未知状态(${status ?? '-'})`;
+const getStatusLabel = (status: string) => {
+	const target = (takeaway_order_status.value || []).find((item: any) => String(item.value) === String(status));
+	return target?.label || `未知状态(${status ?? '-'})`;
+};
 
 const formatOrderItems = (items: Array<{ dishName?: string; quantity?: number }> | undefined) => {
 	if (!items?.length) {

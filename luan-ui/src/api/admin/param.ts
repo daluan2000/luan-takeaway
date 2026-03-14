@@ -54,6 +54,13 @@ export function getObjDetails(obj?: object) {
 	});
 }
 
+export function getPublicValue(publicKey: string) {
+	return request({
+		url: `/admin/param/publicValue/${publicKey}`,
+		method: 'get',
+	});
+}
+
 export function validateParamsCode(rule: any, value: any, callback: any, isEdit: boolean) {
 	if (isEdit) {
 		return callback();
