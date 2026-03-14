@@ -25,7 +25,7 @@ import com.luan.takeaway.takeaway.common.mapper.WmCustomerUserExtMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderItemMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderMapper;
-import com.luan.takeaway.takeaway.dish.api.DishApi;
+import com.luan.takeaway.takeaway.dish.api.RemoteDishService;
 import com.luan.takeaway.takeaway.order.constant.OrderAutoCancelMqConstants;
 import com.luan.takeaway.takeaway.order.dto.ws.OrderStatusWsMessage;
 import com.luan.takeaway.takeaway.order.message.OrderStatusMqPublisher;
@@ -70,7 +70,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 
 	private final WmDeliveryUserExtMapper wmDeliveryUserExtMapper;
 
-	private final DishApi dishApi;
+	private final RemoteDishService dishApi;
 
 	/**
 	 * RabbitMQ 消息发送模板。

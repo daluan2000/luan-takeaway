@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
  *
  * @author pig
  */
-@FeignClient(contextId = "deliveryApi", value = TakeawayServiceNameConstants.TAKEAWAY_USER_SERVICE)
-public interface DeliveryApi {
+@FeignClient(contextId = "remoteDeliveryService", value = TakeawayServiceNameConstants.TAKEAWAY_USER_SERVICE)
+public interface RemoteDeliveryService {
 
 	/**
 	 * 创建配送单

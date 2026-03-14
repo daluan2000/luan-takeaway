@@ -112,6 +112,11 @@
 				<version>${revision}</version>
 			</dependency>
 			<dependency>
+				<groupId>com.luan</groupId>
+				<artifactId>luan-auth-api</artifactId>
+				<version>${revision}</version>
+			</dependency>
+			<dependency>
 				<groupId>com.mysql</groupId>
 				<artifactId>mysql-connector-j</artifactId>
 				<version>${mysql.version}</version>

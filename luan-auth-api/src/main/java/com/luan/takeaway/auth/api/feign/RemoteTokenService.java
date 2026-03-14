@@ -15,14 +15,19 @@
  * Author: lengleng (wangiegie@gmail.com)
  */
 
-package com.luan.takeaway.admin.api.feign;
+package com.luan.takeaway.auth.api.feign;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luan.takeaway.common.core.constant.ServiceNameConstants;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.feign.annotation.NoToken;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 

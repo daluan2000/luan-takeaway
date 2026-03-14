@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * AI 点餐助手 Feign 接口
  */
-@FeignClient(contextId = "aiAssistantApi", value = "luan-ai-biz")
-public interface AiAssistantApi {
+@FeignClient(contextId = "remoteAiAssistantService", value = "luan-ai-biz")
+public interface RemoteAiAssistantService {
 
 	@PostMapping("/ai/assistant/recommend")
 	R<AiAssistantResponse> recommend(@RequestBody AiAssistantRequest request);

@@ -35,6 +35,10 @@
             <groupId>com.luan</groupId>
             <artifactId>luan-upms-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.luan</groupId>
+            <artifactId>luan-auth-api</artifactId>
+        </dependency>
         <!--文件管理-->
         <dependency>
             <groupId>com.luan</groupId>

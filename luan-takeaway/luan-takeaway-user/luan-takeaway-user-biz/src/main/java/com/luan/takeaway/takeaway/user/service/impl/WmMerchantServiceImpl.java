@@ -16,7 +16,7 @@ import com.luan.takeaway.takeaway.common.entity.WmDish;
 import com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt;
 import com.luan.takeaway.takeaway.common.mapper.WmAddressMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
-import com.luan.takeaway.takeaway.merchant.api.MerchantDishApi;
+import com.luan.takeaway.takeaway.dish.api.RemoteDishService;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
 import com.luan.takeaway.takeaway.user.dto.ws.MerchantAuditResultWsMessage;
 import com.luan.takeaway.takeaway.user.message.MerchantAuditResultMqPublisher;
@@ -89,7 +89,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 
 	private final RedisSafeCacheService redisSafeCacheService;
 
-	private final MerchantDishApi merchantDishApi;
+	private final RemoteDishService dishApi;
 
 	@Override
 	public WmMerchantDTO createMerchant(WmMerchantDTO merchantDTO) {
@@ -428,7 +428,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 				continue;
 			}
 			try {
-				R<Page<WmDish>> response = merchantDishApi.page(1, 50, null, merchant.getUserId(),
+				R<Page<WmDish>> response = dishApi.page(1, 50, null, merchant.getUserId(),
 						TakeawayStatusConstants.Dish.SALE_ON);
 				if (response != null && response.getData() != null && response.getData().getRecords() != null) {
 					merchant.setDishList(response.getData().getRecords());

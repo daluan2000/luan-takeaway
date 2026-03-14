@@ -27,6 +27,8 @@ import com.luan.takeaway.common.feign.annotation.NoToken;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * 远程用户服务接口：提供用户信息查询功能
@@ -45,5 +47,15 @@ public interface RemoteUserService {
 	@NoToken
 	@GetMapping("/user/info/query")
 	R<UserInfo> info(@SpringQueryMap UserDTO user);
+
+	/**
+	 * 切换外卖端角色
+	 * @param userId 用户ID
+	 * @param roleCode 角色编码
+	 * @return 是否成功
+	 */
+	@NoToken
+	@PostMapping("/user/internal/role/switch")
+	R<Boolean> switchRole(@RequestParam("userId") Long userId, @RequestParam("roleCode") String roleCode);
 
 }

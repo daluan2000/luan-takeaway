@@ -1,5 +1,4 @@
 com.luan.takeaway.takeaway.customer.api.CustomerApi
-com.luan.takeaway.takeaway.delivery.api.DeliveryApi
+com.luan.takeaway.takeaway.delivery.api.RemoteDeliveryService
 com.luan.takeaway.takeaway.merchant.api.MerchantApi
-com.luan.takeaway.takeaway.merchant.api.MerchantDishApi
 com.luan.takeaway.takeaway.merchant.api.RemoteMerchantService

@@ -10,8 +10,8 @@ import com.luan.takeaway.takeaway.common.dto.PayRequest;
 import com.luan.takeaway.takeaway.common.entity.WmOrder;
 import com.luan.takeaway.takeaway.common.entity.WmOrderPay;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderPayMapper;
-import com.luan.takeaway.takeaway.delivery.api.DeliveryApi;
-import com.luan.takeaway.takeaway.order.api.OrderApi;
+import com.luan.takeaway.takeaway.delivery.api.RemoteDeliveryService;
+import com.luan.takeaway.takeaway.order.api.RemoteOrderService;
 import com.luan.takeaway.takeaway.pay.service.WmOrderPayService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,9 +24,9 @@ import java.util.concurrent.ThreadLocalRandom;
 @AllArgsConstructor
 public class WmOrderPayServiceImpl extends ServiceImpl<WmOrderPayMapper, WmOrderPay> implements WmOrderPayService {
 
-	private final OrderApi orderApi;
+	private final RemoteOrderService orderApi;
 
-	private final DeliveryApi deliveryApi;
+	private final RemoteDeliveryService deliveryApi;
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)

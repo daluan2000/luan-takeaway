@@ -2,6 +2,5 @@ com.luan.takeaway.admin.api.feign.RemoteClientDetailsService
 com.luan.takeaway.admin.api.feign.RemoteDictService
 com.luan.takeaway.admin.api.feign.RemoteLogService
 com.luan.takeaway.admin.api.feign.RemoteParamService
-com.luan.takeaway.admin.api.feign.RemoteTokenService
 com.luan.takeaway.admin.api.feign.RemoteUserService
 com.luan.takeaway.admin.api.feign.RemoteWsPushService

@@ -17,7 +17,7 @@
 
 package com.luan.takeaway.admin.controller;
 
-import com.luan.takeaway.admin.api.feign.RemoteTokenService;
+import com.luan.takeaway.auth.api.feign.RemoteTokenService;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.log.annotation.SysLog;
 import com.luan.takeaway.common.security.annotation.HasPermission;

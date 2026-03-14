@@ -31,11 +31,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ToolCallingService {
 
-	private final RemoteDishService remoteDishService;
+	private final RemoteDishService dishApi;
 
 	private final RemoteMerchantService remoteMerchantService;
 
-	private final RemoteOrderService remoteOrderService;
+	private final RemoteOrderService orderApi;
 
 	private final OpenAiIntentRecognizer openAiIntentRecognizer;
 
@@ -101,7 +101,7 @@ public class ToolCallingService {
 		Set<Long> dedup = new LinkedHashSet<>();
 
 		for (long page = 1; page <= 3; page++) {
-			R<Page<WmDish>> response = remoteDishService.page(page, 30,
+			R<Page<WmDish>> response = dishApi.page(page, 30,
 					intent.getCategory() != null ? intent.getCategory() : firstKeyword(intent.getKeywords()), merchantUserId,
 					TakeawayStatusConstants.Dish.SALE_ON);
 			if (response == null || response.getData() == null || response.getData().getRecords() == null) {
@@ -116,7 +116,7 @@ public class ToolCallingService {
 
 		if (result.isEmpty()) {
 			for (long page = 1; page <= 2; page++) {
-				R<Page<WmDish>> response = remoteDishService.page(page, 30, null, merchantUserId,
+				R<Page<WmDish>> response = dishApi.page(page, 30, null, merchantUserId,
 						TakeawayStatusConstants.Dish.SALE_ON);
 				if (response == null || response.getData() == null || response.getData().getRecords() == null) {
 					continue;
@@ -266,7 +266,7 @@ public class ToolCallingService {
 			return counter;
 		}
 		try {
-			R<Page<OrderDTO>> response = remoteOrderService.page(1, 10, user.getId(), null, null, null);
+			R<Page<OrderDTO>> response = orderApi.page(1, 10, user.getId(), null, null, null);
 			if (response == null || response.getData() == null || response.getData().getRecords() == null) {
 				return counter;
 			}
