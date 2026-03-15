@@ -40,6 +40,13 @@ public class WmDishController {
 		return R.ok(wmDishService.pageByQuery(page, query));
 	}
 
+	@GetMapping(TakeawayApiConstants.DISH_PATH + "/service/page")
+	@Inner
+	@Operation(summary = "内部：分页查询菜品")
+	public R<Page<WmDish>> servicePage(@ParameterObject Page<WmDish> page, @ParameterObject WmDish query) {
+		return R.ok(wmDishService.pageByQuery(page, query));
+	}
+
 	@PostMapping(TakeawayApiConstants.DISH_PATH)
 	@SysLog("新增菜品")
 	@Operation(summary = "新增菜品")

@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const DEFAULT_GATEWAY = 'http://127.0.0.1:9999';
-const DEFAULT_TIMEOUT_MS = 360000;
+const DEFAULT_TIMEOUT_MS = 600000;
 const INTERVAL_MS = 2000;
 
 function isMicroEnabled() {

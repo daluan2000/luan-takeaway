@@ -61,6 +61,22 @@ public interface RemoteDishService {
 			@RequestParam(value = "saleStatus", required = false) String saleStatus);
 
 	/**
+	 * 内部服务分页查询菜品列表（免用户令牌）。
+	 * @param current 当前页
+	 * @param size 每页大小
+	 * @param dishName 菜品名称（模糊）
+	 * @param merchantUserId 商家用户ID
+	 * @param saleStatus 上架状态
+	 * @return 菜品分页结果
+	 */
+	@NoToken
+	@GetMapping(TakeawayApiConstants.DISH_PATH + "/service/page")
+	R<Page<WmDish>> servicePage(@RequestParam("current") long current, @RequestParam("size") long size,
+			@RequestParam(value = "dishName", required = false) String dishName,
+			@RequestParam(value = "merchantUserId", required = false) Long merchantUserId,
+			@RequestParam(value = "saleStatus", required = false) String saleStatus);
+
+	/**
 	 * 混合检索候选菜品
 	 * @param request 结构化检索条件
 	 * @return 候选集合（含知识文档）

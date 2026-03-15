@@ -428,7 +428,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 				continue;
 			}
 			try {
-				R<Page<WmDish>> response = dishApi.page(1, 50, null, merchant.getUserId(),
+				R<Page<WmDish>> response = dishApi.servicePage(1, 50, null, merchant.getUserId(),
 						TakeawayStatusConstants.Dish.SALE_ON);
 				if (response != null && response.getData() != null && response.getData().getRecords() != null) {
 					merchant.setDishList(response.getData().getRecords());
