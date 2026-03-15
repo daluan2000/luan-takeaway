@@ -22,7 +22,7 @@ spring:
 file:
   local:
     enable: true
-    base-path: /home/luan/data/pig/files
+    base-path: /home/luan/data/takeaway/files
 
 ## 登录配置
 security:

@@ -31,7 +31,7 @@
 					class="relative z-[9999994] w-full h-full flex flex-col justify-center text-white">
 					<div class="text-center m-auto">
 						<div class="w-[180px] h-[180px] mx-auto">
-							<img :src="formData.avatar" class="w-full h-full rounded-full" />
+							<img :src="avatarSrc" class="w-full h-full rounded-full" />
 						</div>
 						<div class="text-2xl mt-4 mb-8">{{ formData.username }}</div>
 						<div>
@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts" name="layoutLockScreen">
-import { nextTick, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref } from 'vue';
 import { useIntervalFn, useTimeoutFn } from '@vueuse/core';
 import { formatDate } from '/@/utils/formatTime';
 import { Local, Session } from '/@/utils/storage';
@@ -77,6 +77,7 @@ import { useThemeConfig } from '/@/stores/themeConfig';
 import { checkPassword } from '/@/api/admin/user';
 import { useUserInfo } from '/@/stores/userInfo';
 import { logout } from '/@/api/login';
+import { resolveApiResourceUrl } from '/@/utils/url';
 
 // 定义变量内容
 const mes = ref();
@@ -96,6 +97,8 @@ const state = reactive({
 	isShowLockScreen: false,
 	lockScreenPassword: '',
 });
+
+const avatarSrc = computed(() => resolveApiResourceUrl(formData.avatar));
 
 // 鼠标按下 pc
 const onDownPc = (down: MouseEvent) => {

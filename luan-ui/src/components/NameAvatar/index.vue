@@ -1,11 +1,13 @@
 <template>
 	<div :class="mode == 'square' ? 'chatface' : 'brround avatar cover-image'" :style="transform" style="overflow: hidden; width: 40px; height: 40px">
-		<img v-if="faceUrl && !num" :src="faceUrl" class="w-100 h-100" />
+		<img v-if="faceUrlSrc && !num" :src="faceUrlSrc" class="w-100 h-100" />
 		<div v-else :style="styles" class="w-100 h-100 d-flex ai-center jc-center">{{ text }}</div>
 	</div>
 </template>
 
 <script>
+import { resolveApiResourceUrl } from '/@/utils/url';
+
 export default {
 	name: 'nameAvatar',
 	props: {
@@ -37,6 +39,9 @@ export default {
 	},
 	watch: {},
 	computed: {
+		faceUrlSrc() {
+			return resolveApiResourceUrl(this.faceUrl);
+		},
 		// eslint-disable-next-line vue/return-in-computed-property
 		text() {
 			if (this.num !== undefined) {
