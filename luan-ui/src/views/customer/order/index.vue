@@ -155,10 +155,18 @@ const expandedTimeMap = reactive<Record<string, boolean>>({});
 const nowTs = ref(Date.now());
 let countdownTimer: ReturnType<typeof setInterval> | undefined;
 
+const normalizeId = (value: unknown): string | undefined => {
+	if (value === null || value === undefined || value === '') {
+		return undefined;
+	}
+	const text = String(value).trim();
+	return text ? text : undefined;
+};
+
 const state: BasicTableProps = reactive<BasicTableProps>({
 	createdIsNeed: false,
 	queryForm: {
-		customerUserId: undefined as number | undefined,
+		customerUserId: undefined as string | number | undefined,
 		status: '',
 	},
 	pageList,
@@ -169,16 +177,16 @@ const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTa
 const resolveCurrentCustomerUserId = async () => {
 	try {
 		const res = await currentCustomer();
-		const customerUserId = Number(res?.data?.userId);
-		if (!Number.isNaN(customerUserId) && customerUserId > 0) {
+		const customerUserId = normalizeId(res?.data?.userId);
+		if (customerUserId) {
 			return customerUserId;
 		}
 	} catch {
 		// Ignore and fallback to current login info.
 	}
 
-	const fallbackUserId = Number(useUserInfo().userInfos?.user?.userId);
-	if (!Number.isNaN(fallbackUserId) && fallbackUserId > 0) {
+	const fallbackUserId = normalizeId(useUserInfo().userInfos?.user?.userId);
+	if (fallbackUserId) {
 		return fallbackUserId;
 	}
 	return undefined;

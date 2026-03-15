@@ -3,16 +3,25 @@ package com.luan.takeaway.takeaway.dish.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luan.takeaway.admin.api.util.ParamResolver;
+import com.luan.takeaway.ai.api.feign.RemoteAiAssistantService;
+import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
+import com.luan.takeaway.takeaway.common.dto.DishKnowledgeGenerateEvent;
 import com.luan.takeaway.takeaway.common.dto.DishPurchaseItemDTO;
+import com.luan.takeaway.takeaway.common.dto.HybridDishCandidateDTO;
+import com.luan.takeaway.takeaway.common.dto.HybridDishSearchRequest;
+import com.luan.takeaway.takeaway.common.dto.DishKnowledgeDoc;
 import com.luan.takeaway.takeaway.common.entity.WmDish;
+import com.luan.takeaway.takeaway.common.entity.WmDishKnowledgeDoc;
 import com.luan.takeaway.takeaway.common.mapper.WmDishMapper;
+import com.luan.takeaway.takeaway.common.mapper.WmDishKnowledgeDocMapper;
 import com.luan.takeaway.takeaway.dish.constant.DishStockMqConstants;
 import com.luan.takeaway.takeaway.dish.mq.dto.DishStockDeductEvent;
 import com.luan.takeaway.takeaway.dish.service.WmDishService;
@@ -27,12 +36,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -98,6 +110,10 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 	private final ObjectMapper objectMapper;
 
 	private final RedisSafeCacheService redisSafeCacheService;
+
+	private final WmDishKnowledgeDocMapper wmDishKnowledgeDocMapper;
+
+	private final RemoteAiAssistantService remoteAiAssistantService;
 
 	@Override
 	public Page<WmDish> pageByQuery(Page<WmDish> page, WmDish query) {
@@ -403,12 +419,281 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 		return "takeaway:dish:stock:consume:done:" + orderNo;
 	}
 
+	@Override
+	public DishKnowledgeDoc getKnowledgeDoc(Long dishId) {
+		if (dishId == null) {
+			return null;
+		}
+		WmDishKnowledgeDoc entity = wmDishKnowledgeDocMapper.selectOne(Wrappers.<WmDishKnowledgeDoc>lambdaQuery()
+			.eq(WmDishKnowledgeDoc::getDishId, dishId)
+			.last("LIMIT 1"));
+		if (entity == null) {
+			return null;
+		}
+		return toDoc(entity);
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public boolean upsertKnowledgeDoc(Long dishId, DishKnowledgeDoc doc) {
+		if (dishId == null || doc == null) {
+			throw new IllegalArgumentException("菜品知识文档参数不能为空");
+		}
+
+		WmDish dish = getById(dishId);
+		if (dish == null) {
+			throw new IllegalArgumentException("菜品不存在");
+		}
+
+		WmDishKnowledgeDoc existing = wmDishKnowledgeDocMapper.selectOne(Wrappers.<WmDishKnowledgeDoc>lambdaQuery()
+			.eq(WmDishKnowledgeDoc::getDishId, dishId)
+			.last("LIMIT 1"));
+		WmDishKnowledgeDoc entity = toEntity(dishId, doc);
+		if (existing == null) {
+			wmDishKnowledgeDocMapper.insert(entity);
+		}
+		else {
+			entity.setId(existing.getId());
+			wmDishKnowledgeDocMapper.updateById(entity);
+		}
+		return true;
+	}
+
+	@Override
+	public List<HybridDishCandidateDTO> searchHybridCandidates(HybridDishSearchRequest request) {
+		HybridDishSearchRequest search = request == null ? new HybridDishSearchRequest() : request;
+		int size = search.getLimit() == null || search.getLimit() <= 0 ? 120 : Math.min(search.getLimit(), 300);
+
+		List<WmDish> dishes = page(new Page<>(1, size), Wrappers.<WmDish>lambdaQuery()
+			.eq(search.getMerchantUserId() != null, WmDish::getMerchantUserId, search.getMerchantUserId())
+			.eq(WmDish::getSaleStatus, TakeawayStatusConstants.Dish.SALE_ON)
+			.le(search.getPriceMax() != null, WmDish::getPrice, search.getPriceMax())
+			.orderByDesc(WmDish::getCreateTime)).getRecords();
+
+		if (dishes.isEmpty()) {
+			return List.of();
+		}
+
+		Map<Long, WmDishKnowledgeDoc> knowledgeMap = wmDishKnowledgeDocMapper
+			.selectList(Wrappers.<WmDishKnowledgeDoc>lambdaQuery()
+				.in(WmDishKnowledgeDoc::getDishId,
+					dishes.stream().map(WmDish::getId).filter(Objects::nonNull).collect(Collectors.toSet())))
+			.stream()
+			.collect(Collectors.toMap(WmDishKnowledgeDoc::getDishId, v -> v, (a, b) -> a));
+
+		List<HybridDishCandidateDTO> result = new ArrayList<>();
+		for (WmDish dish : dishes) {
+			WmDishKnowledgeDoc knowledge = knowledgeMap.get(dish.getId());
+			if (knowledge != null && !matchStructuredFilter(search, knowledge)) {
+				continue;
+			}
+
+			HybridDishCandidateDTO candidate = new HybridDishCandidateDTO();
+			candidate.setDishId(dish.getId());
+			candidate.setMerchantUserId(dish.getMerchantUserId());
+			candidate.setDishName(dish.getDishName());
+			candidate.setDishDesc(dish.getDishDesc());
+			candidate.setDishImage(dish.getDishImage());
+			candidate.setPrice(dish.getPrice());
+			candidate.setStock(dish.getStock());
+			candidate.setSaleStatus(dish.getSaleStatus());
+			candidate.setKnowledgeDoc(knowledge == null ? null : toDoc(knowledge));
+			result.add(candidate);
+		}
+		return result;
+	}
+
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public DishKnowledgeDoc generateKnowledgeDocSync(WmDish dish) {
+		if (dish == null || dish.getId() == null) {
+			throw new IllegalArgumentException("菜品不存在");
+		}
+		DishKnowledgeGenerateEvent event = new DishKnowledgeGenerateEvent();
+		event.setDishId(dish.getId());
+		event.setMerchantUserId(dish.getMerchantUserId());
+		event.setDishName(dish.getDishName());
+		event.setDishDesc(dish.getDishDesc());
+		event.setPrice(dish.getPrice());
+
+		R<DishKnowledgeDoc> response = remoteAiAssistantService.generateKnowledgeDoc(event);
+		DishKnowledgeDoc doc = response == null ? null : response.getData();
+		if (doc == null) {
+			throw new IllegalStateException("LLM 同步生成知识文档失败");
+		}
+		upsertKnowledgeDoc(dish.getId(), doc);
+		return getKnowledgeDoc(dish.getId());
+	}
+
 	private WmDish getDishFromDb(Long merchantUserId, Long dishId) {
 		// 按商家隔离查询，避免跨商家串数据。
 		return getOne(Wrappers.<WmDish>lambdaQuery()
 			.eq(WmDish::getMerchantUserId, merchantUserId)
 			.eq(WmDish::getId, dishId)
 			.last("LIMIT 1"), false);
+	}
+
+	private boolean matchStructuredFilter(HybridDishSearchRequest request, WmDishKnowledgeDoc doc) {
+		if (request.getCategory() != null && !request.getCategory().equalsIgnoreCase(emptyToNull(doc.getCategory()))) {
+			return false;
+		}
+		if (request.getSpicy() != null && !request.getSpicy().equals(doc.getSpicy())) {
+			return false;
+		}
+		if (request.getSpicyLevel() != null && !request.getSpicyLevel().equals(doc.getSpicyLevel())) {
+			return false;
+		}
+		if (request.getLightTaste() != null && !request.getLightTaste().equals(doc.getLightTaste())) {
+			return false;
+		}
+		if (request.getOily() != null && !request.getOily().equals(doc.getOily())) {
+			return false;
+		}
+		if (request.getSoupBased() != null && !request.getSoupBased().equals(doc.getSoupBased())) {
+			return false;
+		}
+		if (request.getVegetarian() != null && !request.getVegetarian().equals(doc.getVegetarian())) {
+			return false;
+		}
+		if (request.getCaloriesMin() != null && (doc.getCalories() == null || doc.getCalories() < request.getCaloriesMin())) {
+			return false;
+		}
+		if (request.getCaloriesMax() != null && (doc.getCalories() == null || doc.getCalories() > request.getCaloriesMax())) {
+			return false;
+		}
+		if (request.getProteinMin() != null && (doc.getProtein() == null || doc.getProtein() < request.getProteinMin())) {
+			return false;
+		}
+		if (request.getProteinMax() != null && (doc.getProtein() == null || doc.getProtein() > request.getProteinMax())) {
+			return false;
+		}
+		if (request.getFatMin() != null && (doc.getFat() == null || doc.getFat() < request.getFatMin())) {
+			return false;
+		}
+		if (request.getFatMax() != null && (doc.getFat() == null || doc.getFat() > request.getFatMax())) {
+			return false;
+		}
+		if (request.getCarbohydrateMin() != null
+				&& (doc.getCarbohydrate() == null || doc.getCarbohydrate() < request.getCarbohydrateMin())) {
+			return false;
+		}
+		if (request.getCarbohydrateMax() != null
+				&& (doc.getCarbohydrate() == null || doc.getCarbohydrate() > request.getCarbohydrateMax())) {
+			return false;
+		}
+
+		if (request.getPortionSize() != null && !request.getPortionSize().equalsIgnoreCase(emptyToNull(doc.getPortionSize()))) {
+			return false;
+		}
+
+		if (request.getMealTime() != null && !request.getMealTime().isEmpty()) {
+			List<String> mealTimes = parseStringList(doc.getMealTimeJson());
+			if (!hasIntersection(request.getMealTime(), mealTimes)) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private DishKnowledgeDoc toDoc(WmDishKnowledgeDoc entity) {
+		DishKnowledgeDoc doc = new DishKnowledgeDoc();
+		doc.setDishId(entity.getDishId());
+		doc.setCategory(entity.getCategory());
+		doc.setSpicy(entity.getSpicy());
+		doc.setSpicyLevel(entity.getSpicyLevel());
+		doc.setLightTaste(entity.getLightTaste());
+		doc.setOily(entity.getOily());
+		doc.setSoupBased(entity.getSoupBased());
+		doc.setVegetarian(entity.getVegetarian());
+		doc.setCalories(entity.getCalories());
+		doc.setProtein(entity.getProtein());
+		doc.setFat(entity.getFat());
+		doc.setCarbohydrate(entity.getCarbohydrate());
+		doc.setMealTime(parseStringList(entity.getMealTimeJson()));
+		doc.setPortionSize(entity.getPortionSize());
+		doc.setTags(parseStringList(entity.getTags()));
+		doc.setSuitableScenes(parseStringList(entity.getSuitableScenes()));
+		doc.setAvoidScenes(parseStringList(entity.getAvoidScenes()));
+		doc.setSuitablePeople(parseStringList(entity.getSuitablePeople()));
+		doc.setEmbeddingText(entity.getEmbeddingText());
+		doc.setFlavorDescription(entity.getFlavorDescription());
+		doc.setLlmSummary(entity.getLlmSummary());
+		doc.setRecommendationReason(entity.getRecommendationReason());
+		return doc;
+	}
+
+	private WmDishKnowledgeDoc toEntity(Long dishId, DishKnowledgeDoc doc) {
+		WmDishKnowledgeDoc entity = new WmDishKnowledgeDoc();
+		entity.setDishId(dishId);
+		entity.setCategory(doc.getCategory());
+		entity.setSpicy(doc.getSpicy());
+		entity.setSpicyLevel(doc.getSpicyLevel());
+		entity.setLightTaste(doc.getLightTaste());
+		entity.setOily(doc.getOily());
+		entity.setSoupBased(doc.getSoupBased());
+		entity.setVegetarian(doc.getVegetarian());
+		entity.setCalories(doc.getCalories());
+		entity.setProtein(doc.getProtein());
+		entity.setFat(doc.getFat());
+		entity.setCarbohydrate(doc.getCarbohydrate());
+		entity.setMealTimeJson(writeJsonList(doc.getMealTime()));
+		entity.setPortionSize(doc.getPortionSize());
+		entity.setTags(writeJsonList(doc.getTags()));
+		entity.setSuitableScenes(writeJsonList(doc.getSuitableScenes()));
+		entity.setAvoidScenes(writeJsonList(doc.getAvoidScenes()));
+		entity.setSuitablePeople(writeJsonList(doc.getSuitablePeople()));
+		entity.setEmbeddingText(doc.getEmbeddingText());
+		entity.setFlavorDescription(doc.getFlavorDescription());
+		entity.setLlmSummary(doc.getLlmSummary());
+		entity.setRecommendationReason(doc.getRecommendationReason());
+		return entity;
+	}
+
+	private List<String> parseStringList(String json) {
+		if (!StringUtils.hasText(json)) {
+			return List.of();
+		}
+		try {
+			List<String> parsed = objectMapper.readValue(json, new TypeReference<List<String>>() {
+			});
+			return parsed == null ? List.of() : parsed.stream().filter(StringUtils::hasText).collect(Collectors.toList());
+		}
+		catch (Exception ex) {
+			return List.of();
+		}
+	}
+
+	private String writeJsonList(Collection<String> values) {
+		if (values == null || values.isEmpty()) {
+			return "[]";
+		}
+		try {
+			return objectMapper.writeValueAsString(values);
+		}
+		catch (Exception ex) {
+			return "[]";
+		}
+	}
+
+	private boolean hasIntersection(List<String> source, List<String> target) {
+		if (source == null || source.isEmpty() || target == null || target.isEmpty()) {
+			return false;
+		}
+		Set<String> targetSet = target.stream()
+			.filter(StringUtils::hasText)
+			.map(String::trim)
+			.collect(Collectors.toSet());
+		for (String value : source) {
+			if (StringUtils.hasText(value) && targetSet.contains(value.trim())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private String emptyToNull(String value) {
+		return StringUtils.hasText(value) ? value.trim() : null;
 	}
 
 	private String buildDishItemCacheKey(Long merchantUserId, Long dishId) {

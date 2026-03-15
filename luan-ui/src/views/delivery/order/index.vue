@@ -178,7 +178,7 @@ const { takeaway_order_status } = useDict('takeaway_order_status');
 const loading = ref(false);
 const acceptingId = ref('');
 const riderReady = ref(false);
-const riderUserId = ref<number | undefined>();
+const riderUserId = ref<string | number | undefined>();
 const riderScopeKm = ref<number>(0);
 const allRows = ref<OrderRow[]>([]);
 const expandedTimeMap = reactive<Record<string, boolean>>({});
@@ -241,11 +241,6 @@ const toggleTimeExpanded = (row: Record<string, unknown>) => {
 	expandedTimeMap[key] = !expandedTimeMap[key];
 };
 
-const toNumber = (value: unknown): number | undefined => {
-	const num = Number(value);
-	return Number.isNaN(num) ? undefined : num;
-};
-
 const calcDistanceKm = (from: AddressItem, to: AddressItem) => {
 	const fromLng = Number(from.longitude);
 	const fromLat = Number(from.latitude);
@@ -298,11 +293,7 @@ const sizeChangeHandle = (val: number) => {
 };
 
 const getCurrentRiderUserId = () => {
-	const currentUserId = Number(useUserInfo().userInfos?.user?.userId);
-	if (!Number.isNaN(currentUserId) && currentUserId > 0) {
-		return currentUserId;
-	}
-	return undefined;
+	return normalizeId(useUserInfo().userInfos?.user?.userId);
 };
 
 const prepareRiderContext = async () => {
@@ -323,7 +314,7 @@ const prepareRiderContext = async () => {
 		throw new Error('请先设置有效的配送范围');
 	}
 
-	riderUserId.value = toNumber(rider.userId) || getCurrentRiderUserId();
+	riderUserId.value = normalizeId(rider.userId) || getCurrentRiderUserId();
 	riderScopeKm.value = scopeKm;
 	riderReady.value = !!riderUserId.value;
 	if (!riderReady.value) {

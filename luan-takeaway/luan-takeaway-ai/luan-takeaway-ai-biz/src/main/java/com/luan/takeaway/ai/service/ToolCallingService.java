@@ -26,6 +26,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Tool Calling 推荐服务。
+ * <p>
+ * 跨模块交互说明：
+ * 1) 通过 {@link RemoteDishService} 拉取在售菜品候选；
+ * 2) 通过 {@link RemoteMerchantService} 过滤营业中商家；
+ * 3) 通过 {@link RemoteOrderService} 拉取用户历史订单构建偏好权重；
+ * 4) 最终调用 LLM 对候选做二次筛选排序。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -39,6 +48,11 @@ public class ToolCallingService {
 
 	private final OpenAiIntentRecognizer openAiIntentRecognizer;
 
+	/**
+	 * 结构化推荐主入口。
+	 * <p>
+	 * strictMode=true 时对预算/口味等条件更严格，命中冲突会直接剔除。
+	 */
 	public List<RecommendationItem> recommend(IntentResult intent, Long merchantUserId, int limit, boolean strictMode) {
 		List<WmDish> candidates = searchDishCandidates(intent, merchantUserId);
 		Map<String, Integer> historyPreference = loadUserHistoryKeywordWeight();
@@ -72,30 +86,11 @@ public class ToolCallingService {
 		}
 	}
 
-	public String buildSummary(IntentResult intent, List<RecommendationItem> recommendations) {
-		if (recommendations.isEmpty()) {
-			return "未找到完全匹配的菜品，建议放宽筛选条件后重试。";
-		}
-		StringBuilder builder = new StringBuilder("已根据你的意图完成结构化筛选");
-		if (intent.getPriceMax() != null) {
-			builder.append("（预算<=").append(intent.getPriceMax()).append("元）");
-		}
-		builder.append("，推荐 ").append(recommendations.size()).append(" 道菜。\n");
-		for (int i = 0; i < recommendations.size(); i++) {
-			RecommendationItem item = recommendations.get(i);
-			builder.append(i + 1)
-				.append(". ")
-				.append(item.getDishName())
-				.append("（")
-				.append(item.getPrice())
-				.append("元）")
-				.append(" - ")
-				.append(item.getReason())
-				.append("\n");
-		}
-		return builder.toString().trim();
-	}
-
+	/**
+	 * 候选召回。
+	 * <p>
+	 * 先用品类/关键词分页拉取，再在无结果时降级全量在售兜底，最后过滤非营业商家。
+	 */
 	private List<WmDish> searchDishCandidates(IntentResult intent, Long merchantUserId) {
 		List<WmDish> result = new ArrayList<>();
 		Set<Long> dedup = new LinkedHashSet<>();
@@ -139,6 +134,9 @@ public class ToolCallingService {
 		return keywords.get(0);
 	}
 
+	/**
+	 * 只保留当前营业中的商家菜品。
+	 */
 	private List<WmDish> retainOpenMerchantDishes(List<WmDish> dishes) {
 		if (dishes == null || dishes.isEmpty()) {
 			return List.of();
@@ -159,6 +157,9 @@ public class ToolCallingService {
 		return filtered;
 	}
 
+	/**
+	 * 调商家模块分页接口判断商家是否营业。
+	 */
 	private boolean isMerchantOpen(Long merchantUserId) {
 		try {
 			R<Page<com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt>> response = remoteMerchantService.page(1, 1,
@@ -174,6 +175,11 @@ public class ToolCallingService {
 		}
 	}
 
+	/**
+	 * 单菜品打分。
+	 * <p>
+	 * 由预算、品类、辣度、清淡偏好、关键词命中、历史偏好共同构成。
+	 */
 	private Double scoreDish(WmDish dish, IntentResult intent, Map<String, Integer> historyPreference, boolean strictMode) {
 		double score = 0;
 		String name = normalize(dish.getDishName());
@@ -222,6 +228,9 @@ public class ToolCallingService {
 		return score;
 	}
 
+	/**
+	 * 把内部菜品实体转换为对外推荐项。
+	 */
 	private RecommendationItem toRecommendation(WmDish dish, Double score, IntentResult intent,
 			Map<String, Integer> historyPreference) {
 		RecommendationItem item = new RecommendationItem();
@@ -259,6 +268,11 @@ public class ToolCallingService {
 		return item;
 	}
 
+	/**
+	 * 加载当前登录用户历史订单关键词权重。
+	 * <p>
+	 * 依赖订单模块接口，提取历史菜名分词频次，用于个性化加分。
+	 */
 	private Map<String, Integer> loadUserHistoryKeywordWeight() {
 		Map<String, Integer> counter = new HashMap<>();
 		PigUser user = SecurityUtils.getUser();

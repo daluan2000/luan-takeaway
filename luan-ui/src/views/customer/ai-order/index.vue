@@ -96,7 +96,7 @@
 
 									<div class="dish-grid">
 										<el-card
-											v-for="dish in dishMap[normalizeId(merchant.userId) || ''] || []"
+											v-for="dish in getSortedMerchantDishes(merchant.userId)"
 											:key="dish.id || dish.dishName"
 											shadow="hover"
 											class="dish-card"
@@ -141,21 +141,19 @@
 											</div>
 										</el-card>
 
-										<div class="merchant-remark-panel">
-											<div class="merchant-remark-title">订单备注</div>
-											<el-input
-												v-model="remarkMap[normalizeId(merchant.userId) || '']"
-												type="textarea"
-												:rows="2"
-												maxlength="120"
-												show-word-limit
-												resize="none"
-												placeholder="例如：少辣、不要香菜、请尽快配送"
-											/>
-										</div>
 									</div>
 
 									<div class="merchant-actions">
+										<div class="merchant-remark-inline">
+											<span class="merchant-remark-label">订单备注</span>
+											<el-input
+												v-model="remarkMap[normalizeId(merchant.userId) || '']"
+												maxlength="120"
+												show-word-limit
+												clearable
+												placeholder="例如：少辣、不要香菜"
+											/>
+										</div>
 										<div class="selected-total">
 											已选金额：<span class="selected-total-amount">￥{{ getSelectedTotalAmount(merchant.userId) }}</span>
 										</div>
@@ -278,14 +276,16 @@ const recommendedReasonMap = reactive<Record<string, string>>({});
 const hasResult = computed(() => recommendations.value.length > 0 || !!summary.value || knowledgeEvidence.value.length > 0);
 
 const decisionPathLabel = computed(() => {
-	if (decisionPath.value === 'rag') return 'RAG 语义推荐';
-	if (decisionPath.value === 'tool-calling') return '结构化工具调用';
+	if (decisionPath.value === 'rag') return '混合智能推荐';
+	if (decisionPath.value === 'tool-calling') return '混合智能推荐';
+	if (decisionPath.value === 'hybrid') return '混合智能推荐';
 	return '推荐结果';
 });
 
 const decisionPathTagType = computed(() => {
 	if (decisionPath.value === 'rag') return 'success';
-	if (decisionPath.value === 'tool-calling') return 'warning';
+	if (decisionPath.value === 'tool-calling') return 'success';
+	if (decisionPath.value === 'hybrid') return 'success';
 	return 'info';
 });
 
@@ -327,6 +327,17 @@ const recommendedMerchantList = computed(() => {
 		const merchantUserId = normalizeId(item.userId);
 		return !!merchantUserId && recommendedMerchantSet.value.has(merchantUserId);
 	});
+});
+
+const recommendedRankMap = computed(() => {
+	const map: Record<string, number> = {};
+	recommendations.value.forEach((item, index) => {
+		const key = buildReasonKey(item.merchantUserId, item.dishId);
+		if (!(key in map)) {
+			map[key] = index;
+		}
+	});
+	return map;
 });
 
 const clearDishRelatedState = () => {
@@ -396,6 +407,35 @@ const isRecommendedDish = (merchantUserId: unknown, dishId: unknown) => {
 
 const getRecommendedReason = (merchantUserId: unknown, dishId: unknown) => {
 	return recommendedReasonMap[buildReasonKey(merchantUserId, dishId)] || 'AI 推荐';
+};
+
+const getSortedMerchantDishes = (merchantUserId: unknown) => {
+	const merchantId = normalizeId(merchantUserId) || '';
+	const list = dishMap[merchantId] || [];
+	if (!list.length) return [];
+
+	return list
+		.map((dish, index) => {
+			const key = buildReasonKey(merchantId, dish.id);
+			const rank = recommendedRankMap.value[key];
+			const isRecommended = typeof rank === 'number';
+			return {
+				dish,
+				index,
+				isRecommended,
+				rank: isRecommended ? rank : Number.MAX_SAFE_INTEGER,
+			};
+		})
+		.sort((a, b) => {
+			if (a.isRecommended !== b.isRecommended) {
+				return a.isRecommended ? -1 : 1;
+			}
+			if (a.isRecommended && b.isRecommended && a.rank !== b.rank) {
+				return a.rank - b.rank;
+			}
+			return a.index - b.index;
+		})
+		.map((item) => item.dish);
 };
 
 const getSelectedTotalAmount = (merchantUserId: unknown) => {
@@ -819,18 +859,23 @@ onMounted(() => {
 	width: 100%;
 }
 
-.merchant-remark-panel {
-	grid-column: 1 / -1;
-	padding: 12px 14px;
-	border-radius: 12px;
-	border: 1px solid var(--el-border-color-lighter);
-	background: linear-gradient(120deg, var(--ai-soft) 0%, var(--el-bg-color) 100%);
+
+.merchant-remark-inline {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 320px;
+	flex: 1;
 }
 
-.merchant-remark-title {
+.merchant-remark-label {
 	font-size: 13px;
-	font-weight: 600;
-	margin-bottom: 8px;
+	color: var(--el-text-color-regular);
+	white-space: nowrap;
+}
+
+.merchant-remark-inline :deep(.el-input) {
+	max-width: 420px;
 }
 
 .merchant-actions {
@@ -873,6 +918,15 @@ onMounted(() => {
 	.merchant-title {
 		grid-template-columns: 1fr;
 		gap: 2px;
+	}
+
+	.merchant-remark-inline {
+		min-width: 100%;
+	}
+
+	.merchant-remark-inline :deep(.el-input) {
+		max-width: none;
+		width: 100%;
 	}
 
 	.dish-grid {

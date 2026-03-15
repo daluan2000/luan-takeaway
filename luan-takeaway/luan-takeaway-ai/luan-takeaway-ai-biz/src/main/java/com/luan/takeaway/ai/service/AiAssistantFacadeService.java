@@ -4,70 +4,59 @@ import com.luan.takeaway.ai.config.AiAssistantProperties;
 import com.luan.takeaway.ai.api.dto.AiAssistantRequest;
 import com.luan.takeaway.ai.api.dto.AiAssistantResponse;
 import com.luan.takeaway.ai.api.dto.IntentView;
-import com.luan.takeaway.ai.api.dto.RecommendationItem;
-import com.luan.takeaway.ai.model.IntentMode;
 import com.luan.takeaway.ai.model.IntentResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * AI 助手门面服务。
+ * <p>
+ * 负责请求参数兜底、调用混合推荐主流程、以及把内部意图模型转换为对外展示模型。
+ */
 @Service
 @RequiredArgsConstructor
 public class AiAssistantFacadeService {
 
 	private final AiAssistantProperties properties;
 
-	private final IntentRecognitionService intentRecognitionService;
+	private final HybridRecommendationService hybridRecommendationService;
 
-	private final ToolCallingService toolCallingService;
-
-	private final RagRecommendationService ragRecommendationService;
-
+	/**
+	 * 执行 AI 推荐主流程。
+	 * <p>
+	 * 流程：校验请求 -> 计算 limit -> 调用 HybridRecommendationService -> 组装响应。
+	 */
 	public AiAssistantResponse recommend(AiAssistantRequest request) {
 		validateRequest(request);
 		int limit = request.getLimit() == null || request.getLimit() <= 0 ? properties.getMaxRecommendation()
 				: request.getLimit();
 
-		IntentMode mode = intentRecognitionService.decideMode(request.getMessage());
-		IntentResult intent;
-		List<RecommendationItem> recommendations;
-		List<String> knowledgeEvidence;
-		String decisionPath;
-		String summary;
-
-		if (mode == IntentMode.RAG) {
-			RagRecommendationService.RagOutput ragOutput = ragRecommendationService.recommend(request.getMessage(),
-					request.getMerchantUserId(), limit);
-			intent = ragOutput.intent();
-			recommendations = ragOutput.recommendations();
-			knowledgeEvidence = ragOutput.knowledgeEvidence();
-			decisionPath = "rag";
-			summary = ragOutput.summary();
-		}
-		else {
-			intent = intentRecognitionService.extractToolIntent(request.getMessage());
-			recommendations = toolCallingService.recommend(intent, request.getMerchantUserId(), limit, true);
-			knowledgeEvidence = List.of();
-			decisionPath = "tool-calling";
-			summary = toolCallingService.buildSummary(intent, recommendations);
-		}
+		HybridRecommendationService.HybridOutput output = hybridRecommendationService.recommend(request.getMessage(),
+				request.getMerchantUserId(), limit);
+		IntentResult intent = output.intent();
 
 		AiAssistantResponse response = new AiAssistantResponse();
-		response.setDecisionPath(decisionPath);
+		response.setDecisionPath(output.decisionPath());
 		response.setIntent(toIntentView(intent));
-		response.setRecommendations(recommendations);
-		response.setKnowledgeEvidence(knowledgeEvidence);
-		response.setSummary(summary);
+		response.setRecommendations(output.recommendations());
+		response.setSummary(output.summary());
 		return response;
 	}
 
+	/**
+	 * 基础参数校验，避免空 message 进入后续模型处理。
+	 */
 	private void validateRequest(AiAssistantRequest request) {
 		if (request == null || request.getMessage() == null || request.getMessage().isBlank()) {
 			throw new IllegalArgumentException("message 不能为空");
 		}
 	}
 
+	/**
+	 * 内部意图对象转为 API 展示对象。
+	 */
 	private IntentView toIntentView(IntentResult intent) {
 		IntentView view = new IntentView();
 		view.setRoute(intent.getMode().name());
@@ -78,6 +67,20 @@ public class AiAssistantFacadeService {
 		view.setPeople(intent.getPeople());
 		view.setPreferLight(intent.getPreferLight());
 		view.setKeywords(intent.getKeywords());
+		view.setSpicyLevel(intent.getSpicyLevel());
+		view.setLightTaste(intent.getLightTaste());
+		view.setOily(intent.getOily());
+		view.setSoupBased(intent.getSoupBased());
+		view.setVegetarian(intent.getVegetarian());
+		view.setCaloriesMin(intent.getCaloriesMin());
+		view.setCaloriesMax(intent.getCaloriesMax());
+		view.setMealTime(intent.getMealTime());
+		view.setPortionSize(intent.getPortionSize());
+		view.setTags(intent.getTags());
+		view.setSuitableScenes(intent.getSuitableScenes());
+		view.setAvoidScenes(intent.getAvoidScenes());
+		view.setSuitablePeople(intent.getSuitablePeople());
+		view.setQueryRewrite(intent.getQueryRewrite());
 		return view;
 	}
 

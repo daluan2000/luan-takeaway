@@ -44,3 +44,28 @@ export function saleOff(id: string | number) {
 		method: 'post',
 	});
 }
+
+export function getKnowledgeDoc(id: string | number) {
+	return request({
+		url: `/takeaway/dish/${id}/knowledge-doc`,
+		method: 'get',
+	});
+}
+
+export function updateKnowledgeDoc(id: string | number, data?: object) {
+	return request({
+		url: `/takeaway/dish/${id}/knowledge-doc`,
+		method: 'put',
+		data,
+	});
+}
+
+export function generateKnowledgeDoc(id: string | number) {
+	return request({
+		url: '/takeaway/dish/knowledge-doc/generate',
+		method: 'post',
+		params: {
+			dishId: id,
+		},
+	});
+}

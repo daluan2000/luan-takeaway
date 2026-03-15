@@ -182,7 +182,7 @@ const displayStatusOptions = computed(() => {
 
 const loading = ref(false);
 const riderReady = ref(false);
-const riderUserId = ref<number | undefined>();
+const riderUserId = ref<string | number | undefined>();
 const finishingId = ref('');
 const sourceRows = ref<OrderRow[]>([]);
 const allRows = ref<OrderRow[]>([]);
@@ -241,11 +241,6 @@ const toggleTimeExpanded = (row: Record<string, unknown>) => {
 	expandedTimeMap[key] = !expandedTimeMap[key];
 };
 
-const toNumber = (value: unknown): number | undefined => {
-	const num = Number(value);
-	return Number.isNaN(num) ? undefined : num;
-};
-
 const formatAddress = (address?: AddressItem) => {
 	if (!address) return '-';
 	const text = [address.province, address.city, address.district, address.detailAddress].filter(Boolean).join('');
@@ -301,11 +296,7 @@ const resetQuery = () => {
 };
 
 const getCurrentRiderUserId = () => {
-	const currentUserId = Number(useUserInfo().userInfos?.user?.userId);
-	if (!Number.isNaN(currentUserId) && currentUserId > 0) {
-		return currentUserId;
-	}
-	return undefined;
+	return normalizeId(useUserInfo().userInfos?.user?.userId);
 };
 
 const ensureRiderContext = async () => {
@@ -314,7 +305,7 @@ const ensureRiderContext = async () => {
 	if (rider.noExist || !rider.id) {
 		throw new Error('当前用户暂无骑手扩展信息');
 	}
-	riderUserId.value = toNumber(rider.userId) || getCurrentRiderUserId();
+	riderUserId.value = normalizeId(rider.userId) || getCurrentRiderUserId();
 	riderReady.value = !!riderUserId.value;
 	if (!riderReady.value) {
 		throw new Error('未获取到当前骑手身份，无法查询配送单');

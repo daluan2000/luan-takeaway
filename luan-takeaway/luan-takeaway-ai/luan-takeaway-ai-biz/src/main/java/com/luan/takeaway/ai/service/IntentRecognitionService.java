@@ -7,8 +7,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
+/**
+ * 意图识别编排服务。
+ * <p>
+ * 该类统一封装“模式决策 + 结构化提取 + RAG 建议生成”的调用入口，
+ * 当前实现依赖 LLM，未启用时会直接抛出明确异常。
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -18,6 +22,9 @@ public class IntentRecognitionService {
 
 	private final OpenAiIntentRecognizer openAiIntentRecognizer;
 
+	/**
+	 * 判定当前问题走 TOOL_CALLING 还是 RAG。
+	 */
 	public IntentMode decideMode(String query) {
 		ensureLlmEnabled();
 		log.debug("AI decideMode start, llmEnabled={}, source={}", properties.getLlm().isEnabled(),
@@ -32,28 +39,16 @@ public class IntentRecognitionService {
 		}
 	}
 
-	public IntentResult extractToolIntent(String query) {
-		return extractStructuredIntent(query, IntentMode.TOOL_CALLING, null);
+	/**
+	 * 提取结构化条件（混合场景，可指定模式）。
+	 */
+	public IntentResult extractHybridIntent(String query, IntentMode mode) {
+		return extractStructuredIntent(query, mode == null ? IntentMode.TOOL_CALLING : mode, null);
 	}
 
-	public IntentResult extractRagIntent(String query, String ragAdvice) {
-		return extractStructuredIntent(query, IntentMode.RAG, ragAdvice);
-	}
-
-	public String generateRagAdvice(String query, List<String> knowledgeEvidence) {
-		ensureLlmEnabled();
-		try {
-			String advice = openAiIntentRecognizer.generateRagAdvice(query, knowledgeEvidence);
-			if (advice == null || advice.isBlank()) {
-				throw new IllegalStateException("LLM 返回了空的 RAG 建议");
-			}
-			return advice;
-		}
-		catch (Exception e) {
-			throw new IllegalStateException("LLM RAG建议生成失败: " + e.getMessage(), e);
-		}
-	}
-
+	/**
+	 * 调用 LLM 输出结构化意图。
+	 */
 	private IntentResult extractStructuredIntent(String query, IntentMode targetMode, String extraContext) {
 		ensureLlmEnabled();
 		try {
@@ -69,6 +64,9 @@ public class IntentRecognitionService {
 		}
 	}
 
+	/**
+	 * 强制校验 LLM 开关，避免误用导致不可预期降级。
+	 */
 	private void ensureLlmEnabled() {
 		if (!properties.getLlm().isEnabled()) {
 			throw new IllegalStateException("LLM 已禁用，请设置 ai.assistant.llm.enabled=true");

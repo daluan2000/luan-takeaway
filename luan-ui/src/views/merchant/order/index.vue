@@ -138,10 +138,18 @@ const queryRef = ref();
 const acceptingId = ref('');
 const expandedTimeMap = reactive<Record<string, boolean>>({});
 
+const normalizeId = (value: unknown): string | undefined => {
+	if (value === null || value === undefined || value === '') {
+		return undefined;
+	}
+	const text = String(value).trim();
+	return text ? text : undefined;
+};
+
 const state: BasicTableProps = reactive<BasicTableProps>({
 	createdIsNeed: false,
 	queryForm: {
-		merchantUserId: undefined as number | undefined,
+		merchantUserId: undefined as string | number | undefined,
 		status: '',
 	},
 	pageList,
@@ -150,11 +158,7 @@ const state: BasicTableProps = reactive<BasicTableProps>({
 const { getDataList, currentChangeHandle, sizeChangeHandle, tableStyle } = useTable(state);
 
 const resolveCurrentMerchantUserId = () => {
-	const merchantUserId = Number(useUserInfo().userInfos?.user?.userId);
-	if (!Number.isNaN(merchantUserId) && merchantUserId > 0) {
-		return merchantUserId;
-	}
-	return undefined;
+	return normalizeId(useUserInfo().userInfos?.user?.userId);
 };
 
 const formatMoney = (value: unknown) => {

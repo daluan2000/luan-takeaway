@@ -88,7 +88,15 @@ const submitting = ref(false);
 const isCreateMode = ref(true);
 const addressOptions = ref<Array<{ label: string; value: string }>>([]);
 const msgStore = useMsg();
-const currentMerchantUserId = computed(() => Number(useUserInfo().userInfos?.user?.userId || 0));
+const normalizeId = (value: unknown): string | undefined => {
+	if (value === null || value === undefined || value === '') {
+		return undefined;
+	}
+	const text = String(value).trim();
+	return text ? text : undefined;
+};
+
+const currentMerchantUserId = computed(() => normalizeId(useUserInfo().userInfos?.user?.userId));
 const { takeaway_merchant_business_status, takeaway_merchant_audit_status } = useDict(
 	'takeaway_merchant_business_status',
 	'takeaway_merchant_audit_status'
@@ -115,8 +123,8 @@ const getAuditStatusTagType = (status?: string) => {
 };
 
 const form = reactive({
-	id: undefined as number | undefined,
-	userId: undefined as number | undefined,
+	id: undefined as string | number | undefined,
+	userId: undefined as string | number | undefined,
 	merchantName: '',
 	contactName: '',
 	storeAddressId: '',
@@ -138,8 +146,8 @@ interface MerchantAuditWsMessage {
 	status?: string;
 	title?: string;
 	content?: string;
-	merchantId?: number;
-	userId?: number;
+	merchantId?: string | number;
+	userId?: string | number;
 	auditStatus?: string;
 }
 
@@ -271,10 +279,10 @@ const isCurrentMerchantAuditApprovedMessage = (payload: MerchantAuditWsMessage |
 	if (payload.auditStatus !== '1') return false;
 
 	const loginUserId = currentMerchantUserId.value;
-	if (payload.userId && loginUserId && Number(payload.userId) !== loginUserId) {
+	if (payload.userId && loginUserId && normalizeId(payload.userId) !== loginUserId) {
 		return false;
 	}
-	if (payload.merchantId && form.id && Number(payload.merchantId) !== Number(form.id)) {
+	if (payload.merchantId && form.id && normalizeId(payload.merchantId) !== normalizeId(form.id)) {
 		return false;
 	}
 	return true;

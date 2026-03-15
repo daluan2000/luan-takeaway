@@ -6,6 +6,10 @@ import com.luan.takeaway.ai.api.dto.RecommendationItem;
 import com.luan.takeaway.ai.config.AiAssistantProperties;
 import com.luan.takeaway.ai.model.IntentMode;
 import com.luan.takeaway.ai.model.IntentResult;
+import com.luan.takeaway.takeaway.common.constant.DishBusinessDict;
+import com.luan.takeaway.takeaway.common.constant.DishSemanticDict;
+import com.luan.takeaway.takeaway.common.dto.DishKnowledgeGenerateEvent;
+import com.luan.takeaway.takeaway.common.dto.DishKnowledgeDoc;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,9 +28,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
-import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+/**
+ * OpenAI 兼容接口识别器。
+ * <p>
+ * 负责和大模型交互：模式决策、结构化意图提取、RAG 建议生成、候选重排、
+ * 菜品知识文档生成等能力都在这里统一落地。
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -38,6 +47,9 @@ public class OpenAiIntentRecognizer {
 
 	private final RestTemplateBuilder restTemplateBuilder;
 
+	/**
+	 * 判定路由模式（TOOL_CALLING / RAG）。
+	 */
 	public IntentMode decideMode(String query) throws Exception {
 		String systemPrompt = "你是外卖点餐请求路由器。请判断用户请求应走 TOOL_CALLING 还是 RAG。"
 				+ "当用户有明确可筛选条件(预算/辣度/人数/品类等)优先 TOOL_CALLING；"
@@ -59,12 +71,20 @@ public class OpenAiIntentRecognizer {
 		return "RAG".equalsIgnoreCase(modeRaw) ? IntentMode.RAG : IntentMode.TOOL_CALLING;
 	}
 
+	/**
+	 * 提取结构化意图。
+	 * <p>
+	 * 约束模型仅输出 JSON，避免自然语言污染解析流程。
+	 */
 	public IntentResult extractStructuredIntent(String query, IntentMode mode, String extraContext) throws Exception {
 		String context = extraContext == null || extraContext.isBlank() ? "" : "\n补充上下文: " + extraContext;
 		String systemPrompt = "你是外卖点餐结构化条件提取器。"
 				+ "请把用户需求提取为可查询条件，只输出 JSON，不要其它文字。"
-				+ "JSON 字段: mode(TOOL_CALLING|RAG), category, priceMax, spicy, people, preferLight, keywords(array)。"
-				+ "字段缺失时用 null，keywords 允许为空数组。"
+				+ "JSON 字段: mode(TOOL_CALLING|RAG), category, priceMax, spicy, spicyLevel, people, preferLight,"
+				+ "lightTaste, oily, soupBased, vegetarian, caloriesMin, caloriesMax, proteinMin, proteinMax,"
+				+ "fatMin, fatMax, carbohydrateMin, carbohydrateMax, mealTime(array), portionSize,"
+				+ "keywords(array), tags(array), suitableScenes(array), avoidScenes(array), suitablePeople(array), queryRewrite。"
+				+ "字段缺失时用 null，数组字段没有值时返回空数组。"
 				+ "mode 固定输出 " + mode.name() + "。"
 				+ "禁止输出思考过程、解释或 Markdown 代码块。";
 		String content = chatCompletion("structured-intent-" + mode.name().toLowerCase(Locale.ROOT), systemPrompt,
@@ -73,20 +93,81 @@ public class OpenAiIntentRecognizer {
 		return parseIntent(extractJsonObject(content), query, mode);
 	}
 
-	public String generateRagAdvice(String query, List<String> knowledgeEvidence) throws Exception {
-		StringJoiner joiner = new StringJoiner("\n");
-		for (int i = 0; i < knowledgeEvidence.size(); i++) {
-			joiner.add((i + 1) + ". " + knowledgeEvidence.get(i));
-		}
+	/**
+	 * 生成菜品知识文档。
+	 * <p>
+	 * 这里对 category/tags/scene 等字段做了“字典约束提示”，降低模型越界概率。
+	 */
+	public DishKnowledgeDoc generateDishKnowledgeDoc(DishKnowledgeGenerateEvent event) throws Exception {
+		String systemPrompt = "你是菜品知识结构化生成器。根据菜品基础信息生成 DishKnowledgeDoc。"
+				+ "必须严格输出 JSON，不要输出解释。"
+				+ "category 仅能从 " + DishBusinessDict.CATEGORY + " 中选；"
+				+ "mealTime 仅能从 " + DishBusinessDict.MEAL_TIME + " 中选；"
+				+ "portionSize 仅能从 " + DishBusinessDict.PORTION_SIZE + " 中选；"
+				+ "spicyLevel 仅能从 " + DishBusinessDict.SPICY_LEVEL + " 中选；"
+				+ "tags 仅能从 " + DishSemanticDict.TAGS + " 中选；"
+				+ "suitableScenes 仅能从 " + DishSemanticDict.SUITABLE_SCENES + " 中选；"
+				+ "avoidScenes 仅能从 " + DishSemanticDict.AVOID_SCENES + " 中选；"
+				+ "suitablePeople 仅能从 " + DishSemanticDict.SUITABLE_PEOPLE + " 中选。"
+				+ "需要输出字段: category, spicy, spicyLevel, lightTaste, oily, soupBased, vegetarian, calories, protein, fat, carbohydrate, mealTime, portionSize, tags, suitableScenes, avoidScenes, suitablePeople, embeddingText, flavorDescription, llmSummary, recommendationReason。";
+		String userPrompt = "菜品名称: " + event.getDishName()
+				+ "\n菜品描述: " + event.getDishDesc()
+				+ "\n价格: " + event.getPrice();
 
-		String systemPrompt = "你是外卖饮食建议助手。先结合知识证据给出简短可执行建议，"
-				+ "输出控制在120字内，不能虚构知识，不要输出 JSON。";
-		String userPrompt = "用户问题: " + query + "\n知识证据:\n" + joiner;
-		String content = chatCompletion("rag-advice", systemPrompt, userPrompt, 0.2, 256);
-		log.debug("[LLM][rag-advice][output] content={}", safeLog(content));
-		return content.trim();
+		String content = chatCompletion("knowledge-generate", systemPrompt, userPrompt, 0.2, 768);
+		JsonNode node = objectMapper.readTree(extractJsonObject(content));
+
+		DishKnowledgeDoc doc = new DishKnowledgeDoc();
+		doc.setDishId(event.getDishId());
+		doc.setCategory(asNullable(node.path("category").asText(null)));
+		if (node.has("spicy") && !node.get("spicy").isNull()) {
+			doc.setSpicy(node.get("spicy").asBoolean());
+		}
+		if (node.has("spicyLevel") && !node.get("spicyLevel").isNull()) {
+			doc.setSpicyLevel(node.get("spicyLevel").asInt());
+		}
+		if (node.has("lightTaste") && !node.get("lightTaste").isNull()) {
+			doc.setLightTaste(node.get("lightTaste").asBoolean());
+		}
+		if (node.has("oily") && !node.get("oily").isNull()) {
+			doc.setOily(node.get("oily").asBoolean());
+		}
+		if (node.has("soupBased") && !node.get("soupBased").isNull()) {
+			doc.setSoupBased(node.get("soupBased").asBoolean());
+		}
+		if (node.has("vegetarian") && !node.get("vegetarian").isNull()) {
+			doc.setVegetarian(node.get("vegetarian").asBoolean());
+		}
+		if (node.has("calories") && !node.get("calories").isNull()) {
+			doc.setCalories(node.get("calories").asInt());
+		}
+		if (node.has("protein") && !node.get("protein").isNull()) {
+			doc.setProtein(node.get("protein").asInt());
+		}
+		if (node.has("fat") && !node.get("fat").isNull()) {
+			doc.setFat(node.get("fat").asInt());
+		}
+		if (node.has("carbohydrate") && !node.get("carbohydrate").isNull()) {
+			doc.setCarbohydrate(node.get("carbohydrate").asInt());
+		}
+		doc.setMealTime(readStringArray(node.path("mealTime")));
+		doc.setPortionSize(asNullable(node.path("portionSize").asText(null)));
+		doc.setTags(readStringArray(node.path("tags")));
+		doc.setSuitableScenes(readStringArray(node.path("suitableScenes")));
+		doc.setAvoidScenes(readStringArray(node.path("avoidScenes")));
+		doc.setSuitablePeople(readStringArray(node.path("suitablePeople")));
+		doc.setEmbeddingText(asNullable(node.path("embeddingText").asText(null)));
+		doc.setFlavorDescription(asNullable(node.path("flavorDescription").asText(null)));
+		doc.setLlmSummary(asNullable(node.path("llmSummary").asText(null)));
+		doc.setRecommendationReason(asNullable(node.path("recommendationReason").asText(null)));
+		return doc;
 	}
 
+	/**
+	 * 对候选推荐做二次筛选与重排。
+	 * <p>
+	 * 仅允许从候选列表中选择，不允许模型凭空新增菜品。
+	 */
 	public List<RecommendationItem> rerankRecommendations(IntentResult intent, List<RecommendationItem> candidates,
 			int limit) throws Exception {
 		if (candidates == null || candidates.isEmpty()) {
@@ -156,6 +237,9 @@ public class OpenAiIntentRecognizer {
 		return reranked;
 	}
 
+	/**
+	 * 兼容 dishId 为数字或纯数字字符串两种返回形态。
+	 */
 	private Long parseDishId(JsonNode dishIdNode) {
 		if (dishIdNode == null || dishIdNode.isMissingNode() || dishIdNode.isNull()) {
 			return null;
@@ -177,6 +261,11 @@ public class OpenAiIntentRecognizer {
 		}
 	}
 
+	/**
+	 * 封装 chat/completions 调用。
+	 * <p>
+	 * 支持 local/remote 双源配置，并统一做超时、日志、返回结构解析。
+	 */
 	private String chatCompletion(String stage, String systemPrompt, String userPrompt, double temperature,
 			int maxTokens)
 			throws Exception {
@@ -234,6 +323,9 @@ public class OpenAiIntentRecognizer {
 		return contentNode.asText();
 	}
 
+	/**
+	 * 把模型 JSON 解析成内部意图对象。
+	 */
 	private IntentResult parseIntent(String json, String query, IntentMode fallbackMode) throws Exception {
 		JsonNode parsed = objectMapper.readTree(json);
 		IntentResult result = new IntentResult();
@@ -262,9 +354,62 @@ public class OpenAiIntentRecognizer {
 			}
 		}
 
+		result.setSpicyLevel(parseIntField(parsed, "spicyLevel"));
+		if (parsed.has("lightTaste") && !parsed.get("lightTaste").isNull()) {
+			result.setLightTaste(parsed.get("lightTaste").asBoolean());
+		}
+		if (parsed.has("oily") && !parsed.get("oily").isNull()) {
+			result.setOily(parsed.get("oily").asBoolean());
+		}
+		if (parsed.has("soupBased") && !parsed.get("soupBased").isNull()) {
+			result.setSoupBased(parsed.get("soupBased").asBoolean());
+		}
+		if (parsed.has("vegetarian") && !parsed.get("vegetarian").isNull()) {
+			result.setVegetarian(parsed.get("vegetarian").asBoolean());
+		}
+		result.setCaloriesMin(parseIntField(parsed, "caloriesMin"));
+		result.setCaloriesMax(parseIntField(parsed, "caloriesMax"));
+		result.setProteinMin(parseIntField(parsed, "proteinMin"));
+		result.setProteinMax(parseIntField(parsed, "proteinMax"));
+		result.setFatMin(parseIntField(parsed, "fatMin"));
+		result.setFatMax(parseIntField(parsed, "fatMax"));
+		result.setCarbohydrateMin(parseIntField(parsed, "carbohydrateMin"));
+		result.setCarbohydrateMax(parseIntField(parsed, "carbohydrateMax"));
+		result.setMealTime(readStringArray(parsed.path("mealTime")));
+		result.setPortionSize(asNullable(parsed.path("portionSize").asText(null)));
+		result.setTags(readStringArray(parsed.path("tags")));
+		result.setSuitableScenes(readStringArray(parsed.path("suitableScenes")));
+		result.setAvoidScenes(readStringArray(parsed.path("avoidScenes")));
+		result.setSuitablePeople(readStringArray(parsed.path("suitablePeople")));
+		result.setQueryRewrite(asNullable(parsed.path("queryRewrite").asText(null)));
+
 		return result;
 	}
 
+	private Integer parseIntField(JsonNode root, String fieldName) {
+		if (!root.has(fieldName) || root.get(fieldName).isNull()) {
+			return null;
+		}
+		return root.get(fieldName).asInt();
+	}
+
+	private List<String> readStringArray(JsonNode node) {
+		if (node == null || !node.isArray()) {
+			return List.of();
+		}
+		List<String> values = new java.util.ArrayList<>();
+		for (JsonNode item : node) {
+			String value = asNullable(item.asText(null));
+			if (value != null) {
+				values.add(value);
+			}
+		}
+		return values;
+	}
+
+	/**
+	 * 类目标准化：处理英文别名、过滤不可识别英文类目。
+	 */
 	private String normalizeCategory(String rawCategory) {
 		if (rawCategory == null) {
 			return null;
@@ -302,6 +447,9 @@ public class OpenAiIntentRecognizer {
 		return value;
 	}
 
+	/**
+	 * 清理模型可能返回的 Markdown 代码块包装。
+	 */
 	private String cleanJson(String raw) {
 		String value = raw.trim();
 		if (value.startsWith("```") && value.endsWith("```")) {
@@ -311,6 +459,11 @@ public class OpenAiIntentRecognizer {
 		return value.trim();
 	}
 
+	/**
+	 * 从混杂文本中提取完整 JSON 对象。
+	 * <p>
+	 * 使用括号深度与字符串状态机，避免误截断。
+	 */
 	private String extractJsonObject(String raw) {
 		String value = cleanJson(raw);
 		int start = value.indexOf('{');
@@ -354,6 +507,9 @@ public class OpenAiIntentRecognizer {
 		throw new IllegalStateException("LLM 返回 JSON 不完整，raw前300=" + previewRaw(value));
 	}
 
+	/**
+	 * 判断是否出现 Thinking 前缀，便于错误定位。
+	 */
 	private boolean containsThinkingPrefix(String value) {
 		String lower = value.toLowerCase(Locale.ROOT);
 		return lower.startsWith("thinking") || lower.contains("thinking process");
@@ -378,6 +534,9 @@ public class OpenAiIntentRecognizer {
 		return value;
 	}
 
+	/**
+	 * 统一日志安全裁剪，防止过长日志污染输出。
+	 */
 	private String safeLog(String raw) {
 		if (raw == null) {
 			return "<null>";

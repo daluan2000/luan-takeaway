@@ -764,6 +764,57 @@ INSERT INTO `wm_dish` (`id`, `merchant_user_id`, `dish_image`, `dish_name`, `dis
 -- --------------------------------------------------------
 
 --
+-- 表的结构 `wm_dish_knowledge_doc`
+--
+
+DROP TABLE IF EXISTS `wm_dish_knowledge_doc`;
+CREATE TABLE `wm_dish_knowledge_doc` (
+  `id` bigint NOT NULL COMMENT '主键ID',
+  `dish_id` bigint NOT NULL COMMENT '菜品ID(wm_dish.id)',
+  `category` varchar(32) DEFAULT NULL COMMENT '主类别',
+  `spicy` tinyint(1) DEFAULT NULL COMMENT '是否辣',
+  `spicy_level` int DEFAULT NULL COMMENT '辣度等级',
+  `light_taste` tinyint(1) DEFAULT NULL COMMENT '是否清淡',
+  `oily` tinyint(1) DEFAULT NULL COMMENT '是否油腻',
+  `soup_based` tinyint(1) DEFAULT NULL COMMENT '是否汤类',
+  `vegetarian` tinyint(1) DEFAULT NULL COMMENT '是否素食',
+  `calories` int DEFAULT NULL COMMENT '热量kcal',
+  `protein` int DEFAULT NULL COMMENT '蛋白质g',
+  `fat` int DEFAULT NULL COMMENT '脂肪g',
+  `carbohydrate` int DEFAULT NULL COMMENT '碳水g',
+  `meal_time` json DEFAULT NULL COMMENT '适用餐段JSON数组',
+  `portion_size` varchar(16) DEFAULT NULL COMMENT '分量',
+  `tags` json DEFAULT NULL COMMENT '标签JSON数组',
+  `suitable_scenes` json DEFAULT NULL COMMENT '推荐场景JSON数组',
+  `avoid_scenes` json DEFAULT NULL COMMENT '避免场景JSON数组',
+  `suitable_people` json DEFAULT NULL COMMENT '适用人群JSON数组',
+  `embedding_text` text COMMENT 'embedding输入文本',
+  `flavor_description` varchar(255) DEFAULT NULL COMMENT '风味描述',
+  `llm_summary` text COMMENT '知识摘要',
+  `recommendation_reason` text COMMENT '推荐理由',
+  `create_by` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `update_by` varchar(64) DEFAULT NULL COMMENT '更新人',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_wm_dish_knowledge_doc_dish_id` (`dish_id`),
+  KEY `idx_wm_dish_knowledge_doc_category` (`category`),
+  KEY `idx_wm_dish_knowledge_doc_spicy` (`spicy`),
+  KEY `idx_wm_dish_knowledge_doc_calories` (`calories`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-菜品知识文档';
+
+--
+-- 转存表中的数据 `wm_dish_knowledge_doc`
+--
+
+INSERT INTO `wm_dish_knowledge_doc` (`id`, `dish_id`, `category`, `spicy`, `spicy_level`, `light_taste`, `oily`, `soup_based`, `vegetarian`, `calories`, `protein`, `fat`, `carbohydrate`, `meal_time`, `portion_size`, `tags`, `suitable_scenes`, `avoid_scenes`, `suitable_people`, `embedding_text`, `flavor_description`, `llm_summary`, `recommendation_reason`, `create_by`, `update_by`, `create_time`, `update_time`, `del_flag`) VALUES
+(2033000000000000001, 2029883716233834498, 'rice', 1, 2, 0, 1, 0, 0, 560, 28, 24, 50, '["lunch","dinner"]', 'medium', '["重口味","高热量"]', '["补充能量","聚餐"]', '["睡前"]', '["学生","重体力劳动"]', 'rice 重口味 高热量 补充能量 聚餐 鱼香肉丝口味浓郁，适合重口味偏好。', '咸鲜微辣', '鱼香肉丝属于下饭热菜，口味偏重，适合午晚餐场景。', '适合需要高饱腹感和重口味的用户。', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '0'),
+(2033000000000000002, 2030278477109170178, 'porridge', 0, 0, 1, 0, 1, 0, 320, 24, 9, 28, '["lunch","dinner"]', 'medium', '["清淡","暖胃","易消化"]', '["胃不舒服","天气寒冷"]', '["运动前"]', '["办公室","老人"]', 'porridge 清淡 暖胃 易消化 胃不舒服 天气寒冷 牛肉汤温和暖胃，油脂负担较小。', '温和鲜香', '牛肉汤属于清淡汤类，适合需要温热、易消化饮食的场景。', '适合作为工作日午晚餐，兼顾饱腹与温和口感。', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '0');
+
+-- --------------------------------------------------------
+
+--
 -- 表的结构 `wm_merchant_user_ext`
 --
 
