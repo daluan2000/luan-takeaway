@@ -574,7 +574,8 @@ const handleSubmit = async () => {
 				dialogVisible.value = false;
 				sourceDish.id = form.id;
 				upsertLocalDishRow(sourceDish);
-				setKnowledgeSyncLocked(sourceDish, form.autoGenerateKnowledge);
+				// 后端为同步生成：接口返回时知识已处理完，前端不应继续锁定操作按钮。
+				setKnowledgeSyncLocked(sourceDish, false);
 				useMessage().success('菜品修改成功');
 			} else {
 				const res: any = await addObj(payload);
@@ -582,14 +583,9 @@ const handleSubmit = async () => {
 				dialogVisible.value = false;
 				sourceDish.id = savedDishId;
 				upsertLocalDishRow(sourceDish);
-				setKnowledgeSyncLocked(sourceDish, form.autoGenerateKnowledge);
+				// 后端为同步生成：接口返回时知识已处理完，前端不应继续锁定操作按钮。
+				setKnowledgeSyncLocked(sourceDish, false);
 				useMessage().success('菜品新增成功');
-			}
-			if (savedDishId) {
-				const key = getDishIdKey(savedDishId);
-				if (key && form.autoGenerateKnowledge) {
-					knowledgeSyncLockedDishMap[key] = true;
-				}
 			}
 			getDataList(false);
 		} catch (error: any) {
