@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-MODEL_PATH="${VLLM_MODEL_PATH:-/home/luan/workplace/LLM_CTA/models/Qwen3.5-4B}"
+MODEL_PATH="${VLLM_MODEL_PATH:-/home/luan/.cache/modelscope/hub/models/Qwen/Qwen3.5-4B}"
 MODEL_NAME="${VLLM_MODEL_NAME:-qwen3.5-4b}"
 HOST="${VLLM_HOST:-0.0.0.0}"
 PORT="${VLLM_PORT:-8000}"

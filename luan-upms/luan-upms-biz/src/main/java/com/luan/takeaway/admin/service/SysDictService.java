@@ -20,6 +20,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.luan.takeaway.admin.api.entity.SysDict;
 import com.luan.takeaway.common.core.util.R;
 
+// todo 字典管理的作用是什么，业务数据库是依赖字典值的，如果删除或修改字典值，那么所有业务数据库将会出现差错
+// 如果增加字典值，那么前后端一定需要增加相应的字典逻辑，那直接改代码得了
+// 说白了，字典值的增加删除修改，就不该是运行阶段进行的，而是开发阶段的任务
+// 目前字典管理的唯一作用好像是将字典值传给前端，防止前端字典值的硬编码，但直接将java常量类里的字典值传给前端即可，没必要用数据库
+
 /**
  * 字典表服务接口 提供字典数据的增删改查及缓存同步功能
  *
