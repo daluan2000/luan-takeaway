@@ -88,7 +88,7 @@ public class OpenAiIntentRecognizer {
 				+ "mode 固定输出 " + mode.name() + "。"
 				+ "禁止输出思考过程、解释或 Markdown 代码块。";
 		String content = chatCompletion("structured-intent-" + mode.name().toLowerCase(Locale.ROOT), systemPrompt,
-				query + context, 0.1, 256);
+				query + context, 0.1, 1024);
 		log.debug("[LLM][structured-intent][output] mode={} content={}", mode, safeLog(content));
 		return parseIntent(extractJsonObject(content), query, mode);
 	}
