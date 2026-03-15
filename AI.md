@@ -48,7 +48,7 @@ Response Generation
 
 核心执行逻辑：
 
-```text id="5s0g4r"
+```text
 LLM 负责理解需求
 结构系统负责精确过滤
 知识系统负责语义补充
