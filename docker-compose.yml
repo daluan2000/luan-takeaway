@@ -142,7 +142,7 @@ services:
       AI_LLM_REMOTE_BASE_URL: ${AI_LLM_REMOTE_BASE_URL:-}
       AI_LLM_REMOTE_MODEL: ${AI_LLM_REMOTE_MODEL:-}
       AI_LLM_REMOTE_API_KEY: ${AI_LLM_REMOTE_API_KEY:-}
-      AI_LLM_TIMEOUT_MS: ${AI_LLM_TIMEOUT_MS:-5000}
+      AI_LLM_TIMEOUT_MS: ${AI_LLM_TIMEOUT_MS:-30000}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
