@@ -191,3 +191,46 @@ OrderHistoryTool
 ---
 
 
+对，你现在其实已经意识到关键点了：你原来以为是两种 mode（Tool / RAG），但工程落地后它们大多数情况下会融合成一种统一模式——Hybrid Retrieval + LLM Orchestration（混合检索编排模式）。🎯🤖
+
+
+
+二、真正落地后是统一链路（推荐你按这个理解）🔥
+用户输入
+↓
+LLM统一解析 Query
+↓
+结构过滤（Tool）
+↓
+语义召回（RAG）
+↓
+排序
+↓
+LLM解释
+
+
+三、你原来的“两种 mode”其实应该改成“两种能力”
+
+更准确写法是：
+
+AI Service 提供两种能力：
+① Structured Retrieval Capability
+
+结构约束解析能力
+
+对应：
+
+Tool Calling
+
+② Semantic Recommendation Capability
+
+语义推荐能力
+
+对应：
+
+RAG
+
+
+
+原先的菜品数据只包含菜品基本信息，如菜品名称，菜品描述，菜品价格。为了使LLM更好的理解菜品，增加一个新的数据表格：菜品知识库，里面存放了每道菜品的扩展知识，包含标签、适用人群、热量、辣度、分量、知识摘要、embedding向量等等。当用户创建菜品后，调用LLM根据菜品基础信息自动生成菜品对应的扩展知识。用户可以在前端编辑生成的知识。
+
