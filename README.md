@@ -1,4 +1,4 @@
-# Luan Takeaway System
+# Luan Takeaway
 
 一个基于 Spring Boot + Spring Cloud 构建的外卖业务系统，系统按照业务领域拆分为用户、菜品、订单、支付和智能推荐等多个服务，并通过 Gateway、Nacos、Redis、RabbitMQ 等组件构建完整的服务治理与异步处理体系。
 
@@ -19,7 +19,7 @@
 
 点击下方封面可跳转到外链视频：
 
-[![演示视频封面](./assets/demo-cover.jpg)](https://www.bilibili.com/video/BV1B3c6zcEqh)
+[![演示视频封面](./assets/demo-cover.jpg)](https://www.bilibili.com/video/BV1Cww5zNEKK)
 
 
 
