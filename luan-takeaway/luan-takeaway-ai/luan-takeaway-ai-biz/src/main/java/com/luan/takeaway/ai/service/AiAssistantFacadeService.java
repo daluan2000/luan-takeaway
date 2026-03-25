@@ -8,12 +8,13 @@ import com.luan.takeaway.ai.model.IntentResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 /**
  * AI 助手门面服务。
  * <p>
  * 负责请求参数兜底、调用混合推荐主流程、以及把内部意图模型转换为对外展示模型。
+ * <p>
+ * 完整链路（文档 # 8）：
+ * Query Understanding → Hybrid Retrieval → Fusion Ranking → LLM Selection and Generation
  */
 @Service
 @RequiredArgsConstructor
@@ -30,13 +31,14 @@ public class AiAssistantFacadeService {
 	 */
 	public AiAssistantResponse recommend(AiAssistantRequest request) {
 		validateRequest(request);
-		int limit = request.getLimit() == null || request.getLimit() <= 0 ? properties.getMaxRecommendation()
+		int limit = request.getLimit() == null || request.getLimit() <= 0
+				? properties.getMaxRecommendation()
 				: request.getLimit();
 
-		HybridRecommendationService.HybridOutput output = hybridRecommendationService.recommend(request.getMessage(),
-				request.getMerchantUserId(), limit);
-		IntentResult intent = output.intent();
+		HybridRecommendationService.HybridOutput output = hybridRecommendationService.recommend(
+				request.getMessage(), request.getMerchantUserId(), limit);
 
+		IntentResult intent = output.intent();
 		AiAssistantResponse response = new AiAssistantResponse();
 		response.setDecisionPath(output.decisionPath());
 		response.setIntent(toIntentView(intent));
@@ -59,13 +61,12 @@ public class AiAssistantFacadeService {
 	 */
 	private IntentView toIntentView(IntentResult intent) {
 		IntentView view = new IntentView();
-		view.setRoute(intent.getMode().name());
+		view.setRoute(intent.getMode() != null ? intent.getMode().name() : "TOOL_CALLING");
 		view.setOriginalQuery(intent.getOriginalQuery());
 		view.setCategory(intent.getCategory());
 		view.setPriceMax(intent.getPriceMax());
 		view.setSpicy(intent.getSpicy());
 		view.setPeople(intent.getPeople());
-		view.setPreferLight(intent.getPreferLight());
 		view.setKeywords(intent.getKeywords());
 		view.setSpicyLevel(intent.getSpicyLevel());
 		view.setLightTaste(intent.getLightTaste());

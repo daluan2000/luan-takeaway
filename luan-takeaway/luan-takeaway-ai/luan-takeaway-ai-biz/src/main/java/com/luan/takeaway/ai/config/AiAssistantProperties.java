@@ -19,6 +19,11 @@ public class AiAssistantProperties {
 	private int maxRecommendation = 5;
 
 	/**
+	 * 语义向量检索配置。
+	 */
+	private Semantic semantic = new Semantic();
+
+	/**
 	 * LLM 相关配置。
 	 */
 	private Llm llm = new Llm();
@@ -115,6 +120,57 @@ public class AiAssistantProperties {
 			}
 			return second;
 		}
+
+	}
+
+	/**
+	 * 语义向量检索配置。
+	 * <p>
+	 * 用于控制 embedding 生成和向量检索的行为。
+	 */
+	@Data
+	public static class Semantic {
+
+		/**
+		 * 是否启用语义向量检索（embedding + Redis 向量匹配）。
+		 * <p>
+		 * 若禁用，则仅走结构化过滤，降级为纯条件召回。
+		 */
+		private boolean enabled = true;
+
+		/**
+		 * Embedding 模型服务地址（OpenAI 兼容接口）。
+		 * <p>
+		 * 支持 Ollama / vLLM 等部署的 embedding 模型。
+		 * 默认使用 Ollama 本地服务。
+		 */
+		private String embeddingUrl = "http://127.0.0.1:11434/api/embeddings";
+
+		/**
+		 * Embedding 模型名称。
+		 * <p>
+		 * Ollama 推荐: mxbai-embed-large（1024维，高质量）
+		 */
+		private String embeddingModel = "mxbai-embed-large";
+
+		/**
+		 * Embedding 维度。
+		 * <p>
+		 * mxbai-embed-large 为 1024 维。
+		 */
+		private int embeddingDimension = 1024;
+
+		/**
+		 * 向量检索时返回的 Top-N 近邻数量。
+		 * <p>
+		 * 作为语义候选池，后续还会经过结构化过滤和融合排序。
+		 */
+		private int topK = 100;
+
+		/**
+		 * Redis 中存储 embedding 向量的 key 前缀。
+		 */
+		private String redisKeyPrefix = "takeaway:embedding:";
 
 	}
 

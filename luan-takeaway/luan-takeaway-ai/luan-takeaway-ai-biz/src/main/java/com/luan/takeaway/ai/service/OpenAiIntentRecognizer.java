@@ -26,15 +26,21 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * OpenAI 兼容接口识别器。
  * <p>
- * 负责和大模型交互：模式决策、结构化意图提取、RAG 建议生成、候选重排、
- * 菜品知识文档生成等能力都在这里统一落地。
+ * 负责和大模型交互，核心能力：
+ * <ul>
+ *   <li>模式决策（辅助标注，非路由决定）</li>
+ *   <li>Query Understanding：结构化意图 + 语义意图统一解析</li>
+ *   <li>RAG 建议生成</li>
+ *   <li>候选重排</li>
+ *   <li>菜品知识文档生成</li>
+ * </ul>
  */
 @Component
 @RequiredArgsConstructor
@@ -47,14 +53,20 @@ public class OpenAiIntentRecognizer {
 
 	private final RestTemplateBuilder restTemplateBuilder;
 
+	// ==================== 公开方法 ====================
+
 	/**
-	 * 判定路由模式（TOOL_CALLING / RAG）。
+	 * 判定路由模式标签（TOOL_CALLING / RAG）。
+	 * <p>
+	 * 辅助下游做参考解释，非路由决定。
+	 * 当用户有明确可筛选条件（品类/预算/辣度等）优先 TOOL_CALLING，
+	 * 当用户是模糊健康或场景诉求（如胃不舒服/上火）优先 RAG。
 	 */
 	public IntentMode decideMode(String query) throws Exception {
 		String systemPrompt = "你是外卖点餐请求路由器。请判断用户请求应走 TOOL_CALLING 还是 RAG。"
 				+ "当用户有明确可筛选条件(预算/辣度/人数/品类等)优先 TOOL_CALLING；"
 				+ "当用户是模糊健康或场景诉求(如胃不舒服/上火/不想太油)优先 RAG。"
-				+ "禁止输出思考过程、解释或多余文本，只输出 JSON: {\\\"mode\\\":\\\"TOOL_CALLING\\\"} 或 {\\\"mode\\\":\\\"RAG\\\"}";
+				+ "禁止输出思考过程、解释或多余文本，只输出 JSON: {\"mode\":\"TOOL_CALLING\"} 或 {\"mode\":\"RAG\"}";
 		String content = chatCompletion("mode-decision", systemPrompt, query, 0.0, 128);
 		log.debug("[LLM][mode-decision][output] content={}", safeLog(content));
 
@@ -72,31 +84,28 @@ public class OpenAiIntentRecognizer {
 	}
 
 	/**
-	 * 提取结构化意图。
+	 * Query Understanding 主入口：统一解析结构化意图 + 语义意图。
+	 * <p>
+	 * 由 LLM 完成两步解析：
+	 * <ol>
+	 *   <li>识别请求模式标签（TOOL_CALLING / RAG），用于意图提取与结果解释辅助。</li>
+	 *   <li>提取结构化意图（如类别、预算、辣度、营养区间、场景标签等）和语义意图。</li>
+	 * </ol>
 	 * <p>
 	 * 约束模型仅输出 JSON，避免自然语言污染解析流程。
+	 *
+	 * @param query 用户自然语言输入
+	 * @return 解析后的结构化 + 语义意图
 	 */
-	public IntentResult extractStructuredIntent(String query, IntentMode mode, String extraContext) throws Exception {
-		String context = extraContext == null || extraContext.isBlank() ? "" : "\n补充上下文: " + extraContext;
-		String systemPrompt = "你是外卖点餐结构化条件提取器。"
-				+ "请把用户需求提取为可查询条件，只输出 JSON，不要其它文字。"
-				+ "JSON 字段: mode(TOOL_CALLING|RAG), category, priceMax, spicy, spicyLevel, people, preferLight,"
-				+ "lightTaste, oily, soupBased, vegetarian, caloriesMin, caloriesMax, proteinMin, proteinMax,"
-				+ "fatMin, fatMax, carbohydrateMin, carbohydrateMax, mealTime(array), portionSize,"
-				+ "keywords(array), tags(array), suitableScenes(array), avoidScenes(array), suitablePeople(array), queryRewrite。"
-				+ "字段缺失时用 null，数组字段没有值时返回空数组。"
-				+ "mode 固定输出 " + mode.name() + "。"
-				+ "禁止输出思考过程、解释或 Markdown 代码块。";
-		String content = chatCompletion("structured-intent-" + mode.name().toLowerCase(Locale.ROOT), systemPrompt,
-				query + context, 0.1, 1024);
-		log.debug("[LLM][structured-intent][output] mode={} content={}", mode, safeLog(content));
-		return parseIntent(extractJsonObject(content), query, mode);
+	public IntentResult parseQueryUnderstanding(String query) throws Exception {
+		String systemPrompt = buildQueryUnderstandingSystemPrompt();
+		String content = chatCompletion("query-understanding", systemPrompt, query, 0.1, 1024);
+		log.debug("[LLM][query-understanding][output] content={}", safeLog(content));
+		return parseIntentFromQueryUnderstanding(extractJsonObject(content), query);
 	}
 
 	/**
 	 * 生成菜品知识文档。
-	 * <p>
-	 * 这里对 category/tags/scene 等字段做了“字典约束提示”，降低模型越界概率。
 	 */
 	public DishKnowledgeDoc generateDishKnowledgeDoc(DishKnowledgeGenerateEvent event) throws Exception {
 		String systemPrompt = "你是菜品知识结构化生成器。根据菜品基础信息生成 DishKnowledgeDoc。"
@@ -176,7 +185,6 @@ public class OpenAiIntentRecognizer {
 
 		String userQuery = intent == null || intent.getOriginalQuery() == null ? "" : intent.getOriginalQuery();
 		String structured = intent == null ? "{}" : objectMapper.writeValueAsString(intent);
-		// Map.of does not allow null values; use mutable maps to preserve nullable fields in candidate payload.
 		String candidateJson = objectMapper.writeValueAsString(candidates.stream().map(item -> {
 			Map<String, Object> candidate = new LinkedHashMap<>();
 			candidate.put("dishId", item.getDishId());
@@ -191,7 +199,7 @@ public class OpenAiIntentRecognizer {
 
 		String systemPrompt = "你是外卖推荐重排器。你只能从候选菜品中挑选最优结果，不能新增菜品。"
 				+ "请结合用户原始需求和结构化意图，对候选做最终筛选和排序。"
-				+ "只输出 JSON，格式: {\\\"selected\\\":[{\\\"dishId\\\":123,\\\"reason\\\":\\\"...\\\"}]}。"
+				+ "只输出 JSON，格式: {\"selected\":[{\"dishId\":123,\"reason\":\"...\"}]}。"
 				+ "selected 最多返回 " + limit + " 个，dishId 必须来自候选列表。";
 		String userPrompt = "用户原始需求: " + userQuery + "\n结构化意图: " + structured + "\n候选菜品JSON: " + candidateJson;
 		log.debug("[LLM][post-filter-rerank][input] limit={} userQuery={} structuredIntent={} candidates={}", limit,
@@ -237,127 +245,64 @@ public class OpenAiIntentRecognizer {
 		return reranked;
 	}
 
-	/**
-	 * 兼容 dishId 为数字或纯数字字符串两种返回形态。
-	 */
-	private Long parseDishId(JsonNode dishIdNode) {
-		if (dishIdNode == null || dishIdNode.isMissingNode() || dishIdNode.isNull()) {
-			return null;
-		}
-		if (dishIdNode.isIntegralNumber()) {
-			return dishIdNode.asLong();
-		}
+	// ==================== 内部解析方法 ====================
 
-		String dishIdText = asNullable(dishIdNode.asText(null));
-		if (dishIdText == null || !dishIdText.matches("\\d+")) {
-			return null;
-		}
-
-		try {
-			return Long.parseLong(dishIdText);
-		}
-		catch (NumberFormatException ex) {
-			return null;
-		}
+	private String buildQueryUnderstandingSystemPrompt() {
+		return "你是外卖点餐 Query Understanding 解析器。"
+				+ "请把用户需求同时提取为结构化约束（硬过滤条件）和语义偏好（软约束），只输出 JSON，不要其它文字。"
+				+ "\n【结构化约束字段 - 硬过滤条件】"
+				+ "\n- mode: 模式标签(TOOL_CALLING|RAG)，用于解释参考，非路由决定"
+				+ "\n- category: 菜品类别，如 面/粥/米饭/火锅/饮品/小吃/甜点"
+				+ "\n- priceMax: 预算上限（数字）"
+				+ "\n- spicy: 是否辣(true/false)"
+				+ "\n- spicyLevel: 辣度等级(0-5)"
+				+ "\n- lightTaste: 是否清淡(true/false)"
+				+ "\n- oily: 是否油腻(true/false)"
+				+ "\n- soupBased: 是否汤类(true/false)"
+				+ "\n- vegetarian: 是否素食(true/false)"
+				+ "\n- caloriesMin/caloriesMax: 热量范围"
+				+ "\n- proteinMin/proteinMax: 蛋白质范围"
+				+ "\n- fatMin/fatMax: 脂肪范围"
+				+ "\n- carbohydrateMin/carbohydrateMax: 碳水范围"
+				+ "\n- mealTime: 餐段数组，如 [\"lunch\",\"dinner\"]，可选 breakfast/lunch/dinner/midnight"
+				+ "\n- portionSize: 分量(small/medium/large)"
+				+ "\n- people: 就餐人数"
+				+ "\n【语义偏好字段 - 软约束，用于语义相似度计算】"
+				+ "\n- keywords: 语义关键词数组，如 [\"清淡\",\"易消化\"]"
+				+ "\n- tags: 语义标签数组，可选 低脂/高蛋白/高碳水/高纤维/清淡/重口味/暖胃/解腻/低糖/高热量/易消化/饱腹感强"
+				+ "\n- suitableScenes: 适合场景数组，可选 减脂/健身恢复/胃不舒服/工作午餐/夜宵/两人分享/聚餐/快速解决一餐/补充能量/天气寒冷"
+				+ "\n- avoidScenes: 避免场景数组，可选 睡前/空腹/肠胃敏感/上火/减脂期间/运动前"
+				+ "\n- suitablePeople: 适合人群数组，可选 学生/办公室/健身/老人/儿童/熬夜人群/重体力劳动"
+				+ "\n- queryRewrite: 查询改写，把用户口语化表达改写为标准推荐意图描述"
+				+ "\n【示例】"
+				+ "\n用户输入: \"今天有点上火，想吃清淡、好消化的\""
+				+ "\n解析结果: {\"mode\":\"RAG\",\"tags\":[\"清淡\",\"易消化\"],\"avoidScenes\":[\"上火\"],\"lightTaste\":true,\"spicy\":false,\"queryRewrite\":\"清淡易消化，适合上火期间食用\"}"
+				+ "\n【规则】"
+				+ "\n- 字段缺失时用 null，数组字段没有值时返回空数组 []"
+				+ "\n- 禁止输出思考过程、解释或 Markdown 代码块"
+				+ "\n- 只输出完整 JSON 对象";
 	}
 
-
-	
-
-	/**
-	 * 封装 chat/completions 调用。
-	 * <p>
-	 * 支持 local/remote 双源配置，并统一做超时、日志、返回结构解析。
-	 */
-	private String chatCompletion(String stage, String systemPrompt, String userPrompt, double temperature,
-			int maxTokens)
-			throws Exception {
-		AiAssistantProperties.Llm llm = properties.getLlm();
-		String baseUrl = llm.resolveBaseUrl();
-		String apiKey = llm.resolveApiKey();
-		String model = llm.resolveModel();
-		if (baseUrl == null || baseUrl.isBlank() || model == null || model.isBlank()) {
-			throw new IllegalStateException("LLM 配置不完整，请检查 ai.assistant.llm 的 source/base-url/model 配置");
-		}
-
-		RestTemplate restTemplate = restTemplateBuilder
-				.setConnectTimeout(Duration.ofMillis(llm.getTimeoutMs()))
-				.setReadTimeout(Duration.ofMillis(llm.getTimeoutMs()))
-				.build();
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		if (apiKey != null && !apiKey.isBlank()) {
-			headers.setBearerAuth(apiKey);
-		}
-
-		Map<String, Object> payload = new HashMap<>();
-		payload.put("model", model);
-		payload.put("temperature", temperature);
-		payload.put("max_tokens", maxTokens);
-		if ("local".equalsIgnoreCase(llm.getSource())) {
-			// For local vLLM + Qwen, disable reasoning/thinking output so parser receives final JSON content directly.
-			payload.put("chat_template_kwargs", Map.of("enable_thinking", false));
-		}
-		payload.put("messages", List.of(
-				Map.of("role", "system", "content", systemPrompt),
-				Map.of("role", "user", "content", userPrompt)));
-
-		String endpoint = baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
-		log.debug("[LLM][{}][input] endpoint={} model={} temperature={} maxTokens={} systemPrompt={} userPrompt={}",
-				stage, endpoint, model, temperature, maxTokens, safeLog(systemPrompt), safeLog(userPrompt));
-
-		ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(payload, headers),
-				String.class);
-		if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-			log.debug("[LLM][{}][raw-response] status={} body=<empty>", stage, response.getStatusCode());
-			throw new IllegalStateException("LLM 调用失败，HTTP状态=" + response.getStatusCode());
-		}
-
-		log.debug("[LLM][{}][raw-response] status={} body={}", stage, response.getStatusCode(),
-				safeLog(response.getBody()));
-
-		JsonNode root = objectMapper.readTree(response.getBody());
-		JsonNode contentNode = root.path("choices").path(0).path("message").path("content");
-		if (contentNode.isMissingNode() || contentNode.asText().isBlank()) {
-			log.debug("[LLM][{}][parsed-content] <empty>", stage);
-			throw new IllegalStateException("LLM 返回内容为空，stage=" + stage);
-		}
-		return contentNode.asText();
-	}
-
-	/**
-	 * 把模型 JSON 解析成内部意图对象。
-	 */
-	private IntentResult parseIntent(String json, String query, IntentMode fallbackMode) throws Exception {
+	private IntentResult parseIntentFromQueryUnderstanding(String json, String query) throws Exception {
 		JsonNode parsed = objectMapper.readTree(json);
 		IntentResult result = new IntentResult();
 		result.setOriginalQuery(query);
-		String modeRaw = parsed.path("mode").asText(fallbackMode == null ? "TOOL_CALLING" : fallbackMode.name());
+
+		// 模式标签
+		String modeRaw = parsed.path("mode").asText("TOOL_CALLING");
 		result.setMode("RAG".equalsIgnoreCase(modeRaw) ? IntentMode.RAG : IntentMode.TOOL_CALLING);
+
+		// 结构化约束
 		result.setCategory(normalizeCategory(asNullable(parsed.path("category").asText(null))));
-		if (parsed.hasNonNull("priceMax")) {
+		if (parsed.has("priceMax") && !parsed.get("priceMax").isNull()) {
 			result.setPriceMax(new BigDecimal(parsed.get("priceMax").asText()));
 		}
 		if (parsed.has("spicy") && !parsed.get("spicy").isNull()) {
 			result.setSpicy(parsed.get("spicy").asBoolean());
 		}
-		if (parsed.has("people") && !parsed.get("people").isNull()) {
-			result.setPeople(parsed.get("people").asInt());
+		if (parsed.has("spicyLevel") && !parsed.get("spicyLevel").isNull()) {
+			result.setSpicyLevel(parsed.get("spicyLevel").asInt());
 		}
-		if (parsed.has("preferLight") && !parsed.get("preferLight").isNull()) {
-			result.setPreferLight(parsed.get("preferLight").asBoolean());
-		}
-		if (parsed.has("keywords") && parsed.get("keywords").isArray()) {
-			for (JsonNode keyword : parsed.get("keywords")) {
-				String value = keyword.asText();
-				if (!value.isBlank()) {
-					result.getKeywords().add(value);
-				}
-			}
-		}
-
-		result.setSpicyLevel(parseIntField(parsed, "spicyLevel"));
 		if (parsed.has("lightTaste") && !parsed.get("lightTaste").isNull()) {
 			result.setLightTaste(parsed.get("lightTaste").asBoolean());
 		}
@@ -380,6 +325,19 @@ public class OpenAiIntentRecognizer {
 		result.setCarbohydrateMax(parseIntField(parsed, "carbohydrateMax"));
 		result.setMealTime(readStringArray(parsed.path("mealTime")));
 		result.setPortionSize(asNullable(parsed.path("portionSize").asText(null)));
+		if (parsed.has("people") && !parsed.get("people").isNull()) {
+			result.setPeople(parsed.get("people").asInt());
+		}
+
+		// 语义偏好
+		if (parsed.has("keywords") && parsed.get("keywords").isArray()) {
+			for (JsonNode keyword : parsed.get("keywords")) {
+				String value = asNullable(keyword.asText(null));
+				if (value != null) {
+					result.getKeywords().add(value);
+				}
+			}
+		}
 		result.setTags(readStringArray(parsed.path("tags")));
 		result.setSuitableScenes(readStringArray(parsed.path("suitableScenes")));
 		result.setAvoidScenes(readStringArray(parsed.path("avoidScenes")));
@@ -451,6 +409,30 @@ public class OpenAiIntentRecognizer {
 	}
 
 	/**
+	 * 兼容 dishId 为数字或纯数字字符串两种返回形态。
+	 */
+	private Long parseDishId(JsonNode dishIdNode) {
+		if (dishIdNode == null || dishIdNode.isMissingNode() || dishIdNode.isNull()) {
+			return null;
+		}
+		if (dishIdNode.isIntegralNumber()) {
+			return dishIdNode.asLong();
+		}
+
+		String dishIdText = asNullable(dishIdNode.asText(null));
+		if (dishIdText == null || !dishIdText.matches("\\d+")) {
+			return null;
+		}
+
+		try {
+			return Long.parseLong(dishIdText);
+		}
+		catch (NumberFormatException ex) {
+			return null;
+		}
+	}
+
+	/**
 	 * 清理模型可能返回的 Markdown 代码块包装。
 	 */
 	private String cleanJson(String raw) {
@@ -464,8 +446,6 @@ public class OpenAiIntentRecognizer {
 
 	/**
 	 * 从混杂文本中提取完整 JSON 对象。
-	 * <p>
-	 * 使用括号深度与字符串状态机，避免误截断。
 	 */
 	private String extractJsonObject(String raw) {
 		String value = cleanJson(raw);
@@ -510,9 +490,6 @@ public class OpenAiIntentRecognizer {
 		throw new IllegalStateException("LLM 返回 JSON 不完整，raw前300=" + previewRaw(value));
 	}
 
-	/**
-	 * 判断是否出现 Thinking 前缀，便于错误定位。
-	 */
 	private boolean containsThinkingPrefix(String value) {
 		String lower = value.toLowerCase(Locale.ROOT);
 		return lower.startsWith("thinking") || lower.contains("thinking process");
@@ -550,6 +527,66 @@ public class OpenAiIntentRecognizer {
 			return normalized;
 		}
 		return normalized.substring(0, maxLen) + "...(truncated)";
+	}
+
+	// ==================== LLM 调用封装 ====================
+
+	/**
+	 * 封装 chat/completions 调用。
+	 */
+	private String chatCompletion(String stage, String systemPrompt, String userPrompt, double temperature,
+			int maxTokens) throws Exception {
+		AiAssistantProperties.Llm llm = properties.getLlm();
+		String baseUrl = llm.resolveBaseUrl();
+		String apiKey = llm.resolveApiKey();
+		String model = llm.resolveModel();
+		if (baseUrl == null || baseUrl.isBlank() || model == null || model.isBlank()) {
+			throw new IllegalStateException("LLM 配置不完整，请检查 ai.assistant.llm 的 source/base-url/model 配置");
+		}
+
+		RestTemplate restTemplate = restTemplateBuilder
+				.setConnectTimeout(Duration.ofMillis(llm.getTimeoutMs()))
+				.setReadTimeout(Duration.ofMillis(llm.getTimeoutMs()))
+				.build();
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		if (apiKey != null && !apiKey.isBlank()) {
+			headers.setBearerAuth(apiKey);
+		}
+
+		Map<String, Object> payload = new HashMap<>();
+		payload.put("model", model);
+		payload.put("temperature", temperature);
+		payload.put("max_tokens", maxTokens);
+		if ("local".equalsIgnoreCase(llm.getSource())) {
+			payload.put("chat_template_kwargs", Map.of("enable_thinking", false));
+		}
+		payload.put("messages", List.of(
+				Map.of("role", "system", "content", systemPrompt),
+				Map.of("role", "user", "content", userPrompt)));
+
+		String endpoint = baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
+		log.debug("[LLM][{}][input] endpoint={} model={} temperature={} maxTokens={} systemPrompt={} userPrompt={}",
+				stage, endpoint, model, temperature, maxTokens, safeLog(systemPrompt), safeLog(userPrompt));
+
+		ResponseEntity<String> response = restTemplate.postForEntity(endpoint, new HttpEntity<>(payload, headers),
+				String.class);
+		if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
+			log.debug("[LLM][{}][raw-response] status={} body=<empty>", stage, response.getStatusCode());
+			throw new IllegalStateException("LLM 调用失败，HTTP状态=" + response.getStatusCode());
+		}
+
+		log.debug("[LLM][{}][raw-response] status={} body={}", stage, response.getStatusCode(),
+				safeLog(response.getBody()));
+
+		JsonNode root = objectMapper.readTree(response.getBody());
+		JsonNode contentNode = root.path("choices").path(0).path("message").path("content");
+		if (contentNode.isMissingNode() || contentNode.asText().isBlank()) {
+			log.debug("[LLM][{}][parsed-content] <empty>", stage);
+			throw new IllegalStateException("LLM 返回内容为空，stage=" + stage);
+		}
+		return contentNode.asText();
 	}
 
 }

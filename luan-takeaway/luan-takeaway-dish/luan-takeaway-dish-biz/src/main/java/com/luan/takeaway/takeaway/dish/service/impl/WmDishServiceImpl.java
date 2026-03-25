@@ -462,18 +462,44 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 	@Override
 	public List<HybridDishCandidateDTO> searchHybridCandidates(HybridDishSearchRequest request) {
 		HybridDishSearchRequest search = request == null ? new HybridDishSearchRequest() : request;
-		int size = search.getLimit() == null || search.getLimit() <= 0 ? 120 : Math.min(search.getLimit(), 300);
 
-		List<WmDish> dishes = page(new Page<>(1, size), Wrappers.<WmDish>lambdaQuery()
-			.eq(search.getMerchantUserId() != null, WmDish::getMerchantUserId, search.getMerchantUserId())
-			.eq(WmDish::getSaleStatus, TakeawayStatusConstants.Dish.SALE_ON)
-			.le(search.getPriceMax() != null, WmDish::getPrice, search.getPriceMax())
-			.orderByDesc(WmDish::getCreateTime)).getRecords();
+		// 构建候选集
+		List<WmDish> dishes;
+		List<Long> semanticIds = search.getSemanticCandidateIds();
 
-		if (dishes.isEmpty()) {
-			return List.of();
+		if (semanticIds != null && !semanticIds.isEmpty()) {
+			// ========== 语义召回路径 ==========
+			// 当存在语义向量检索命中的菜品 ID 时，优先用 ID 拉取菜品
+			// 再做结构化过滤
+			dishes = listByMerchantAndIds(search.getMerchantUserId(), semanticIds);
+			if (dishes.isEmpty()) {
+				return List.of();
+			}
+
+			// 价格上限过滤（结构化硬约束）
+			if (search.getPriceMax() != null) {
+				dishes = dishes.stream()
+					.filter(d -> d.getPrice() == null || d.getPrice().compareTo(search.getPriceMax()) <= 0)
+					.collect(Collectors.toList());
+			}
+		}
+		else {
+			// ========== 结构化召回路径 ==========
+			int size = search.getLimit() == null || search.getLimit() <= 0
+					? 120 : Math.min(search.getLimit(), 300);
+
+			dishes = page(new Page<>(1, size), Wrappers.<WmDish>lambdaQuery()
+				.eq(search.getMerchantUserId() != null, WmDish::getMerchantUserId, search.getMerchantUserId())
+				.eq(WmDish::getSaleStatus, TakeawayStatusConstants.Dish.SALE_ON)
+				.le(search.getPriceMax() != null, WmDish::getPrice, search.getPriceMax())
+				.orderByDesc(WmDish::getCreateTime)).getRecords();
+
+			if (dishes.isEmpty()) {
+				return List.of();
+			}
 		}
 
+		// 加载知识文档
 		Map<Long, WmDishKnowledgeDoc> knowledgeMap = wmDishKnowledgeDocMapper
 			.selectList(Wrappers.<WmDishKnowledgeDoc>lambdaQuery()
 				.in(WmDishKnowledgeDoc::getDishId,
@@ -481,10 +507,13 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 			.stream()
 			.collect(Collectors.toMap(WmDishKnowledgeDoc::getDishId, v -> v, (a, b) -> a));
 
+		// 结构化过滤 + 组装
 		List<HybridDishCandidateDTO> result = new ArrayList<>();
 		for (WmDish dish : dishes) {
 			WmDishKnowledgeDoc knowledge = knowledgeMap.get(dish.getId());
-			if (knowledge != null && !matchStructuredFilter(search, knowledge)) {
+
+			// 结构化过滤：DishKnowledgeDoc 字段做硬约束过滤
+			if (!matchStructuredFilter(search, knowledge)) {
 				continue;
 			}
 
@@ -500,6 +529,7 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 			candidate.setKnowledgeDoc(knowledge == null ? null : toDoc(knowledge));
 			result.add(candidate);
 		}
+
 		return result;
 	}
 
@@ -534,6 +564,11 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 	}
 
 	private boolean matchStructuredFilter(HybridDishSearchRequest request, WmDishKnowledgeDoc doc) {
+		// 当没有知识文档时：如果有严格的结构化约束，则跳过；否则通过
+		if (doc == null) {
+			return !hasStrictStructuredConstraints(request);
+		}
+
 		if (request.getCategory() != null && !request.getCategory().equalsIgnoreCase(emptyToNull(doc.getCategory()))) {
 			return false;
 		}
@@ -694,6 +729,27 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 
 	private String emptyToNull(String value) {
 		return StringUtils.hasText(value) ? value.trim() : null;
+	}
+
+	/**
+	 * 判断请求是否有严格的结构化约束（需要知识文档才能判断的条件）。
+	 */
+	private boolean hasStrictStructuredConstraints(HybridDishSearchRequest request) {
+		return request.getSpicy() != null
+				|| request.getSpicyLevel() != null
+				|| request.getLightTaste() != null
+				|| request.getOily() != null
+				|| request.getSoupBased() != null
+				|| request.getVegetarian() != null
+				|| request.getCaloriesMin() != null
+				|| request.getCaloriesMax() != null
+				|| request.getProteinMin() != null
+				|| request.getProteinMax() != null
+				|| request.getFatMin() != null
+				|| request.getFatMax() != null
+				|| request.getCarbohydrateMin() != null
+				|| request.getCarbohydrateMax() != null
+				|| request.getPortionSize() != null;
 	}
 
 	private String buildDishItemCacheKey(Long merchantUserId, Long dishId) {
