@@ -23,6 +23,10 @@ import java.util.stream.Collectors;
 
 /**
  * 混合推荐服务（结构化 + 语义 + 业务信号）。
+ * 
+ * AI推荐核心类，走完整个流程
+ * 
+ * 
  * <p>
  * 跨模块交互说明：通过 {@link RemoteDishService#searchHybridCandidates} 从菜品模块召回候选，
  * 本模块完成融合打分后，再交给 LLM 做小范围重排，得到最终推荐结果。
@@ -72,6 +76,7 @@ public class HybridRecommendationService {
 		request.setMealTime(intent.getMealTime());
 		request.setPortionSize(intent.getPortionSize());
 
+		// package com.luan.takeaway.takeaway.dish.service.impl.WmDishServiceImpl.searchHybridCandidates;
 		R<List<HybridDishCandidateDTO>> response = remoteDishService.searchHybridCandidates(request);
 		List<HybridDishCandidateDTO> candidates = response == null || response.getData() == null ? List.of() : response.getData();
 

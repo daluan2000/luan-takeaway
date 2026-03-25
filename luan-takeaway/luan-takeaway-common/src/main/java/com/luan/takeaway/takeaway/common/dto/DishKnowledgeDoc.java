@@ -140,3 +140,10 @@ public class DishKnowledgeDoc {
      */
     private String recommendationReason;
 }
+
+
+
+
+
+
+

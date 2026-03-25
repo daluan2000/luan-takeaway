@@ -46,6 +46,7 @@ public class OrderAutoCancelMqConfig {
 	@Bean
 	public Queue orderAutoCancelDelayQueue() {
 		Map<String, Object> args = new HashMap<>(2);
+		// 该queue存放延迟消息，该queue不会被消费，消息过期后自动转到死信交换机，再由交换机路由到死信队列
 		// 指定死信交换机：消息过期后不丢弃，继续流转到自动取消消费链路。
 		args.put("x-dead-letter-exchange", OrderAutoCancelMqConstants.DEAD_LETTER_EXCHANGE);
 		// 指定死信路由键：确保死信能精确路由到自动取消队列。

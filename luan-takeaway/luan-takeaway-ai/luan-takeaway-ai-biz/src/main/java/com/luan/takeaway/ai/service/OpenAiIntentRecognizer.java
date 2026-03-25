@@ -261,6 +261,9 @@ public class OpenAiIntentRecognizer {
 		}
 	}
 
+
+	
+
 	/**
 	 * 封装 chat/completions 调用。
 	 * <p>

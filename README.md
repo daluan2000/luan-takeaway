@@ -396,18 +396,94 @@ Redis Lua脚本校验库存并扣减
 * * BusinessScore：基于库存与价格带（平价优先）加分。
 * LLM Selection and Generation：先取规则排序后的前置候选池（Top-N）交给 LLM 二次重排与理由改写，再返回最终推荐结果；若 LLM 失败则回退规则排序结果。
 
-## 8.1 查询处理流程
+与大模型的交互基于Langchain4j实现，一种可能的示例：
+```
+ChatLanguageModel model = OpenAiChatModel.builder()
+        .baseUrl(baseUrl)
+        .apiKey(apiKey)
+        .modelName(model)
+        .temperature(temperature)
+        .timeout(Duration.ofMillis(timeout))
+        .build();
+
+String response = model.generate(systemPrompt + "\n" + userPrompt);
+```
+
+目前实现采用本地部署vLLM，支持远程API。
+
+## 8.1 知识建模设计
+
+基础的菜品信息不足以提供LLM作出理解与推荐，因此为菜品构建了扩展知识库，定义为`DishKnowledgeDoc`实体。
+
+`DishKnowledgeDoc`实体包含三层信息：结构化字段，语义字段，描述字段（任意文字描述）。结构化层里放类别、辣度、营养、餐段、分量等明确边界字段，主要在 dish 服务侧参与硬过滤；语义层里放标签、适用场景、人群这类文本特征，主要参与相关度计算。
+
+
+描述层使用 `llmSummary`、`flavorDescription`、`recommendationReason` 等字段，最终用于推荐理由与展示文案生成。
+
+关键代码位于：`WmDishServiceImpl.java`、`HybridRecommendationService.java`、`DishKnowledgeGenerationService.java`。
+
+
+**知识数据自动生成与embedding**
+
+系统支持LLM基于菜品基础信息自动生成扩展知识数据，当前采用同步调用链路：dish 服务在需要时调用 AI 接口生成 `DishKnowledgeDoc`。
+关键代码位于：`WmDishServiceImpl.java`、`DishKnowledgeGenerationService.java`、`AiAssistantController.java`。
+
+embedding text由`DishKnowledgeDoc`语义化字段拼接而成：
+```
+类别:{category};
+标签:{tags};
+场景:{suitableScenes};
+人群:{suitablePeople};
+口味:{flavorDescription};
+```
+
+embedding text实例：
+```
+类别:川菜;
+标签:辣味,下饭;
+场景:聚餐;
+人群:重口味用户;
+口味:麻辣鲜香;
+```
+
+embedding由Ollama调用云端嵌入模型，基于embedding text生成，维度固定，一种可能的示例：
+```java
+import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
+import dev.langchain4j.data.embedding.Embedding;
+
+public class TestEmbedding {
+
+    public static void main(String[] args) {
+
+        EmbeddingModel model = OllamaEmbeddingModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("mxbai-embed-large") // 关键
+                .build();
+
+        Embedding embedding = model.embed("辣味, 下饭, 川菜").content();
+
+        float[] vector = embedding.vector();
+
+        System.out.println("维度: " + vector.length); // 1024
+    }
+}
+```
+
+生成的生成的 embedding存入redis，以提供基于相似度的向量检索。
+
+## 8.2 查询处理流程
 
 首先由大模型对用户自然语言进行统一语义解析：
 
-* 结构约束意图（可直接映射为筛选条件）
+* 结构约束意图（按照`DishKnowledgeDoc`的结构化字段，可直接映射为筛选条件）
 * * 定义：能够转成明确过滤条件的“硬约束”，用于菜品候选召回与结构化过滤。
 * * 对应字段：`category`、`priceMax`、`spicy`、`lightTaste`、`oily`、`vegetarian`、`caloriesMin/Max`、`proteinMin/Max`、`fatMin/Max`、`mealTime`、`portionSize` 等。
 * * 示例：
 * * * 用户输入：`晚饭想吃不辣的面，预算 30 以内`
 * * * 解析结果：`category=面`、`spicy=false`、`priceMax=30`、`mealTime=[dinner]`
 
-* 语义推荐意图（用于相关度打分与最终重排）
+* 语义推荐意图（按照`DishKnowledgeDoc`的语义化字段，用于相似度召回）
 * * 定义：不一定是硬过滤条件，但能表达偏好、场景和人群特征的“软约束”。
 * * 对应字段：`keywords`、`tags`、`suitableScenes`、`avoidScenes`、`suitablePeople`、`queryRewrite` 等。
 * * 示例：
@@ -415,31 +491,17 @@ Redis Lua脚本校验库存并扣减
 * * * 解析结果：`tags=[清淡, 易消化]`、`avoidScenes=[上火]` 或 `suitableScenes=[胃不舒服]`
 
 
-两类意图会在同一条混合链路中同时生效：结构约束负责“先筛准”，语义意图负责“再排优”，最后由 LLM 在候选池中二次重排并生成解释。
+先根据语义推荐意图拼接embedding text，然后嵌入为embedding，然后在redis中做向量搜索，选取top-100/200相似度菜品，然后做根据结构约束意图做结构化筛选。
 
-## 8.2 知识建模设计
-
-基础的菜品信息不足以提供LLM作出理解与推荐，因此为菜品构建了扩展知识库，定义为`DishKnowledgeDoc`实体。
-
-`DishKnowledgeDoc`实体包含三层信息：结构化字段，语义字段，描述字段（任意文字描述）。结构化层里放类别、辣度、营养、餐段、分量等明确边界字段，主要在 dish 服务侧参与硬过滤；语义层里放标签、适用场景、人群这类文本特征，主要参与相关度计算。
-
-描述层使用 `llmSummary`、`flavorDescription`、`recommendationReason` 等字段，最终用于推荐理由与展示文案生成。
-
-关键代码位于：`WmDishServiceImpl.java`、`HybridRecommendationService.java`、`DishKnowledgeGenerationService.java`。
-
-
-**知识数据自动生成**
-
-系统支持LLM基于菜品基础信息自动生成扩展知识数据，当前采用同步调用链路：dish 服务在需要时调用 AI 接口生成 `DishKnowledgeDoc`。
-
-关键代码位于：`WmDishServiceImpl.java`、`DishKnowledgeGenerationService.java`、`AiAssistantController.java`。
-
-
+然后对筛选结果做融合排序，选择排序Top-N作为候选池，最后由 LLM 在候选池中二次重排并生成解释。
 
 
 ## 8.3 融合排序机制
 
-根据结构化意图获取候选菜品后，做一轮规则融合排序。排序逻辑由三部分共同决定：结构命中（是否满足类目、预算、辣度、餐段等）、语义相关（用户意图词与知识文档词的重合程度）、业务可售（库存和价格带）。
+根据结构化意图获取候选菜品后，做一轮规则融合排序。排序逻辑由三部分共同决定：
+- 结构条件满足强度（预算、辣度、热量等），满足强度越高，得分越高，如对于价格，越便宜得分越高。
+- 语义相关（用户意图词与知识文档词的重合程度），命中词数越高，得分越高。
+- 业务可售（库存、时间等），如库存充裕得分高，
 
 算出融合得分后按降序排列，得到 Top-N 个候选最优菜品。关键代码位于：`HybridRecommendationService.java`。
 
