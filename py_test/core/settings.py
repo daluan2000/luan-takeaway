@@ -8,9 +8,16 @@ import yaml
 from dotenv import load_dotenv
 
 
+# 角色编码（对应 sys_role.role_code）
+ROLE_MERCHANT_CODE = "ROLE_MERCHANT"
+ROLE_CUSTOMER_CODE = "ROLE_CUSTOMER"
+ROLE_DELIVERY_CODE = "ROLE_DELIVERY"
+
+
 @dataclass(frozen=True)
 class ModeConfig:
     base_url: str
+    business_path: str  # 业务接口统一前缀，monolith=/admin, microservice=/takeaway
     login_path: str
     user_info_path: str
 
@@ -19,8 +26,6 @@ class ModeConfig:
 class TestSettings:
     mode: str
     mode_config: ModeConfig
-    username: str
-    password: str
     client_credential: str
     timeout: float
     password_encrypt_key: str
@@ -29,6 +34,10 @@ class TestSettings:
     @property
     def base_url(self) -> str:
         return self.mode_config.base_url
+
+    @property
+    def business_path(self) -> str:
+        return self.mode_config.business_path
 
     @property
     def login_path(self) -> str:
@@ -40,13 +49,8 @@ class TestSettings:
 
     @property
     def auth_ready(self) -> bool:
-        if not (self.username and self.password and self.client_credential):
+        if not self.client_credential:
             return False
-
-        placeholder_prefixes = ("YOUR_", "<")
-        if self.client_credential.upper().startswith(placeholder_prefixes):
-            return False
-
         return ":" in self.client_credential
 
 
@@ -85,11 +89,10 @@ def load_settings(mode_override: str | None = None) -> TestSettings:
         mode=mode,
         mode_config=ModeConfig(
             base_url=str(mode_cfg.get("base_url", "")).rstrip("/"),
+            business_path=str(mode_cfg.get("business_path", "")),
             login_path=str(mode_cfg.get("login_path", "")),
             user_info_path=str(mode_cfg.get("user_info_path", "")),
         ),
-        username=os.getenv("API_USERNAME", "test_admin").strip(),
-        password=os.getenv("API_PASSWORD", "123456").strip(),
         client_credential=os.getenv("API_CLIENT_CREDENTIAL", "").strip(),
         timeout=timeout,
         password_encrypt_key=password_encrypt_key,

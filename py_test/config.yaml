@@ -1,10 +1,12 @@
 modes:
   microservice:
     base_url: "http://127.0.0.1:9999"
+    business_path: "/takeaway"
     login_path: "/auth/oauth2/token"
     user_info_path: "/admin/user/info"
 
   monolith:
     base_url: "http://127.0.0.1:9999"
+    business_path: "/admin"
     login_path: "/admin/oauth2/token"
     user_info_path: "/admin/user/info"

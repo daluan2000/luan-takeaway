@@ -10,8 +10,8 @@ def main() -> int:
     parser.add_argument(
         "--mode",
         choices=["monolith", "microservice"],
-        default="microservice",
-        help="后端运行模式",
+        default=None,
+        help="后端运行模式（默认从 .env 的 API_MODE 读取）",
     )
     parser.add_argument(
         "pytest_args",
@@ -20,7 +20,11 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    cmd = [sys.executable, "-m", "pytest", "--mode", args.mode, *args.pytest_args]
+    cmd = [sys.executable, "-m", "pytest"]
+    cmd.append("--fresh-seed")  # 每次跑都重新注册用户、重新拿 token
+    if args.mode is not None:
+        cmd.extend(["--mode", args.mode])
+    cmd.extend(args.pytest_args)
     return subprocess.call(cmd)
 
 

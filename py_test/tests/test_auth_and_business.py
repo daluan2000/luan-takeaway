@@ -18,12 +18,15 @@ def _looks_unauthorized(body: dict) -> bool:
         return True
     return False
 
-def test_login_should_return_token(token_payload: dict) -> None:
-    assert token_payload.get("access_token"), f"登录响应缺少 access_token: {token_payload}"
+def test_login_should_return_token(merchant_clients: list[ApiClient]) -> None:
+    client = merchant_clients[0]
+    assert hasattr(client, "session") and client.session.headers.get("Authorization", "").startswith("Bearer "), \
+        "merchant_clients[0] 应已设置 Bearer token"
 
 
-def test_user_info_with_token(api_client: ApiClient, settings: TestSettings) -> None:
-    response = api_client.get(settings.user_info_path)
+def test_user_info_with_token(merchant_clients: list[ApiClient], settings: TestSettings) -> None:
+    client = merchant_clients[0]
+    response = client.get(settings.user_info_path)
     assert response.status_code == 200, response.text
 
     body = response.json()

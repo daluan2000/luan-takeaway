@@ -1,0 +1,2030 @@
+{
+  "merchants": [
+    {
+      "userId": "2038096820608401409",
+      "merchantId": "2038103009719189505",
+      "addressId": "2038103009601748994",
+      "username": "test_merchant_1",
+      "password": "123456",
+      "phone": "11380000002",
+      "merchantName": "新派甜品店"
+    },
+    {
+      "userId": "2038096821149466625",
+      "merchantId": "2038103009719189505",
+      "addressId": "2038103009610137604",
+      "username": "test_merchant_10",
+      "password": "123456",
+      "phone": "11380000039",
+      "merchantName": "秘制川菜馆"
+    },
+    {
+      "userId": "2038096820620984321",
+      "merchantId": "2038103009723383811",
+      "addressId": "2038103009614331905",
+      "username": "test_merchant_4",
+      "password": "123456",
+      "phone": "11380000014",
+      "merchantName": "特色湘菜馆"
+    },
+    {
+      "userId": "2038096820616790019",
+      "merchantId": "2038103009723383811",
+      "addressId": "2038103009610137605",
+      "username": "test_merchant_2",
+      "password": "123456",
+      "phone": "11380000005",
+      "merchantName": "正宗火锅店"
+    },
+    {
+      "userId": "2038096820616790018",
+      "merchantId": "2038103009719189505",
+      "addressId": "2038103009605943297",
+      "username": "test_merchant_7",
+      "password": "123456",
+      "phone": "11380000033",
+      "merchantName": "农家火锅店"
+    },
+    {
+      "userId": "2038096820612595713",
+      "merchantId": "2038103009723383811",
+      "addressId": "2038103009614331906",
+      "username": "test_merchant_8",
+      "password": "123456",
+      "phone": "11380000041",
+      "merchantName": "新派面馆"
+    },
+    {
+      "userId": "2038096820604207105",
+      "merchantId": "2038103009723383811",
+      "addressId": "2038103009610137602",
+      "username": "test_merchant_3",
+      "password": "123456",
+      "phone": "11380000012",
+      "merchantName": "老字号卤味店"
+    },
+    {
+      "userId": "2038096820612595714",
+      "merchantId": "2038103009723383811",
+      "addressId": "2038103009610137603",
+      "username": "test_merchant_5",
+      "password": "123456",
+      "phone": "11380000015",
+      "merchantName": "正宗川菜馆"
+    },
+    {
+      "userId": "2038096820616790017",
+      "merchantId": "2038103010235088898",
+      "addressId": "2038103010201534465",
+      "username": "test_merchant_6",
+      "password": "123456",
+      "phone": "11380000024",
+      "merchantName": "手作快餐店"
+    },
+    {
+      "userId": "2038096821145272321",
+      "merchantId": "2038103010235088898",
+      "addressId": "2038103010201534466",
+      "username": "test_merchant_9",
+      "password": "123456",
+      "phone": "11380000041",
+      "merchantName": "地道串串香"
+    }
+  ],
+  "customers": [
+    {
+      "userId": "2038096822713942018",
+      "customerId": null,
+      "addressId": "2038103012328046594",
+      "username": "test_customer_2",
+      "password": "123456",
+      "phone": "11380100002",
+      "realName": "王五"
+    },
+    {
+      "userId": "2038096822718136322",
+      "customerId": null,
+      "addressId": "2038103012328046597",
+      "username": "test_customer_6",
+      "password": "123456",
+      "phone": "11380100053",
+      "realName": "刘德明"
+    },
+    {
+      "userId": "2038096822713942017",
+      "customerId": null,
+      "addressId": "2038103012328046595",
+      "username": "test_customer_7",
+      "password": "123456",
+      "phone": "11380100069",
+      "realName": "周海洋"
+    },
+    {
+      "userId": "2038096822751690753",
+      "customerId": null,
+      "addressId": "2038103012328046596",
+      "username": "test_customer_3",
+      "password": "123456",
+      "phone": "11380100016",
+      "realName": "李建国"
+    },
+    {
+      "userId": "2038096822722330626",
+      "customerId": null,
+      "addressId": "2038103012332240897",
+      "username": "test_customer_4",
+      "password": "123456",
+      "phone": "11380100018",
+      "realName": "李建国"
+    },
+    {
+      "userId": "2038096822755885058",
+      "customerId": null,
+      "addressId": "2038103012332240898",
+      "username": "test_customer_5",
+      "password": "123456",
+      "phone": "11380100035",
+      "realName": "钱七"
+    },
+    {
+      "userId": "2038096823045292034",
+      "customerId": null,
+      "addressId": "2038103012344823809",
+      "username": "test_customer_10",
+      "password": "123456",
+      "phone": "11380100105",
+      "realName": "李建国"
+    },
+    {
+      "userId": "2038096822713942019",
+      "customerId": null,
+      "addressId": "2038103012336435202",
+      "username": "test_customer_1",
+      "password": "123456",
+      "phone": "11380100007",
+      "realName": "黄文龙"
+    },
+    {
+      "userId": "2038096823028514817",
+      "customerId": null,
+      "addressId": "2038103013129158659",
+      "username": "test_customer_12",
+      "password": "123456",
+      "phone": "11380100128",
+      "realName": "刘德明"
+    },
+    {
+      "userId": "2038096823028514818",
+      "customerId": null,
+      "addressId": "2038103013112381441",
+      "username": "test_customer_11",
+      "password": "123456",
+      "phone": "11380100113",
+      "realName": "赵六"
+    },
+    {
+      "userId": "2038096823070457857",
+      "customerId": null,
+      "addressId": "2038103013120770050",
+      "username": "test_customer_13",
+      "password": "123456",
+      "phone": "11380100141",
+      "realName": "赵六"
+    },
+    {
+      "userId": "2038096823053680641",
+      "customerId": null,
+      "addressId": "2038103013129158658",
+      "username": "test_customer_16",
+      "password": "123456",
+      "phone": "11380100159",
+      "realName": "李四"
+    },
+    {
+      "userId": "2038096823020126209",
+      "customerId": null,
+      "addressId": "2038103013133352962",
+      "username": "test_customer_9",
+      "password": "123456",
+      "phone": "11380100101",
+      "realName": "吴十"
+    },
+    {
+      "userId": "2038096822722330625",
+      "customerId": null,
+      "addressId": "2038103013133352961",
+      "username": "test_customer_8",
+      "password": "123456",
+      "phone": "11380100083",
+      "realName": "刘德明"
+    },
+    {
+      "userId": "2038096823049486338",
+      "customerId": null,
+      "addressId": "2038103013137547266",
+      "username": "test_customer_15",
+      "password": "123456",
+      "phone": "11380100158",
+      "realName": "周海洋"
+    },
+    {
+      "userId": "2038096823313727490",
+      "customerId": null,
+      "addressId": "2038103013129158660",
+      "username": "test_customer_18",
+      "password": "123456",
+      "phone": "11380100187",
+      "realName": "李四"
+    },
+    {
+      "userId": "2038096823284367362",
+      "customerId": null,
+      "addressId": "2038103013682806786",
+      "username": "test_customer_17",
+      "password": "123456",
+      "phone": "11380100162",
+      "realName": "王小芳"
+    },
+    {
+      "userId": "2038096823049486339",
+      "customerId": null,
+      "addressId": "2038103013695389698",
+      "username": "test_customer_14",
+      "password": "123456",
+      "phone": "11380100140",
+      "realName": "张丽华"
+    },
+    {
+      "userId": "2038096824655904769",
+      "customerId": null,
+      "addressId": "2038103013712166914",
+      "username": "test_customer_26",
+      "password": "123456",
+      "phone": "11380100289",
+      "realName": "杨晓红"
+    },
+    {
+      "userId": "2038096823309533185",
+      "customerId": null,
+      "addressId": "2038103013707972610",
+      "username": "test_customer_21",
+      "password": "123456",
+      "phone": "11380100216",
+      "realName": "马俊杰"
+    },
+    {
+      "userId": "2038096823301144578",
+      "customerId": null,
+      "addressId": "2038103013712166915",
+      "username": "test_customer_20",
+      "password": "123456",
+      "phone": "11380100203",
+      "realName": "林俊杰"
+    },
+    {
+      "userId": "2038096824601378817",
+      "customerId": null,
+      "addressId": "2038103013716361218",
+      "username": "test_customer_25",
+      "password": "123456",
+      "phone": "11380100266",
+      "realName": "张三"
+    },
+    {
+      "userId": "2038096823322116097",
+      "customerId": null,
+      "addressId": "2038103013707972612",
+      "username": "test_customer_19",
+      "password": "123456",
+      "phone": "11380100191",
+      "realName": "何文强"
+    },
+    {
+      "userId": "2038096823334699009",
+      "customerId": null,
+      "addressId": "2038103013728944129",
+      "username": "test_customer_22",
+      "password": "123456",
+      "phone": "11380100234",
+      "realName": "杨晓红"
+    },
+    {
+      "userId": "2038096824647516162",
+      "customerId": null,
+      "addressId": "2038103014228066306",
+      "username": "test_customer_31",
+      "password": "123456",
+      "phone": "11380100359",
+      "realName": "吴十"
+    },
+    {
+      "userId": "2038096824626544642",
+      "customerId": null,
+      "addressId": "2038103014228066308",
+      "username": "test_customer_27",
+      "password": "123456",
+      "phone": "11380100307",
+      "realName": "钱七"
+    },
+    {
+      "userId": "2038096823368253441",
+      "customerId": null,
+      "addressId": "2038103014202900483",
+      "username": "test_customer_23",
+      "password": "123456",
+      "phone": "11380100242",
+      "realName": "钱七"
+    },
+    {
+      "userId": "2038096824613961730",
+      "customerId": null,
+      "addressId": "2038103014228066307",
+      "username": "test_customer_28",
+      "password": "123456",
+      "phone": "11380100331",
+      "realName": "郑小明"
+    },
+    {
+      "userId": "2038096823338893314",
+      "customerId": null,
+      "addressId": "2038103014219677698",
+      "username": "test_customer_24",
+      "password": "123456",
+      "phone": "11380100257",
+      "realName": "周海洋"
+    },
+    {
+      "userId": "2038096824622350337",
+      "customerId": null,
+      "addressId": "2038103014249037825",
+      "username": "test_customer_32",
+      "password": "123456",
+      "phone": "11380100380",
+      "realName": "李建国"
+    },
+    {
+      "userId": "2038096824626544641",
+      "customerId": null,
+      "addressId": "2038103014236454914",
+      "username": "test_customer_29",
+      "password": "123456",
+      "phone": "11380100331",
+      "realName": "何文强"
+    },
+    {
+      "userId": "2038096824643321858",
+      "customerId": null,
+      "addressId": "2038103014240649217",
+      "username": "test_customer_30",
+      "password": "123456",
+      "phone": "11380100348",
+      "realName": "黄文龙"
+    },
+    {
+      "userId": "2038096824857231361",
+      "customerId": null,
+      "addressId": "2038103014899154947",
+      "username": "test_customer_33",
+      "password": "123456",
+      "phone": "11380100376",
+      "realName": "孙丽丽"
+    },
+    {
+      "userId": "2038096824882397186",
+      "customerId": null,
+      "addressId": "2038103014894960642",
+      "username": "test_customer_34",
+      "password": "123456",
+      "phone": "11380100376",
+      "realName": "李建国"
+    },
+    {
+      "userId": "2038096824924340227",
+      "customerId": null,
+      "addressId": "2038103014899154948",
+      "username": "test_customer_40",
+      "password": "123456",
+      "phone": "11380100436",
+      "realName": "王小芳"
+    },
+    {
+      "userId": "2038096824945311746",
+      "customerId": null,
+      "addressId": "2038103014894960643",
+      "username": "test_customer_37",
+      "password": "123456",
+      "phone": "11380100410",
+      "realName": "赵六"
+    },
+    {
+      "userId": "2038096824890785794",
+      "customerId": null,
+      "addressId": "2038103014899154946",
+      "username": "test_customer_36",
+      "password": "123456",
+      "phone": "11380100410",
+      "realName": "何文强"
+    },
+    {
+      "userId": "2038096824924340225",
+      "customerId": null,
+      "addressId": "2038103014903349249",
+      "username": "test_customer_35",
+      "password": "123456",
+      "phone": "11380100394",
+      "realName": "周海洋"
+    },
+    {
+      "userId": "2038096824936923138",
+      "customerId": null,
+      "addressId": "2038103014924320769",
+      "username": "test_customer_38",
+      "password": "123456",
+      "phone": "11380100420",
+      "realName": "马俊杰"
+    },
+    {
+      "userId": "2038096824928534529",
+      "customerId": null,
+      "addressId": "2038103014920126466",
+      "username": "test_customer_39",
+      "password": "123456",
+      "phone": "11380100437",
+      "realName": "钱七"
+    },
+    {
+      "userId": "2038096825146638338",
+      "customerId": null,
+      "addressId": "2038103015477968898",
+      "username": "test_customer_42",
+      "password": "123456",
+      "phone": "11380100458",
+      "realName": "何文强"
+    },
+    {
+      "userId": "2038096825125666817",
+      "customerId": null,
+      "addressId": "2038103015477968900",
+      "username": "test_customer_41",
+      "password": "123456",
+      "phone": "11380100447",
+      "realName": "胡志强"
+    },
+    {
+      "userId": "2038096825150832641",
+      "customerId": null,
+      "addressId": "2038103015490551810",
+      "username": "test_customer_43",
+      "password": "123456",
+      "phone": "11380100470",
+      "realName": "赵六"
+    },
+    {
+      "userId": "2038096825217941505",
+      "customerId": null,
+      "addressId": "2038103015498940419",
+      "username": "test_customer_48",
+      "password": "123456",
+      "phone": "11380100514",
+      "realName": "赵六"
+    },
+    {
+      "userId": "2038096825192775681",
+      "customerId": null,
+      "addressId": "2038103015498940418",
+      "username": "test_customer_45",
+      "password": "123456",
+      "phone": "11380100499",
+      "realName": "马俊杰"
+    },
+    {
+      "userId": "2038096825977110530",
+      "customerId": null,
+      "addressId": "2038103015494746116",
+      "username": "test_customer_49",
+      "password": "123456",
+      "phone": "11380100526",
+      "realName": "周九"
+    },
+    {
+      "userId": "2038096825205358595",
+      "customerId": null,
+      "addressId": "2038103015532494850",
+      "username": "test_customer_44",
+      "password": "123456",
+      "phone": "11380100479",
+      "realName": "王五"
+    },
+    {
+      "userId": "2038096825205358594",
+      "customerId": null,
+      "addressId": "2038103015540883459",
+      "username": "test_customer_46",
+      "password": "123456",
+      "phone": "11380100499",
+      "realName": "郑小明"
+    },
+    {
+      "userId": "2038096825222135809",
+      "customerId": null,
+      "addressId": "2038103015977091076",
+      "username": "test_customer_47",
+      "password": "123456",
+      "phone": "11380100514",
+      "realName": "郭小红"
+    },
+    {
+      "userId": "2038096825977110529",
+      "customerId": null,
+      "addressId": "2038103015977091075",
+      "username": "test_customer_50",
+      "password": "123456",
+      "phone": "11380100534",
+      "realName": "周九"
+    }
+  ],
+  "deliveries": [
+    {
+      "userId": "2038096827600306178",
+      "deliveryId": null,
+      "username": "test_delivery_1",
+      "password": "123456",
+      "phone": "11380200000",
+      "realName": "郭小红"
+    },
+    {
+      "userId": "2038096827612889091",
+      "deliveryId": null,
+      "username": "test_delivery_8",
+      "password": "123456",
+      "phone": "11380200081",
+      "realName": "马俊杰"
+    },
+    {
+      "userId": "2038096827600306179",
+      "deliveryId": null,
+      "username": "test_delivery_6",
+      "password": "123456",
+      "phone": "11380200066",
+      "realName": "张丽华"
+    },
+    {
+      "userId": "2038096827612889090",
+      "deliveryId": null,
+      "username": "test_delivery_7",
+      "password": "123456",
+      "phone": "11380200072",
+      "realName": "孙八"
+    },
+    {
+      "userId": "2038096827604500482",
+      "deliveryId": null,
+      "username": "test_delivery_5",
+      "password": "123456",
+      "phone": "11380200041",
+      "realName": "何文强"
+    },
+    {
+      "userId": "2038096827600306180",
+      "deliveryId": null,
+      "username": "test_delivery_2",
+      "password": "123456",
+      "phone": "11380200017",
+      "realName": "吴秀英"
+    },
+    {
+      "userId": "2038096827608694786",
+      "deliveryId": null,
+      "username": "test_delivery_3",
+      "password": "123456",
+      "phone": "11380200021",
+      "realName": "马俊杰"
+    },
+    {
+      "userId": "2038096827604500483",
+      "deliveryId": null,
+      "username": "test_delivery_4",
+      "password": "123456",
+      "phone": "11380200027",
+      "realName": "吴秀英"
+    },
+    {
+      "userId": "2038096827877130243",
+      "deliveryId": null,
+      "username": "test_delivery_9",
+      "password": "123456",
+      "phone": "11380200079",
+      "realName": "胡志强"
+    },
+    {
+      "userId": "2038096827877130242",
+      "deliveryId": null,
+      "username": "test_delivery_10",
+      "password": "123456",
+      "phone": "11380200085",
+      "realName": "赵六"
+    }
+  ],
+  "dishes": [
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "商家1 招牌特色菜",
+      "price": 38.0,
+      "stock": 147,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "商家1 老板推荐",
+      "price": 28.0,
+      "stock": 152,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "商家1 秘制私房菜",
+      "price": 48.0,
+      "stock": 144,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "商家1 今日特价",
+      "price": 18.0,
+      "stock": 73,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "红烧排骨",
+      "price": 26.89,
+      "stock": 364,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "商家1 时令鲜蔬",
+      "price": 22.0,
+      "stock": 52,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "微麻辣子鸡",
+      "price": 52.08,
+      "stock": 384,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "中辣炸酱面",
+      "price": 21.73,
+      "stock": 488,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "招牌臭豆腐",
+      "price": 68.26,
+      "stock": 94,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "宫保鸡丁",
+      "price": 43.98,
+      "stock": 470,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "精选剁椒蒸蛋",
+      "price": 52.19,
+      "stock": 393,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "经典凉皮",
+      "price": 21.4,
+      "stock": 490,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "招牌口味虾",
+      "price": 61.11,
+      "stock": 251,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "特辣菌汤锅底",
+      "price": 152.97,
+      "stock": 214,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "微麻干锅花菜",
+      "price": 36.79,
+      "stock": 213,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "精选芒果班戟",
+      "price": 30.67,
+      "stock": 274,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "微麻芒果汁",
+      "price": 24.51,
+      "stock": 166,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "豪华剁椒鱼头",
+      "price": 35.96,
+      "stock": 239,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "微辣臭豆腐",
+      "price": 37.68,
+      "stock": 330,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820608401409",
+      "dishName": "精选骨汤锅底",
+      "price": 128.77,
+      "stock": 374,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "商家2 老板推荐",
+      "price": 28.0,
+      "stock": 70,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "商家2 秘制私房菜",
+      "price": 48.0,
+      "stock": 156,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "商家2 招牌特色菜",
+      "price": 38.0,
+      "stock": 144,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "商家2 今日特价",
+      "price": 18.0,
+      "stock": 196,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "特辣口味虾",
+      "price": 42.86,
+      "stock": 446,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "招牌老婆饼",
+      "price": 10.5,
+      "stock": 359,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "微辣青椒炒肉",
+      "price": 34.23,
+      "stock": 421,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "商家2 时令鲜蔬",
+      "price": 22.0,
+      "stock": 174,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "豪华红豆沙",
+      "price": 31.23,
+      "stock": 412,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "招牌煲仔饭",
+      "price": 20.43,
+      "stock": 209,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "招牌剁椒鱼头",
+      "price": 47.02,
+      "stock": 179,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "中辣烧鹅",
+      "price": 39.77,
+      "stock": 492,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "微辣杨枝甘露",
+      "price": 6.72,
+      "stock": 94,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "微辣牛肉串",
+      "price": 16.78,
+      "stock": 395,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "杨森奶茶",
+      "price": 7.05,
+      "stock": 181,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "招牌水煮鱼",
+      "price": 84.17,
+      "stock": 366,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "微辣农家小炒肉",
+      "price": 74.94,
+      "stock": 170,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "豪华炒面",
+      "price": 25.22,
+      "stock": 95,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "烤茄子",
+      "price": 46.01,
+      "stock": 123,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "商家3 招牌特色菜",
+      "price": 38.0,
+      "stock": 81,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821149466625",
+      "dishName": "精选干煸四季豆",
+      "price": 41.46,
+      "stock": 290,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "商家3 老板推荐",
+      "price": 28.0,
+      "stock": 123,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "精选梅菜扣肉",
+      "price": 68.44,
+      "stock": 136,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "特辣老婆饼",
+      "price": 15.63,
+      "stock": 39,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "虾饺",
+      "price": 79.34,
+      "stock": 97,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "商家3 今日特价",
+      "price": 18.0,
+      "stock": 178,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "商家3 时令鲜蔬",
+      "price": 22.0,
+      "stock": 97,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "商家3 秘制私房菜",
+      "price": 48.0,
+      "stock": 126,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "微麻回锅肉",
+      "price": 65.89,
+      "stock": 132,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "中辣凉皮",
+      "price": 23.03,
+      "stock": 467,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "招牌土豆片",
+      "price": 125.23,
+      "stock": 384,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "特辣鸭血",
+      "price": 148.68,
+      "stock": 322,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "招牌烤韭菜",
+      "price": 20.84,
+      "stock": 169,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "微辣青椒炒肉",
+      "price": 41.01,
+      "stock": 447,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "招牌水煮牛肉",
+      "price": 52.19,
+      "stock": 411,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "微辣炒面",
+      "price": 14.93,
+      "stock": 38,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "豪华烧鹅",
+      "price": 25.77,
+      "stock": 425,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "经典金针菇",
+      "price": 56.89,
+      "stock": 389,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "豪华煲仔饭",
+      "price": 25.29,
+      "stock": 190,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820620984321",
+      "dishName": "豪华菠萝咕噜肉",
+      "price": 35.87,
+      "stock": 375,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "商家4 老板推荐",
+      "price": 28.0,
+      "stock": 163,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "商家4 今日特价",
+      "price": 18.0,
+      "stock": 155,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "商家4 秘制私房菜",
+      "price": 48.0,
+      "stock": 120,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "商家4 招牌特色菜",
+      "price": 38.0,
+      "stock": 145,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "特辣葡萄柚绿",
+      "price": 18.83,
+      "stock": 131,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "中辣西红柿炒蛋",
+      "price": 42.36,
+      "stock": 446,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "豪华辣子鸡",
+      "price": 83.04,
+      "stock": 402,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "商家4 时令鲜蔬",
+      "price": 22.0,
+      "stock": 122,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "微麻牛肉串",
+      "price": 13.74,
+      "stock": 235,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "特辣煲仔饭",
+      "price": 24.94,
+      "stock": 377,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "特辣白灼虾",
+      "price": 39.61,
+      "stock": 199,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "中辣芒果布丁",
+      "price": 17.55,
+      "stock": 412,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "招牌青椒炒肉",
+      "price": 41.25,
+      "stock": 353,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "微辣菠萝咕噜肉",
+      "price": 63.21,
+      "stock": 418,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "微麻白切鸡",
+      "price": 37.92,
+      "stock": 229,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "经典红烧排骨",
+      "price": 31.75,
+      "stock": 467,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "精选蒜泥白肉",
+      "price": 19.82,
+      "stock": 368,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "担担面",
+      "price": 21.5,
+      "stock": 78,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "经典干锅土豆片",
+      "price": 25.77,
+      "stock": 183,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790019",
+      "dishName": "招牌牛肉拉面",
+      "price": 34.32,
+      "stock": 275,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "商家5 老板推荐",
+      "price": 28.0,
+      "stock": 101,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "商家5 秘制私房菜",
+      "price": 48.0,
+      "stock": 123,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "商家5 招牌特色菜",
+      "price": 38.0,
+      "stock": 52,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "商家5 今日特价",
+      "price": 18.0,
+      "stock": 189,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "特辣烤韭菜",
+      "price": 34.1,
+      "stock": 390,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "招牌肠粉",
+      "price": 64.93,
+      "stock": 203,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "商家5 时令鲜蔬",
+      "price": 22.0,
+      "stock": 184,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "干锅茶树菇",
+      "price": 72.87,
+      "stock": 398,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "特辣老婆饼",
+      "price": 21.29,
+      "stock": 283,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "干锅土豆片",
+      "price": 23.49,
+      "stock": 54,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "招牌叉烧",
+      "price": 66.28,
+      "stock": 466,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "招牌油泼面",
+      "price": 18.83,
+      "stock": 93,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "招牌烧鹅",
+      "price": 122.52,
+      "stock": 418,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "精选芋泥波波",
+      "price": 14.27,
+      "stock": 296,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "特辣鼓汁蒸排骨",
+      "price": 36.58,
+      "stock": 348,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "经典口味虾",
+      "price": 17.1,
+      "stock": 139,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "经典阳春面",
+      "price": 21.84,
+      "stock": 298,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "招牌叉烧",
+      "price": 56.41,
+      "stock": 252,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "白灼虾",
+      "price": 76.69,
+      "stock": 179,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "商家6 招牌特色菜",
+      "price": 38.0,
+      "stock": 127,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "商家6 老板推荐",
+      "price": 28.0,
+      "stock": 101,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790018",
+      "dishName": "中辣土豆烧牛肉",
+      "price": 28.8,
+      "stock": 228,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "商家6 今日特价",
+      "price": 18.0,
+      "stock": 107,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "商家6 秘制私房菜",
+      "price": 48.0,
+      "stock": 126,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "经典肠粉",
+      "price": 54.06,
+      "stock": 303,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "商家6 时令鲜蔬",
+      "price": 22.0,
+      "stock": 154,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "微麻梅菜扣肉",
+      "price": 53.87,
+      "stock": 372,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "精选煲仔饭",
+      "price": 64.77,
+      "stock": 319,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "经典肠粉",
+      "price": 21.01,
+      "stock": 425,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "中辣椰汁西米露",
+      "price": 9.93,
+      "stock": 69,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "精选冻豆腐",
+      "price": 118.08,
+      "stock": 106,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "微麻杨森奶茶",
+      "price": 12.77,
+      "stock": 168,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "招牌五花肉",
+      "price": 14.38,
+      "stock": 184,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "精选金针菇",
+      "price": 150.05,
+      "stock": 260,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "招牌五花肉",
+      "price": 44.92,
+      "stock": 260,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "豪华椰汁西米露",
+      "price": 21.54,
+      "stock": 167,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "招牌叉烧",
+      "price": 112.4,
+      "stock": 322,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "经典煲仔饭",
+      "price": 91.29,
+      "stock": 190,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "土豆片",
+      "price": 151.37,
+      "stock": 382,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595713",
+      "dishName": "特辣柠檬水",
+      "price": 12.43,
+      "stock": 318,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "商家7 招牌特色菜",
+      "price": 38.0,
+      "stock": 141,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "商家7 老板推荐",
+      "price": 28.0,
+      "stock": 182,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "商家7 今日特价",
+      "price": 18.0,
+      "stock": 134,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "商家7 秘制私房菜",
+      "price": 48.0,
+      "stock": 160,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "精选盖浇饭",
+      "price": 19.73,
+      "stock": 72,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "精选杨枝甘露",
+      "price": 19.1,
+      "stock": 78,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "特辣回锅肉",
+      "price": 72.51,
+      "stock": 398,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "商家7 时令鲜蔬",
+      "price": 22.0,
+      "stock": 155,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "微辣珍珠奶茶",
+      "price": 23.67,
+      "stock": 68,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "招牌土豆烧牛肉",
+      "price": 33.31,
+      "stock": 227,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "经典毛血旺",
+      "price": 23.12,
+      "stock": 123,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "中辣烤韭菜",
+      "price": 6.79,
+      "stock": 210,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "精选煎饼果子",
+      "price": 8.02,
+      "stock": 387,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "微辣牛肉串",
+      "price": 31.04,
+      "stock": 298,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "biangbiang面",
+      "price": 12.46,
+      "stock": 198,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "微辣热干面",
+      "price": 33.17,
+      "stock": 200,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "中辣口水鸡",
+      "price": 19.18,
+      "stock": 424,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "精选农家小炒肉",
+      "price": 27.0,
+      "stock": 238,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "商家8 老板推荐",
+      "price": 28.0,
+      "stock": 164,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "豪华鱼香肉丝",
+      "price": 78.21,
+      "stock": 446,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "商家8 招牌特色菜",
+      "price": 38.0,
+      "stock": 95,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820604207105",
+      "dishName": "精选麻婆豆腐",
+      "price": 87.79,
+      "stock": 161,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "商家8 秘制私房菜",
+      "price": 48.0,
+      "stock": 70,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "商家8 今日特价",
+      "price": 18.0,
+      "stock": 166,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "招牌杨枝甘露",
+      "price": 29.9,
+      "stock": 381,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "特辣鼓汁蒸排骨",
+      "price": 84.69,
+      "stock": 214,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "商家8 时令鲜蔬",
+      "price": 22.0,
+      "stock": 108,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "中辣臭豆腐",
+      "price": 24.97,
+      "stock": 310,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "微辣煲仔饭",
+      "price": 26.95,
+      "stock": 288,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "招牌芒果班戟",
+      "price": 17.62,
+      "stock": 355,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "小炒肉",
+      "price": 49.5,
+      "stock": 327,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "经典芝士蛋糕",
+      "price": 29.32,
+      "stock": 467,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "中辣煎饼果子",
+      "price": 17.79,
+      "stock": 320,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "特辣烤猪蹄",
+      "price": 26.61,
+      "stock": 184,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "经典担担面",
+      "price": 12.77,
+      "stock": 382,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "特辣小炒肉",
+      "price": 69.38,
+      "stock": 475,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "豪华辣子鸡",
+      "price": 26.43,
+      "stock": 435,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "招牌煲仔饭",
+      "price": 17.24,
+      "stock": 488,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "商家9 招牌特色菜",
+      "price": 38.0,
+      "stock": 66,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "经典干煸四季豆",
+      "price": 37.43,
+      "stock": 340,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820612595714",
+      "dishName": "微麻红烧排骨",
+      "price": 30.63,
+      "stock": 346,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "商家9 时令鲜蔬",
+      "price": 22.0,
+      "stock": 107,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "商家9 老板推荐",
+      "price": 28.0,
+      "stock": 121,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "商家9 秘制私房菜",
+      "price": 48.0,
+      "stock": 89,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "豪华干锅茶树菇",
+      "price": 46.43,
+      "stock": 204,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "商家9 今日特价",
+      "price": 18.0,
+      "stock": 58,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "精选青椒炒肉",
+      "price": 27.0,
+      "stock": 450,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "微辣芒果汁",
+      "price": 23.83,
+      "stock": 246,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "中辣红烧排骨",
+      "price": 40.2,
+      "stock": 273,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "经典叉烧",
+      "price": 95.88,
+      "stock": 129,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "中辣煎饼果子",
+      "price": 10.16,
+      "stock": 333,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "口味虾",
+      "price": 56.53,
+      "stock": 136,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "豪华干锅茶树菇",
+      "price": 21.97,
+      "stock": 225,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "豪华炒饭",
+      "price": 11.34,
+      "stock": 76,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "特辣蒜泥白肉",
+      "price": 46.33,
+      "stock": 100,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "精选梅菜扣肉",
+      "price": 16.75,
+      "stock": 491,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "阳春面",
+      "price": 25.49,
+      "stock": 78,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "经典烤韭菜",
+      "price": 36.89,
+      "stock": 490,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "特辣蒜蓉西兰花",
+      "price": 43.83,
+      "stock": 274,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "商家10 老板推荐",
+      "price": 28.0,
+      "stock": 90,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "商家10 招牌特色菜",
+      "price": 38.0,
+      "stock": 174,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "商家10 今日特价",
+      "price": 18.0,
+      "stock": 117,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "招牌珍珠奶茶",
+      "price": 23.47,
+      "stock": 198,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "商家10 秘制私房菜",
+      "price": 48.0,
+      "stock": 104,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096820616790017",
+      "dishName": "豪华煎饼果子",
+      "price": 22.43,
+      "stock": 247,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "商家10 时令鲜蔬",
+      "price": 22.0,
+      "stock": 79,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "豪华阳春面",
+      "price": 13.57,
+      "stock": 153,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "经典椰汁西米露",
+      "price": 11.85,
+      "stock": 165,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "微麻肠粉",
+      "price": 52.42,
+      "stock": 236,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "微麻麻婆豆腐",
+      "price": 36.22,
+      "stock": 449,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "干锅土豆片",
+      "price": 68.13,
+      "stock": 361,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "菠萝咕噜肉",
+      "price": 24.75,
+      "stock": 50,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "微麻芝芝莓莓",
+      "price": 17.47,
+      "stock": 69,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "微辣白切鸡",
+      "price": 61.87,
+      "stock": 411,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "精选羊肉串",
+      "price": 13.21,
+      "stock": 417,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "微辣烤猪蹄",
+      "price": 28.48,
+      "stock": 462,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "微麻兰州拉面",
+      "price": 33.65,
+      "stock": 467,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "豪华小炒肉",
+      "price": 67.28,
+      "stock": 192,
+      "saleStatus": "0"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "招牌毛血旺",
+      "price": 80.78,
+      "stock": 456,
+      "saleStatus": "1"
+    },
+    {
+      "merchantUserId": "2038096821145272321",
+      "dishName": "特辣回锅肉",
+      "price": 64.29,
+      "stock": 459,
+      "saleStatus": "1"
+    }
+  ]
+}
