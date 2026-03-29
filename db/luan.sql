@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主机： luan-mysql:3306
--- 生成日期： 2026-03-15 10:16:24
+-- 生成日期： 2026-03-29 04:17:37
 -- 服务器版本： 8.0.32
 -- PHP 版本： 8.3.30
 
@@ -114,9 +114,9 @@ INSERT INTO `sys_dict_item` (`id`, `dict_id`, `item_value`, `label`, `dict_type`
 (57, 14, 'mobile', 'mobile', 'grant_types', '移动端登录', 5, 'admin', ' ', '2023-01-29 17:21:42', NULL, NULL, '0'),
 (58, 18, '0', '有效', 'lock_flag', '有效', 0, 'admin', ' ', '2023-02-01 16:56:00', NULL, NULL, '0'),
 (59, 18, '9', '禁用', 'lock_flag', '禁用', 1, 'admin', ' ', '2023-02-01 16:56:09', NULL, NULL, '0'),
-(86, 27, 'mysql', 'mysql', 'ds_type', 'mysql', 0, 'admin', ' ', '2023-03-12 09:58:11', NULL, NULL, '0'),
 (63, 20, 'false', '否', 'common_status', '否', 1, 'admin', ' ', '2023-02-09 11:02:39', NULL, NULL, '0'),
 (64, 20, 'true', '是', 'common_status', '是', 2, 'admin', ' ', '2023-02-09 11:02:52', NULL, NULL, '0'),
+(86, 27, 'mysql', 'mysql', 'ds_type', 'mysql', 0, 'admin', ' ', '2023-03-12 09:58:11', NULL, NULL, '0'),
 (1001, 101, '1', '营业', 'takeaway_merchant_business_status', '商家正在营业', 1, 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', NULL, '0'),
 (1002, 101, '0', '休息', 'takeaway_merchant_business_status', '商家暂停营业', 2, 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', NULL, '0'),
 (1003, 102, '0', '待审', 'takeaway_merchant_audit_status', '待审核', 1, 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', NULL, '0'),
@@ -156,11 +156,6 @@ CREATE TABLE `sys_file` (
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
   `del_flag` char(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT '0' COMMENT '删除标志'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='文件管理表';
-
---
--- 转存表中的数据 `sys_file`
---
-
 
 -- --------------------------------------------------------
 
@@ -415,56 +410,11 @@ CREATE TABLE `sys_role_menu` (
 --
 
 INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
-(3000000000000000101, 2029765248645763074),
-(3000000000000000101, 2029765757146402817),
-(3000000000000000101, 2029766347125592065),
-(3000000000000000101, 2029766829457969154),
-(3000000000000000101, 2029882213729284097),
-(3000000000000000103, 2029769996618862594),
-(3000000000000000103, 2029770150633705474),
-(3000000000000000103, 2029770661516709889),
-(3000000000000000103, 2029882213729284097),
-(3000000000000000103, 2030513825756209153),
-(3000000000000000101, 2031100000000001001),
-(3000000000000000101, 2031100000000001002),
-(3000000000000000101, 2031100000000001003),
-(3000000000000000101, 2031100000000001004),
-(3000000000000000101, 2031100000000001005),
-(3000000000000000101, 2031100000000001006),
-(3000000000000000101, 2031100000000001007),
-(3000000000000000101, 2031100000000001008),
-(3000000000000000101, 2031100000000001009),
-(3000000000000000101, 2031100000000001010),
-(3000000000000000101, 2031100000000001011),
-(3000000000000000101, 2031100000000001012),
-(3000000000000000103, 2031100000000001001),
-(3000000000000000103, 2031100000000001002),
-(3000000000000000103, 2031100000000001003),
-(3000000000000000103, 2031100000000001004),
-(3000000000000000103, 2031100000000001018),
-(3000000000000000103, 2031100000000001019),
-(3000000000000000103, 2031100000000001020),
-(3000000000000000103, 2031100000000001021),
-(3000000000000000102, 2029882213729284097),
-(3000000000000000102, 2031100000000001001),
-(3000000000000000102, 2031100000000001002),
-(3000000000000000102, 2031100000000001003),
-(3000000000000000102, 2031100000000001004),
-(3000000000000000102, 2029767283445239809),
-(3000000000000000102, 2029767684160655361),
-(3000000000000000102, 2031100000000001013),
-(3000000000000000102, 2031100000000001014),
-(3000000000000000102, 2032730947093729281),
-(3000000000000000102, 2029768804014657538),
-(3000000000000000102, 2031100000000001015),
-(3000000000000000102, 2029768204761862146),
-(3000000000000000102, 2031100000000001016),
-(3000000000000000102, 2031100000000001017),
 (1, 1000),
 (1, 1100),
-(1, 1103),
-(1, 1102),
 (1, 1101),
+(1, 1102),
+(1, 1103),
 (1, 1104),
 (1, 1200),
 (1, 1201),
@@ -480,23 +430,68 @@ INSERT INTO `sys_role_menu` (`role_id`, `menu_id`) VALUES
 (1, 2100),
 (1, 2101),
 (1, 2102),
-(1, 2906),
-(1, 2907),
 (1, 2200),
-(1, 2202),
 (1, 2201),
+(1, 2202),
 (1, 2203),
 (1, 2210),
 (1, 2211),
-(1, 2213),
 (1, 2212),
+(1, 2213),
 (1, 2600),
 (1, 2601),
+(1, 2906),
+(1, 2907),
 (2, 2029882213729284097),
 (2, 2031100000000001001),
 (2, 2031100000000001002),
 (2, 2031100000000001003),
-(2, 2031100000000001004);
+(2, 2031100000000001004),
+(3000000000000000101, 2029765248645763074),
+(3000000000000000101, 2029765757146402817),
+(3000000000000000101, 2029766347125592065),
+(3000000000000000101, 2029766829457969154),
+(3000000000000000101, 2029882213729284097),
+(3000000000000000101, 2031100000000001001),
+(3000000000000000101, 2031100000000001002),
+(3000000000000000101, 2031100000000001003),
+(3000000000000000101, 2031100000000001004),
+(3000000000000000101, 2031100000000001005),
+(3000000000000000101, 2031100000000001006),
+(3000000000000000101, 2031100000000001007),
+(3000000000000000101, 2031100000000001008),
+(3000000000000000101, 2031100000000001009),
+(3000000000000000101, 2031100000000001010),
+(3000000000000000101, 2031100000000001011),
+(3000000000000000101, 2031100000000001012),
+(3000000000000000102, 2029767283445239809),
+(3000000000000000102, 2029767684160655361),
+(3000000000000000102, 2029768204761862146),
+(3000000000000000102, 2029768804014657538),
+(3000000000000000102, 2029882213729284097),
+(3000000000000000102, 2031100000000001001),
+(3000000000000000102, 2031100000000001002),
+(3000000000000000102, 2031100000000001003),
+(3000000000000000102, 2031100000000001004),
+(3000000000000000102, 2031100000000001013),
+(3000000000000000102, 2031100000000001014),
+(3000000000000000102, 2031100000000001015),
+(3000000000000000102, 2031100000000001016),
+(3000000000000000102, 2031100000000001017),
+(3000000000000000102, 2032730947093729281),
+(3000000000000000103, 2029769996618862594),
+(3000000000000000103, 2029770150633705474),
+(3000000000000000103, 2029770661516709889),
+(3000000000000000103, 2029882213729284097),
+(3000000000000000103, 2030513825756209153),
+(3000000000000000103, 2031100000000001001),
+(3000000000000000103, 2031100000000001002),
+(3000000000000000103, 2031100000000001003),
+(3000000000000000103, 2031100000000001004),
+(3000000000000000103, 2031100000000001018),
+(3000000000000000103, 2031100000000001019),
+(3000000000000000103, 2031100000000001020),
+(3000000000000000103, 2031100000000001021);
 
 -- --------------------------------------------------------
 
@@ -534,6 +529,7 @@ CREATE TABLE `sys_user` (
 
 INSERT INTO `sys_user` (`user_id`, `username`, `password`, `salt`, `phone`, `avatar`, `nickname`, `name`, `email`, `create_by`, `update_by`, `create_time`, `update_time`, `lock_flag`, `del_flag`, `wx_openid`, `mini_openid`, `qq_openid`, `gitee_login`, `osc_id`) VALUES
 (1, 'admin', '$2a$10$c/Ae0pRjJtMZg3BnvVpO.eIK6WYWVbKTzqgdy3afR7w.vd.xi3Mgy', '', '17034642999', '/api/admin/sys-file/local/a3c603a1edac40c3a048d93bc57fdd71.jpg', '管理员', '管理员', 'pig4cloud1@qq.com', ' ', 'admin', '2018-04-20 07:15:18', '2026-03-15 17:33:31', '0', '0', NULL, 'oBxPy5E-v82xWGsfzZVzkD3wEX64', NULL, 'log4j', NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -584,11 +580,6 @@ CREATE TABLE `wm_address` (
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-地址表';
 
---
--- 转存表中的数据 `wm_address`
---
-
-
 -- --------------------------------------------------------
 
 --
@@ -607,11 +598,6 @@ CREATE TABLE `wm_customer_user_ext` (
   `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-客户用户扩展表';
-
---
--- 转存表中的数据 `wm_customer_user_ext`
---
-
 
 -- --------------------------------------------------------
 
@@ -659,10 +645,6 @@ CREATE TABLE `wm_delivery_user_ext` (
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-配送员用户扩展表';
 
---
--- 转存表中的数据 `wm_delivery_user_ext`
---
-
 -- --------------------------------------------------------
 
 --
@@ -685,11 +667,6 @@ CREATE TABLE `wm_dish` (
   `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-菜品表';
-
---
--- 转存表中的数据 `wm_dish`
---
-
 
 -- --------------------------------------------------------
 
@@ -729,10 +706,6 @@ CREATE TABLE `wm_dish_knowledge_doc` (
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-菜品知识文档';
 
---
--- 转存表中的数据 `wm_dish_knowledge_doc`
---
-
 -- --------------------------------------------------------
 
 --
@@ -754,11 +727,6 @@ CREATE TABLE `wm_merchant_user_ext` (
   `update_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `del_flag` char(1) DEFAULT '0' COMMENT '删除标记 0未删除 1已删除'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='外卖平台-商家用户扩展表';
-
---
--- 转存表中的数据 `wm_merchant_user_ext`
---
-
 
 -- --------------------------------------------------------
 
@@ -841,6 +809,140 @@ CREATE TABLE `wm_order_pay` (
 --
 
 --
+-- 表的索引 `sys_dict`
+--
+ALTER TABLE `sys_dict`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_sys_dict_type` (`dict_type`),
+  ADD KEY `idx_sys_dict_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_dict_item`
+--
+ALTER TABLE `sys_dict_item`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sys_dict_item_dict_id` (`dict_id`),
+  ADD KEY `idx_sys_dict_item_dict_type` (`dict_type`),
+  ADD KEY `idx_sys_dict_item_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_file`
+--
+ALTER TABLE `sys_file`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sys_file_create_by` (`create_by`),
+  ADD KEY `idx_sys_file_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_log`
+--
+ALTER TABLE `sys_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_sys_log_create_by` (`create_by`),
+  ADD KEY `idx_sys_log_create_time` (`create_time`),
+  ADD KEY `idx_sys_log_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_menu`
+--
+ALTER TABLE `sys_menu`
+  ADD PRIMARY KEY (`menu_id`),
+  ADD KEY `idx_sys_menu_parent_id` (`parent_id`),
+  ADD KEY `idx_sys_menu_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_oauth_client_details`
+--
+ALTER TABLE `sys_oauth_client_details`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_sys_oauth_client_id` (`client_id`),
+  ADD KEY `idx_sys_oauth_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_public_param`
+--
+ALTER TABLE `sys_public_param`
+  ADD PRIMARY KEY (`public_id`),
+  ADD UNIQUE KEY `uk_sys_public_param_key` (`public_key`),
+  ADD KEY `idx_sys_public_param_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_role`
+--
+ALTER TABLE `sys_role`
+  ADD PRIMARY KEY (`role_id`),
+  ADD UNIQUE KEY `uk_sys_role_code` (`role_code`),
+  ADD KEY `idx_sys_role_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_role_menu`
+--
+ALTER TABLE `sys_role_menu`
+  ADD PRIMARY KEY (`role_id`,`menu_id`),
+  ADD KEY `idx_sys_role_menu_role_id` (`role_id`);
+
+--
+-- 表的索引 `sys_user`
+--
+ALTER TABLE `sys_user`
+  ADD PRIMARY KEY (`user_id`),
+  ADD UNIQUE KEY `uk_sys_user_username` (`username`),
+  ADD UNIQUE KEY `uk_sys_user_phone` (`phone`),
+  ADD KEY `idx_sys_user_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `sys_user_role`
+--
+ALTER TABLE `sys_user_role`
+  ADD PRIMARY KEY (`user_id`,`role_id`),
+  ADD KEY `idx_sys_user_role_user_id` (`user_id`),
+  ADD KEY `idx_sys_user_role_role_id` (`role_id`);
+
+--
+-- 表的索引 `wm_address`
+--
+ALTER TABLE `wm_address`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_wm_address_user_id` (`user_id`),
+  ADD KEY `idx_wm_address_del_flag` (`del_flag`),
+  ADD KEY `idx_wm_address_create_time` (`create_time`);
+
+--
+-- 表的索引 `wm_customer_user_ext`
+--
+ALTER TABLE `wm_customer_user_ext`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_wm_customer_user_ext_user_id` (`user_id`),
+  ADD KEY `idx_wm_customer_user_ext_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `wm_delivery_order`
+--
+ALTER TABLE `wm_delivery_order`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_wm_delivery_order_no` (`order_no`),
+  ADD KEY `idx_wm_delivery_order_order_id` (`order_id`),
+  ADD KEY `idx_wm_delivery_order_delivery_user_id` (`delivery_user_id`),
+  ADD KEY `idx_wm_delivery_order_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `wm_delivery_user_ext`
+--
+ALTER TABLE `wm_delivery_user_ext`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_wm_delivery_user_ext_user_id` (`user_id`),
+  ADD KEY `idx_wm_delivery_user_ext_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `wm_dish`
+--
+ALTER TABLE `wm_dish`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_wm_dish_merchant_user_id` (`merchant_user_id`),
+  ADD KEY `idx_wm_dish_sale_status` (`sale_status`),
+  ADD KEY `idx_wm_dish_del_flag` (`del_flag`);
+
+--
 -- 表的索引 `wm_dish_knowledge_doc`
 --
 ALTER TABLE `wm_dish_knowledge_doc`
@@ -849,6 +951,45 @@ ALTER TABLE `wm_dish_knowledge_doc`
   ADD KEY `idx_wm_dish_knowledge_doc_category` (`category`),
   ADD KEY `idx_wm_dish_knowledge_doc_spicy` (`spicy`),
   ADD KEY `idx_wm_dish_knowledge_doc_calories` (`calories`);
+
+--
+-- 表的索引 `wm_merchant_user_ext`
+--
+ALTER TABLE `wm_merchant_user_ext`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_wm_merchant_user_ext_user_id` (`user_id`),
+  ADD KEY `idx_wm_merchant_user_ext_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `wm_order`
+--
+ALTER TABLE `wm_order`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uk_wm_order_no` (`order_no`),
+  ADD KEY `idx_wm_order_customer_user_id` (`customer_user_id`),
+  ADD KEY `idx_wm_order_merchant_user_id` (`merchant_user_id`),
+  ADD KEY `idx_wm_order_delivery_user_id` (`delivery_user_id`),
+  ADD KEY `idx_wm_order_status` (`order_status`),
+  ADD KEY `idx_wm_order_create_time` (`create_time`),
+  ADD KEY `idx_wm_order_del_flag` (`del_flag`);
+
+--
+-- 表的索引 `wm_order_item`
+--
+ALTER TABLE `wm_order_item`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_wm_order_item_order_id` (`order_id`),
+  ADD KEY `idx_wm_order_item_dish_id` (`dish_id`);
+
+--
+-- 表的索引 `wm_order_pay`
+--
+ALTER TABLE `wm_order_pay`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_wm_order_pay_order_id` (`order_id`),
+  ADD KEY `idx_wm_order_pay_pay_no` (`pay_no`),
+  ADD KEY `idx_wm_order_pay_status` (`pay_status`),
+  ADD KEY `idx_wm_order_pay_pay_time` (`pay_time`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
