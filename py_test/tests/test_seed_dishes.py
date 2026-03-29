@@ -1,22 +1,24 @@
 """
 批量创建种子菜品数据。
 
-依赖 seed_merchants fixture，会为每个商家创建 20 道菜品。
+依赖 seed_merchants fixture，会为每个商家创建菜品。
 用法：
     python run_tests.py --mode microservice -k seed_dish -v
     python run_tests.py --mode microservice -k seed_dish --fresh-seed  # 强制重建
-    SEED_DISHES_PER_MERCHANT=30 pytest --mode microservice -k seed_dish -v  # 每个商家30道菜
+
+环境变量（必需）：
+    SEED_DISHES_PER_MERCHANT 每个商家的菜品数量
+    SEED_MERCHANT_COUNT      商家数量
 """
 from __future__ import annotations
-
-import os
 
 import pytest
 
 
-def test_seed_dishes_count(seed_dishes: list[dict]) -> None:
-    """验证菜品数量：每个商家 20 道，默认 10 个商家，共 200 道。"""
-    expected_total = int(os.getenv("SEED_DISHES_PER_MERCHANT", "20")) * int(os.getenv("SEED_MERCHANT_COUNT", "10"))
+def test_seed_dishes_count(seed_dishes: list[dict], pytestconfig: pytest.Config) -> None:
+    """验证菜品数量。"""
+    expected_total = pytestconfig.seed_dishes_per_merchant * pytestconfig.seed_merchant_count
+    assert len(seed_dishes) >= expected_total, f"期望至少 {expected_total} 道菜品，实际 {len(seed_dishes)}"
     assert len(seed_dishes) >= expected_total, f"期望至少 {expected_total} 道菜品，实际 {len(seed_dishes)}"
 
 

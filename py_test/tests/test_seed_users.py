@@ -7,28 +7,24 @@
     python run_tests.py --mode microservice -k seed_user -- \
         --lon-min 113.0 --lon-max 114.5 --lat-min 22.4 --lat-max 23.5  # 指定经纬度范围
 
-环境变量（可选）：
-    SEED_MERCHANT_COUNT  商家数量（默认 10）
-    SEED_CUSTOMER_COUNT 客户数量（默认 50）
-    SEED_DELIVERY_COUNT 骑手数量（默认 10）
-    SEED_LON_MIN / SEED_LON_MAX / SEED_LAT_MIN / SEED_LAT_MAX  经纬度范围
+环境变量（必需）：
+    SEED_MERCHANT_COUNT  商家数量
+    SEED_CUSTOMER_COUNT 客户数量
+    SEED_DELIVERY_COUNT 骑手数量
+    SEED_LON_MIN / SEED_LON_MAX / SEED_LAT_MIN / SEED_LAT_MAX  经纬度范围（可选）
 """
 from __future__ import annotations
 
-import os
-
 import pytest
-
-from data.users import DEFAULT_PASSWORD, generate_merchants, generate_customers, generate_deliveries
 
 
 # ---------------------------------------------------------------------------
 # 商家测试
 # ---------------------------------------------------------------------------
 
-def test_seed_merchants_10(seed_merchants: list[dict]) -> None:
-    """注册 10 个商家 fixture，自动生成地址和商家扩展表。"""
-    count = int(os.getenv("SEED_MERCHANT_COUNT", "10"))
+def test_seed_merchants_10(seed_merchants: list[dict], pytestconfig: pytest.Config) -> None:
+    """注册商家 fixture，自动生成地址和商家扩展表。"""
+    count = pytestconfig.seed_merchant_count
     assert len(seed_merchants) >= count, f"期望至少 {count} 个商家，实际 {len(seed_merchants)}"
 
     for m in seed_merchants[:count]:
@@ -51,9 +47,10 @@ def test_seed_merchant_detail_addresses(seed_merchants: list[dict]) -> None:
 # 客户测试
 # ---------------------------------------------------------------------------
 
-def test_seed_customers_50(seed_customers: list[dict]) -> None:
-    """注册 50 个客户 fixture，自动生成地址和客户扩展表。"""
-    count = int(os.getenv("SEED_CUSTOMER_COUNT", "50"))
+def test_seed_customers_50(seed_customers: list[dict], pytestconfig: pytest.Config) -> None:
+    """注册客户 fixture，自动生成地址和客户扩展表。"""
+    count = pytestconfig.seed_customer_count
+    assert len(seed_customers) >= count, f"期望至少 {count} 个客户，实际 {len(seed_customers)}"
     assert len(seed_customers) >= count, f"期望至少 {count} 个客户，实际 {len(seed_customers)}"
 
     for c in seed_customers[:count]:
@@ -76,9 +73,10 @@ def test_seed_customer_detail_addresses(seed_customers: list[dict]) -> None:
 # 骑手测试
 # ---------------------------------------------------------------------------
 
-def test_seed_deliveries_10(seed_deliveries: list[dict]) -> None:
-    """注册 10 个骑手 fixture，自动创建骑手扩展表。"""
-    count = int(os.getenv("SEED_DELIVERY_COUNT", "10"))
+def test_seed_deliveries_10(seed_deliveries: list[dict], pytestconfig: pytest.Config) -> None:
+    """注册骑手 fixture，自动创建骑手扩展表。"""
+    count = pytestconfig.seed_delivery_count
+    assert len(seed_deliveries) >= count, f"期望至少 {count} 个骑手，实际 {len(seed_deliveries)}"
     assert len(seed_deliveries) >= count, f"期望至少 {count} 个骑手，实际 {len(seed_deliveries)}"
 
     for d in seed_deliveries[:count]:

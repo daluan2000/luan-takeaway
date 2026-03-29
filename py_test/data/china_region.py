@@ -66,12 +66,12 @@ _PROVINCE_BOUNDS: dict[str, list[float]] = {
     "澳门特别行政区": [113.5, 113.6, 22.1, 22.3],
 }
 
-# 直辖市经纬度范围（key = "省|省"，city == province）
+# 直辖市经纬度范围（key = "省|市辖区"，直辖市 city 固定为"市辖区"）
 _MUNICIPALITY_BOUNDS: dict[str, list[float]] = {
-    "北京市|北京市": [116.0, 116.7, 39.7, 40.2],
-    "天津市|天津市": [116.6, 118.2, 38.5, 40.3],
-    "上海市|上海市": [120.8, 122.0, 30.7, 31.5],
-    "重庆市|重庆市": [105.8, 107.0, 29.0, 30.0],
+    "北京市|市辖区": [116.0, 116.7, 39.7, 40.2],
+    "天津市|市辖区": [116.6, 118.2, 38.5, 40.3],
+    "上海市|市辖区": [120.8, 122.0, 30.7, 31.5],
+    "重庆市|市辖区": [105.8, 107.0, 29.0, 30.0],
 }
 
 # 市一级更精细的范围（key 格式 "省|市"，若无精确数据则回退省级范围）
@@ -184,18 +184,27 @@ class ChinaRegion:
         province = province_node["label"]
 
         # 直辖市（北京/天津/上海/重庆）：区直接在省下面，市辖区挂在省下
+        # 标准格式：province=北京市, city=市辖区, district=XX区
         if province in _MUNICIPALITIES:
             districts = province_node.get("children") or []
-            # districts[0] = {"label": "市辖区", "children": [{"label": "东城区"}, ...]}
-            if districts and districts[0].get("children"):
-                district = random.choice(districts[0]["children"])["label"]
-            elif districts:
-                district = districts[0]["label"]
+            # 直辖市结构：{"label": "市辖区", "children": [{"label": "东城区"}, ...]}
+            # 或者直接是区列表
+            if districts and len(districts) > 0:
+                first_child = districts[0]
+                if isinstance(first_child, dict):
+                    # 格式1：市辖区下有区
+                    if first_child.get("children"):
+                        district = random.choice(first_child["children"])["label"]
+                    else:
+                        district = first_child.get("label", "")
+                else:
+                    # 格式2：直接是区列表
+                    district = first_child if first_child else ""
             else:
                 district = ""
             return ChinaRegion(
                 province=province,
-                city=province,  # 直辖市：city == province
+                city="市辖区",  # 直辖市标准格式：市辖区
                 district=district,
                 lon_min=lon_min,
                 lon_max=lon_max,
@@ -234,14 +243,21 @@ class ChinaRegion:
         if province_node is None:
             raise ValueError(f"未找到省份: {province}")
 
-        # 直辖市：区直接在省下，city == province
+        # 直辖市：区直接在省下，标准格式 city=市辖区
         if province in _MUNICIPALITIES:
             districts = province_node.get("children") or []
-            if districts and districts[0].get("children"):
-                district = random.choice(districts[0]["children"])["label"]
+            if districts and len(districts) > 0:
+                first_child = districts[0]
+                if isinstance(first_child, dict):
+                    if first_child.get("children"):
+                        district = random.choice(first_child["children"])["label"]
+                    else:
+                        district = first_child.get("label", "")
+                else:
+                    district = first_child if first_child else ""
             else:
-                district = random.choice(districts)["label"] if districts else ""
-            return ChinaRegion(province=province, city=province, district=district)
+                district = ""
+            return ChinaRegion(province=province, city="市辖区", district=district)
 
         cities = province_node.get("children") or []
         if not cities:
@@ -272,18 +288,23 @@ class ChinaRegion:
         if province_node is None:
             raise ValueError(f"未找到省份: {province}")
 
-        # 直辖市：区直接在省下，无城市层，city == province
+        # 直辖市：区直接在省下，标准格式 city=市辖区
         if province in _MUNICIPALITIES:
             districts = province_node.get("children") or []
-            if districts and districts[0].get("children"):
-                district = random.choice(districts[0]["children"])["label"]
-            elif districts:
-                district = districts[0]["label"]
+            if districts and len(districts) > 0:
+                first_child = districts[0]
+                if isinstance(first_child, dict):
+                    if first_child.get("children"):
+                        district = random.choice(first_child["children"])["label"]
+                    else:
+                        district = first_child.get("label", "")
+                else:
+                    district = first_child if first_child else ""
             else:
                 district = ""
             return ChinaRegion(
                 province=province,
-                city=province,
+                city="市辖区",
                 district=district,
                 lon_min=lon_min,
                 lon_max=lon_max,
@@ -345,10 +366,12 @@ class ChinaRegion:
         规则：
         - 用户显式指定的参数 → 直接使用
         - 未指定的参数 → 尝试按省/市/区推断；若推断不到 → 兜底北京市市辖区
+        - 直辖市：city 固定为"市辖区"，匹配直辖市经纬度范围
         """
         lon_min, lon_max = self.lon_min, self.lon_max
         lat_min, lat_max = self.lat_min, self.lat_max
 
+        # 构建 city key 用于查找经纬度范围
         key_city = (
             f"{self._province}|{self._city}"
             if self._province and self._city
@@ -362,12 +385,22 @@ class ChinaRegion:
             lat_min = lat_min or city_bounds[2]
             lat_max = lat_max or city_bounds[3]
         elif self._province:
-            prov_bounds = _PROVINCE_BOUNDS.get(self._province)
-            if prov_bounds:
-                lon_min = lon_min or prov_bounds[0]
-                lon_max = lon_max or prov_bounds[1]
-                lat_min = lat_min or prov_bounds[2]
-                lat_max = lat_max or prov_bounds[3]
+            # 先尝试直辖市范围（key = "省|市辖区"）
+            municipality_key = f"{self._province}|市辖区"
+            municipality_bounds = _MUNICIPALITY_BOUNDS.get(municipality_key)
+            if municipality_bounds:
+                lon_min = lon_min or municipality_bounds[0]
+                lon_max = lon_max or municipality_bounds[1]
+                lat_min = lat_min or municipality_bounds[2]
+                lat_max = lat_max or municipality_bounds[3]
+            else:
+                # 回退到省级范围
+                prov_bounds = _PROVINCE_BOUNDS.get(self._province)
+                if prov_bounds:
+                    lon_min = lon_min or prov_bounds[0]
+                    lon_max = lon_max or prov_bounds[1]
+                    lat_min = lat_min or prov_bounds[2]
+                    lat_max = lat_max or prov_bounds[3]
 
         # 兜底：未确定的参数全用北京市市辖区
         self.lon_min = lon_min or 116.0
@@ -411,15 +444,19 @@ def generate_address(
     快速函数：生成一条地址数据（省市区 + 详细地址 + 经纬度）。
 
     - 若只传 province：仅在该省内随机选市区
+      - 直辖市：自动使用 city="市辖区"
+      - 普通省份：随机选择市和区
     - 若传 province + city：仅在该市内随机选区
+      - 直辖市：city 应传"市辖区"
     - 若传 province + city + district：直接使用，不再随机
     - lon_min / lon_max / lat_min / lat_max：手动覆盖经纬度范围
 
     示例：
         generate_address("广东省", "广州市")
         generate_address("广东省", lon_min=113.0, lon_max=114.0, lat_min=22.8, lat_max=23.5)
+        generate_address("北京市")  # 自动使用 city="市辖区"
 
-    默认行为（不传任何参数）：使用北京市，city = province，district 从市辖区下随机。
+    默认行为（不传任何参数）：使用北京市市辖区。
     """
     if province and city and district:
         region = ChinaRegion(

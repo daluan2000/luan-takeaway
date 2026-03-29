@@ -91,13 +91,29 @@ def _generate_phones(start: int, count: int) -> list[str]:
 def _make_phones(start: int, n: int) -> list[str]:
     """
     生成 n 个不重复的 11 位手机号。
-    以 138 开头，从 start 开始，每隔 1~99 跳一次（带随机抖动）。
+    使用随机大偏移确保唯一性，避免并发时重复。
     """
+    used: set[str] = set()
+    base_num = 13800000000  # 基准值
+    
     phones = []
-    cur = start
-    for _ in range(n):
-        phones.append(f"1{str(cur + random.randint(0, 99))[:10]}"[:11])
-        cur += random.randint(10, 200)
+    for i in range(n):
+        # 使用大的随机范围 + 索引偏移，确保唯一性
+        while True:
+            # 生成一个在 10000000-99999999 范围内的随机8位数
+            random_part = random.randint(10000000, 99999999)
+            phone = f"138{random_part}"
+            if phone not in used:
+                used.add(phone)
+                phones.append(phone)
+                break
+            # 如果重复，再加索引偏移
+            phone = f"138{random_part + i}"
+            if phone not in used and len(phone) == 11:
+                used.add(phone)
+                phones.append(phone)
+                break
+    
     return phones
 
 

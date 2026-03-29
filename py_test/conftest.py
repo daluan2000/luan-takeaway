@@ -8,16 +8,35 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 import pytest
+from dotenv import load_dotenv
 
-MAX_SEED_WORKERS = int(os.getenv("MAX_SEED_WORKERS", "8"))
+# 加载 .env 文件
+load_dotenv()
+
+MAX_SEED_WORKERS = int(os.getenv("MAX_SEED_WORKERS"))
+
+
+def _env_int(name: str) -> int:
+    """读取整数环境变量，缺失时抛出错误。"""
+    val = os.getenv(name)
+    if val is None:
+        raise ValueError(f"环境变量 {name} 未设置")
+    try:
+        return int(val)
+    except ValueError:
+        raise ValueError(f"环境变量 {name} 必须为整数，当前值: {val}")
 
 
 def _env_float(name: str) -> float | None:
-    """读取环境变量为空字符串时返回 None，避免 float("") 崩溃。"""
+    """读取浮点环境变量，缺失或为空时返回 None。"""
     val = os.getenv(name)
     if val is None or val == "":
         return None
-    return float(val)
+    try:
+        return float(val)
+    except ValueError:
+        raise ValueError(f"环境变量 {name} 必须为浮点数，当前值: {val}")
+
 
 from core.client import ApiClient
 from core.settings import TestSettings, load_settings, ROLE_MERCHANT_CODE, ROLE_CUSTOMER_CODE, ROLE_DELIVERY_CODE
@@ -81,23 +100,64 @@ def _save_cache(pytest_config: pytest.Config, data: dict, suffix: str = "seed") 
 # ---------------------------------------------------------------------------
 
 def pytest_addoption(parser: pytest.Parser) -> None:
+    """添加命令行选项，优先级：命令行 > .env > 默认值"""
+    # 运行模式
     parser.addoption(
         "--mode",
         action="store",
         choices=["monolith", "microservice"],
         default=None,
-        help="后端运行模式：monolith 或 microservice",
+        help="后端运行模式：monolith 或 microservice（环境变量：API_MODE）",
     )
+    # 强制重建种子数据
     parser.addoption(
         "--fresh-seed",
         action="store_true",
-        default=False,
-        help="强制重新生成种子数据，忽略缓存",
+        default=None,
+        help="强制重新生成种子数据，忽略缓存（环境变量：SEED_FRESH=true）",
     )
+    # 种子数据数量
+    parser.addoption(
+        "--merchant-count",
+        action="store",
+        type=int,
+        default=None,
+        help="商家数量（环境变量：SEED_MERCHANT_COUNT）",
+    )
+    parser.addoption(
+        "--customer-count",
+        action="store",
+        type=int,
+        default=None,
+        help="客户数量（环境变量：SEED_CUSTOMER_COUNT）",
+    )
+    parser.addoption(
+        "--delivery-count",
+        action="store",
+        type=int,
+        default=None,
+        help="骑手数量（环境变量：SEED_DELIVERY_COUNT）",
+    )
+    parser.addoption(
+        "--dishes-per-merchant",
+        action="store",
+        type=int,
+        default=None,
+        help="每个商家的菜品数量（环境变量：SEED_DISHES_PER_MERCHANT）",
+    )
+    # 地址经纬度范围
     parser.addoption("--lon-min", action="store", type=float, default=None)
     parser.addoption("--lon-max", action="store", type=float, default=None)
     parser.addoption("--lat-min", action="store", type=float, default=None)
     parser.addoption("--lat-max", action="store", type=float, default=None)
+
+
+def _env_bool(name: str) -> bool:
+    """读取布尔环境变量，缺失时抛出错误。"""
+    val = os.getenv(name)
+    if val is None:
+        raise ValueError(f"环境变量 {name} 未设置")
+    return val.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -105,6 +165,16 @@ def pytest_configure(config: pytest.Config) -> None:
     config.seed_lon_max = config.getoption("--lon-max", default=None)
     config.seed_lat_min = config.getoption("--lat-min", default=None)
     config.seed_lat_max = config.getoption("--lat-max", default=None)
+
+    # 种子数据数量配置（命令行 > .env）
+    config.seed_merchant_count = config.getoption("--merchant-count", default=None) or _env_int("SEED_MERCHANT_COUNT")
+    config.seed_customer_count = config.getoption("--customer-count", default=None) or _env_int("SEED_CUSTOMER_COUNT")
+    config.seed_delivery_count = config.getoption("--delivery-count", default=None) or _env_int("SEED_DELIVERY_COUNT")
+    config.seed_dishes_per_merchant = config.getoption("--dishes-per-merchant", default=None) or _env_int("SEED_DISHES_PER_MERCHANT")
+
+    # 是否强制重建种子数据（命令行 > .env）
+    fresh_arg = config.getoption("--fresh-seed", default=None)
+    config.seed_fresh = True if fresh_arg else _env_bool("SEED_FRESH")
 
 
 # ---------------------------------------------------------------------------
@@ -252,9 +322,11 @@ def seed_merchants(
     """
     注册 N 个商家（默认 10），自动创建地址和商家扩展表。
     并发执行，MAX_SEED_WORKERS 控制并发数。
+
+    配置优先级：命令行 > .env > 默认值
     """
-    count = int(os.getenv("SEED_MERCHANT_COUNT", "10"))
-    fresh = pytestconfig.getoption("fresh_seed", default=False)
+    count = pytestconfig.seed_merchant_count
+    fresh = pytestconfig.seed_fresh
     key = "merchants"
 
     if not fresh and key in seed_cache_mut and len(seed_cache_mut[key]) >= count:
@@ -399,9 +471,11 @@ def seed_customers(
     """
     注册 N 个客户（默认 50），自动创建地址和客户扩展表。
     并发执行，MAX_SEED_WORKERS 控制并发数。
+
+    配置优先级：命令行 > .env > 默认值
     """
-    count = int(os.getenv("SEED_CUSTOMER_COUNT", "50"))
-    fresh = pytestconfig.getoption("fresh_seed", default=False)
+    count = pytestconfig.seed_customer_count
+    fresh = pytestconfig.seed_fresh
     key = "customers"
 
     if not fresh and key in seed_cache_mut and len(seed_cache_mut[key]) >= count:
@@ -542,9 +616,11 @@ def seed_deliveries(
     """
     注册 N 个骑手（默认 10），自动创建骑手扩展表。
     并发执行，MAX_SEED_WORKERS 控制并发数。
+
+    配置优先级：命令行 > .env > 默认值
     """
-    count = int(os.getenv("SEED_DELIVERY_COUNT", "10"))
-    fresh = pytestconfig.getoption("fresh_seed", default=False)
+    count = pytestconfig.seed_delivery_count
+    fresh = pytestconfig.seed_fresh
     key = "deliveries"
 
     if not fresh and key in seed_cache_mut and len(seed_cache_mut[key]) >= count:
@@ -678,8 +754,10 @@ def seed_dishes(
     为每个商家创建 N 道菜品，每个商家用自己的 token 创建。
     所有菜品并发创建，MAX_SEED_WORKERS 控制并发数。
     缓存：按 merchantUserId + dishName 去重，已存在则跳过。
+
+    配置优先级：命令行 > .env > 默认值
     """
-    fresh = pytestconfig.getoption("fresh_seed", default=False)
+    fresh = pytestconfig.seed_fresh
     key = "dishes"
 
     if not fresh and key in seed_cache_mut and len(seed_cache_mut[key]) > 0:
@@ -692,11 +770,14 @@ def seed_dishes(
     for d in all_dishes:
         existing_keys.add(f"{d.get('merchantUserId')}|{d.get('dishName')}")
 
+    # 每个商家生成的菜品数量（命令行 > .env > 默认值20）
+    dish_count = pytestconfig.seed_dishes_per_merchant
+
     # 收集所有待创建的菜品任务
     tasks: list[tuple] = []
     for idx, merchant in enumerate(seed_merchants):
         user_id = merchant["userId"]
-        for tpl in generate_merchant_dishes(idx):
+        for tpl in generate_merchant_dishes(idx, dish_count=dish_count):
             key_str = f"{user_id}|{tpl.dish_name}"
             if key_str not in existing_keys:
                 tasks.append((merchant, user_id, tpl))

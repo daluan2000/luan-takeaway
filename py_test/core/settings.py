@@ -54,11 +54,11 @@ class TestSettings:
         return ":" in self.client_credential
 
 
-def _env_bool(name: str, default: bool) -> bool:
+def _env_bool(name: str) -> bool:
+    """读取布尔环境变量，缺失时抛出错误。"""
     raw = os.getenv(name)
     if raw is None:
-        return default
-
+        raise ValueError(f"环境变量 {name} 未设置")
     value = raw.strip().lower()
     return value in {"1", "true", "yes", "on"}
 
@@ -75,15 +75,17 @@ def load_settings(mode_override: str | None = None) -> TestSettings:
         raw_cfg = yaml.safe_load(fp) or {}
 
     modes = raw_cfg.get("modes", {})
-    mode = mode_override or os.getenv("API_MODE", "microservice")
+    mode = mode_override or os.getenv("API_MODE")
+    if mode is None:
+        raise ValueError("环境变量 API_MODE 未设置，且未通过 --mode 参数指定")
     if mode not in modes:
         available = ", ".join(sorted(modes.keys()))
         raise ValueError(f"未知 mode={mode}，可选值: {available}")
 
     mode_cfg = modes[mode]
-    timeout = float(os.getenv("API_TIMEOUT", "10"))
-    password_encrypt_key = os.getenv("API_PWD_ENC_KEY", "thanks,pig4cloud").strip()
-    password_encrypt_enabled = _env_bool("API_PWD_ENCRYPT_ENABLED", True)
+    timeout = float(os.getenv("API_TIMEOUT"))
+    password_encrypt_key = os.getenv("API_PWD_ENC_KEY").strip()
+    password_encrypt_enabled = _env_bool("API_PWD_ENCRYPT_ENABLED")
 
     return TestSettings(
         mode=mode,
@@ -93,7 +95,7 @@ def load_settings(mode_override: str | None = None) -> TestSettings:
             login_path=str(mode_cfg.get("login_path", "")),
             user_info_path=str(mode_cfg.get("user_info_path", "")),
         ),
-        client_credential=os.getenv("API_CLIENT_CREDENTIAL", "").strip(),
+        client_credential=os.getenv("API_CLIENT_CREDENTIAL").strip(),
         timeout=timeout,
         password_encrypt_key=password_encrypt_key,
         password_encrypt_enabled=password_encrypt_enabled,
