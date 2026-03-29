@@ -394,9 +394,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	/**
-	 * 注册用户并赋予默认角色
+	 * 注册用户并赋予角色
+	 * - 若传 roleCode：后端自动解析为 roleId（推荐）
+	 * - 若传 role（List<Long>）：直接使用
+	 * - 两者都为空：使用后端默认角色 USER_DEFAULT_ROLE
 	 * @param userDto 用户注册信息DTO
-	 * @return 注册结果，包含成功或失败状态
+	 * @return 注册结果
 	 */
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -410,6 +413,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
 		UserDTO user = new UserDTO();
 		BeanUtils.copyProperties(userDto, user);
+
+		// 优先使用 roleCode 解析 roleId
+		if (StrUtil.isNotBlank(userDto.getRoleCode())) {
+			SysRole role = sysRoleService
+				.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, userDto.getRoleCode()));
+			if (role == null) {
+				return R.failed("角色编码不存在: " + userDto.getRoleCode());
+			}
+			user.setRole(CollUtil.toList(role.getRoleId()));
+		}
+
 		return R.ok(saveUser(user));
 	}
 

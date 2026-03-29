@@ -33,6 +33,21 @@
 				</template>
 			</el-input>
 		</el-form-item>
+		<el-form-item class="login-animation4" prop="roleCode">
+			<el-select
+				class="w100"
+				clearable
+				:placeholder="'请选择注册角色'"
+				v-model="state.ruleForm.roleCode"
+			>
+				<el-option
+					v-for="item in roleData"
+					:key="item.roleId"
+					:label="item.roleName"
+					:value="item.roleCode"
+				/>
+			</el-select>
+		</el-form-item>
 		<el-form-item>
 			<el-checkbox v-model="state.ruleForm.checked">
 				{{ $t('password.readAccept') }}
@@ -51,6 +66,7 @@
 
 <script setup lang="ts" name="register">
 import { registerUser, validateUsername, validatePhone } from '/@/api/admin/user';
+import { list as roleList } from '/@/api/admin/role';
 import { useMessage } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
 import { rule } from '/@/utils/validate';
@@ -72,6 +88,9 @@ const dataFormRef = ref();
 // 加载中状态
 const loading = ref(false);
 
+// 角色列表（排除管理员）
+const roleData = ref<any[]>([]);
+
 // 组件内部状态
 const state = reactive({
 	// 是否显示密码
@@ -82,6 +101,7 @@ const state = reactive({
 		password: '', // 密码
 		phone: '', // 手机号
 		checked: '', // 是否同意条款
+		roleCode: '', // 角色编码
 	},
 });
 
@@ -127,11 +147,21 @@ const dataRules = reactive({
 			trigger: 'blur',
 		},
 	],
-	checked: [{ required: true, message: '请阅读并同意条款', trigger: 'blur' }],
+	checked: [{ required: true, message: '请阅读并同意条款', trigger: 'change' }],
+	roleCode: [{ required: true, message: '请选择注册角色', trigger: 'change' }],
 });
 
 // 保留强度组件仅做提示，不阻止表单提交
 const handlePassScore = (_e) => {};
+
+// 挂载时加载角色列表（排除管理员）
+onMounted(() => {
+	roleList().then((res) => {
+		roleData.value = (res.data || []).filter(
+			(item: any) => item.roleCode !== 'ROLE_ADMIN'
+		);
+	});
+});
 
 /**
  * @name handleRegister

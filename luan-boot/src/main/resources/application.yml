@@ -28,6 +28,7 @@ spring:
 
 
 ## spring security 对外暴露接口设置（不鉴权直接可访问）
+## 这里是去除过前缀的接口，比如微服务的/auth/token/**和单体模式的/admin/token/**，只需要/token/**
 security:
   micro: false
   oauth2:
@@ -43,6 +44,7 @@ security:
         - /error
         - /token/**
         - /actuator/**
+        - /role/list
 
 #--------------如下配置尽量不要变动-------------
 # swagger 配置
