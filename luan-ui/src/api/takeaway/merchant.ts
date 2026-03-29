@@ -52,3 +52,11 @@ export function listMerchantByRegion(params?: { province?: string; city?: string
 		params,
 	});
 }
+
+export function listMerchantByNearby(params?: { longitude: number; latitude: number; includeDishList?: boolean }) {
+	return request({
+		url: '/takeaway/user/merchant/nearby',
+		method: 'get',
+		params,
+	});
+}

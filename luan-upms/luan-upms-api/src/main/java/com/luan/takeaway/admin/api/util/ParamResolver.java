@@ -36,6 +36,16 @@ public class ParamResolver {
 	}
 
 	/**
+	 * 根据key 查询value 配置
+	 * @param key key
+	 * @param defaultVal 默认值
+	 * @return value
+	 */
+	public Double getDouble(String key, Double... defaultVal) {
+		return checkAndGet(key, Double.class, defaultVal);
+	}
+
+	/**
 	 * 根据key获取远程参数值并转换为指定类型
 	 * @param key 参数key
 	 * @param clazz 目标类型

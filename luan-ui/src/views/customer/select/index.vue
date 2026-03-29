@@ -20,11 +20,11 @@
 
 				<el-empty v-else-if="!merchantList.length" :description="emptyMerchantDescription" />
 
-				<el-collapse v-else>
+				<el-collapse v-else @change="handleCollapseChange">
 					<el-collapse-item
 						v-for="merchant in merchantList"
-						:key="merchant.id || merchant.userId"
-						:name="String(merchant.id || merchant.userId)"
+						:key="merchant.userId || merchant.id"
+						:name="String(merchant.userId || merchant.id)"
 					>
 						<template #title>
 							<div class="merchant-title">
@@ -41,14 +41,19 @@
 									<span class="merchant-address">{{ getMerchantAddress(merchant) }}</span>
 								</el-tooltip>
 								<span v-else class="merchant-address">-</span>
-								<span v-if="distanceMap[merchant.id || merchant.userId || 0]" class="merchant-distance">
-									{{ distanceMap[merchant.id || merchant.userId || 0] }}
+								<span v-if="distanceMap[merchant.userId || merchant.id || 0]" class="merchant-distance">
+									{{ distanceMap[merchant.userId || merchant.id || 0] }}
 								</span>
 							</div>
 						</template>
 
+						<div v-if="dishLoadingMap[normalizeId(merchant.userId) || '']" class="dish-loading">
+							<el-icon class="is-loading"><Loading /></el-icon>
+							<span>加载菜品中...</span>
+						</div>
+
 						<el-empty
-							v-if="!dishMap[merchant.userId || 0]?.length"
+							v-else-if="!dishMap[normalizeId(merchant.userId) || '']?.length"
 							description="该商店暂无在售菜品"
 							:image-size="80"
 						/>
@@ -115,7 +120,7 @@
 								type="primary"
 								size="small"
 								:loading="submittingMap[merchant.userId || 0]"
-								:disabled="!dishMap[merchant.userId || 0]?.length"
+								:disabled="dishLoadingMap[normalizeId(merchant.userId) || ''] || !dishMap[normalizeId(merchant.userId) || '']?.length"
 								@click.stop="submitOrder(merchant)"
 							>
 								下单
@@ -129,10 +134,12 @@
 </template>
 
 <script setup lang="ts" name="customerSelectIndex">
+import { Loading } from '@element-plus/icons-vue';
 import { useMessage } from '/@/hooks/message';
 import { listAddress } from '/@/api/takeaway/address';
 import { currentCustomer } from '/@/api/takeaway/customer';
-import { listMerchantByRegion } from '/@/api/takeaway/merchant';
+import { listMerchantByRegion, listMerchantByNearby } from '/@/api/takeaway/merchant';
+import { pageList as pageDish } from '/@/api/takeaway/dish';
 import { createOrder } from '/@/api/takeaway/order';
 import { useUserInfo } from '/@/stores/userInfo';
 import { resolveApiResourceUrl } from '/@/utils/url';
@@ -187,6 +194,7 @@ const currentCity = ref('');
 const currentDisplayRegion = ref('');
 const merchantList = ref<MerchantItem[]>([]);
 const dishMap = reactive<Record<string, DishItem[]>>({});
+const dishLoadingMap = reactive<Record<string, boolean>>({});
 const distanceMap = reactive<Record<string, string>>({});
 const quantityMap = reactive<Record<string, Record<string, number>>>({});
 const remarkMap = reactive<Record<string, string>>({});
@@ -222,6 +230,9 @@ const emptyMerchantDescription = computed(() => {
 const clearDishMap = () => {
 	Object.keys(dishMap).forEach((key) => {
 		delete dishMap[key];
+	});
+	Object.keys(dishLoadingMap).forEach((key) => {
+		delete dishLoadingMap[key];
 	});
 };
 
@@ -448,48 +459,104 @@ const loadData = async () => {
 		if (!currentAddress) {
 			return;
 		}
+
+		const userLng = Number(currentAddress.longitude);
+		const userLat = Number(currentAddress.latitude);
+		const hasValidCoordinates = !Number.isNaN(userLng) && !Number.isNaN(userLat) && userLng !== 0 && userLat !== 0;
+
 		const queryCity = String(currentAddress?.city || '').trim();
-		if (!queryCity) {
+
+		let allMerchants: MerchantItem[] = [];
+
+		if (hasValidCoordinates) {
+			// 有有效经纬度时，使用附近商家接口
+			currentCity.value = queryCity || '附近';
+			currentDisplayRegion.value = '附近';
+			const merchantRes = await listMerchantByNearby({
+				longitude: userLng,
+				latitude: userLat,
+			});
+			allMerchants = merchantRes?.data || [];
+		}
+		else if (queryCity) {
+			// 无有效经纬度但有城市信息时，降级使用城市查询
+			currentCity.value = queryCity;
+			currentDisplayRegion.value = resolveDisplayRegion(currentAddress);
+			const merchantRes = await listMerchantByRegion({
+				province: currentAddress.province,
+				city: queryCity,
+			});
+			allMerchants = merchantRes?.data || [];
+		}
+		else {
+			// 既没有经纬度也没有城市信息，无法查询
 			return;
 		}
 
-		currentCity.value = queryCity;
-		currentDisplayRegion.value = resolveDisplayRegion(currentAddress);
-		const merchantRes = await listMerchantByRegion({
-			province: currentAddress.province,
-			city: queryCity,
-			includeDishList: true,
-		});
-
-		const allMerchants: MerchantItem[] = merchantRes?.data || [];
 		const openMerchants = allMerchants.filter((item) => String(item.businessStatus) === businessOpenValue.value);
 		merchantList.value = openMerchants;
 
-		openMerchants.forEach((merchant) => {
-			const key = normalizeId(merchant.id) || normalizeId(merchant.userId);
-			if (!key) return;
-			distanceMap[key] = calcDistanceKm(currentAddress, merchant.address);
-		});
-
-		openMerchants.forEach((merchant) => {
-			const merchantUserId = normalizeId(merchant.userId);
-			if (!merchantUserId) return;
-			const records: DishItem[] = merchant.dishList || [];
-			dishMap[merchantUserId] = records.filter((item) => String(item.saleStatus) === dishSaleOnValue.value);
-			remarkMap[merchantUserId] = '';
-			const merchantQuantity = ensureMerchantQuantityMap(merchantUserId);
-			dishMap[merchantUserId].forEach((dish) => {
-				const dishId = normalizeId(dish.id);
-				if (dishId) {
-					merchantQuantity[dishId] = 0;
-				}
+		if (hasValidCoordinates) {
+			openMerchants.forEach((merchant) => {
+				const key = normalizeId(merchant.userId) || normalizeId(merchant.id);
+				if (!key) return;
+				distanceMap[key] = calcDistanceKm(currentAddress, merchant.address);
 			});
-		});
+		}
 	} catch (error: any) {
 		useMessage().error(error?.msg || error?.response?.data?.msg || '加载失败');
 	} finally {
 		loading.value = false;
 	}
+};
+
+const loadMerchantDishes = async (merchantUserId: string) => {
+	const key = normalizeId(merchantUserId);
+	if (!key || dishMap[key] || dishLoadingMap[key]) {
+		return;
+	}
+	dishLoadingMap[key] = true;
+	try {
+		const dishRes = await pageDish({
+			current: 1,
+			size: 500,
+			merchantUserId,
+		});
+		const records: DishItem[] = dishRes?.data?.records || [];
+		dishMap[key] = records.filter((item) => String(item.saleStatus) === dishSaleOnValue.value);
+		remarkMap[key] = '';
+		const merchantQuantity = ensureMerchantQuantityMap(key);
+		dishMap[key].forEach((dish) => {
+			const dishId = normalizeId(dish.id);
+			if (dishId) {
+				merchantQuantity[dishId] = 0;
+			}
+		});
+	} catch (error: any) {
+		useMessage().error(`加载菜品失败: ${error?.msg || error?.response?.data?.msg || '未知错误'}`);
+	} finally {
+		dishLoadingMap[key] = false;
+	}
+};
+
+const expandedMerchants = ref<Set<string>>(new Set());
+
+const handleCollapseChange = (names: string | string[]) => {
+	const nameList = Array.isArray(names) ? names : [names];
+	const currentIds = new Set(nameList.filter(Boolean));
+	// 处理新增展开的商家
+	currentIds.forEach((id) => {
+		if (!expandedMerchants.value.has(id)) {
+			expandedMerchants.value.add(id);
+			loadMerchantDishes(id);
+		}
+	});
+	// 处理收起展开的商家
+	expandedMerchants.value.forEach((id) => {
+		if (!currentIds.has(id)) {
+			expandedMerchants.value.delete(id);
+		}
+	});
 };
 
 onMounted(() => {
@@ -581,6 +648,21 @@ onMounted(() => {
 	font-size: 18px;
 	font-weight: 700;
 	color: var(--el-color-danger);
+}
+
+.dish-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 40px 0;
+	color: var(--el-text-color-secondary);
+	font-size: 14px;
+}
+
+.dish-loading .el-icon {
+	font-size: 20px;
+	color: var(--el-color-primary);
 }
 
 @media (max-width: 768px) {

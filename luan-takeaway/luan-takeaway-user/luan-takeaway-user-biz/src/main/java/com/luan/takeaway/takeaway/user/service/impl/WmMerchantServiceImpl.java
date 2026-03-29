@@ -28,6 +28,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +49,15 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 
 	private static final String PARAM_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS =
 			"TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS";
+
+	private static final String PARAM_MERCHANT_NEARBY_DISTANCE_KM =
+			"TAKEAWAY_MERCHANT_NEARBY_DISTANCE_KM";
+
+	// 商家列表查询缓存 key 前缀。
+	private static final String MERCHANT_NEARBY_CACHE_KEY_PREFIX = "takeaway:merchant:nearby:";
+
+	// 【防击穿】附近商家列表查询锁 key 前缀。
+	private static final String MERCHANT_NEARBY_LOCK_KEY_PREFIX = "takeaway:merchant:nearby:lock:";
 
 	// 商户缓存版本号，写操作后递增，用于让老的查询缓存“逻辑过期”。
 	private static final String MERCHANT_CACHE_VERSION_KEY = "takeaway:merchant:cache:version";
@@ -293,6 +303,133 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 		// 地域列表查询也复用统一组件，和个体/分页一套规则。
 		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, listType,
 				() -> loadMerchantListByRegionFromDb(province, city, district, includeDishList), MERCHANT_CACHE_POLICY);
+	}
+
+	@Override
+	public List<WmMerchantDTO> listByNearby(BigDecimal longitude, BigDecimal latitude, boolean includeDishList) {
+		if (longitude == null || latitude == null) {
+			return Collections.emptyList();
+		}
+
+		// 计算经纬度范围
+		double[] latLngRange = calculateLatLngRange(longitude.doubleValue(), latitude.doubleValue());
+
+		long version = getMerchantCacheVersion();
+		String safeIncludeDishList = includeDishList ? "1" : "0";
+		// 缓存key包含经纬度范围和版本号
+		String cacheKey = MERCHANT_NEARBY_CACHE_KEY_PREFIX + version + ":" + longitude + ":" + latitude + ":"
+				+ String.format("%.4f", latLngRange[0]) + ":" + String.format("%.4f", latLngRange[1]) + ":"
+				+ String.format("%.4f", latLngRange[2]) + ":" + String.format("%.4f", latLngRange[3]) + ":"
+				+ safeIncludeDishList;
+		String lockKey = MERCHANT_NEARBY_LOCK_KEY_PREFIX + cacheKey;
+
+		JavaType listType = objectMapper.getTypeFactory().constructCollectionType(List.class, WmMerchantDTO.class);
+		return redisSafeCacheService.queryWithProtect(cacheKey, lockKey, listType,
+				() -> loadMerchantListByNearbyFromDb(longitude, latitude, latLngRange, includeDishList),
+				MERCHANT_CACHE_POLICY);
+	}
+
+	/**
+	 * 根据经纬度距离上限计算经纬度范围
+	 * @param longitude 经度
+	 * @param latitude 纬度
+	 * @return [minLat, maxLat, minLng, maxLng]
+	 */
+	private double[] calculateLatLngRange(double longitude, double latitude) {
+		Double distanceKm = ParamResolver.getDouble(PARAM_MERCHANT_NEARBY_DISTANCE_KM, 5.0);
+		if (distanceKm == null || distanceKm <= 0) {
+			distanceKm = 5.0;
+		}
+
+		// 纬度范围：每跨越1度约111公里
+		double latDelta = distanceKm / 111.0;
+
+		// 经度范围：需要根据纬度进行调整，纬度越高，经度每度跨越的距离越短
+		double avgLatRad = Math.toRadians(latitude);
+		double lngDelta = distanceKm / (111.0 * Math.cos(avgLatRad));
+
+		// 如果cos(avgLatRad)接近0（两极地区），设置一个最小经度范围
+		if (lngDelta > 180) {
+			lngDelta = 180;
+		}
+
+		return new double[] {
+				latitude - latDelta, // minLat
+				latitude + latDelta, // maxLat
+				longitude - lngDelta, // minLng
+				longitude + lngDelta // maxLng
+		};
+	}
+
+	private List<WmMerchantDTO> loadMerchantListByNearbyFromDb(BigDecimal longitude, BigDecimal latitude,
+			double[] latLngRange, boolean includeDishList) {
+		double minLat = latLngRange[0];
+		double maxLat = latLngRange[1];
+		double minLng = latLngRange[2];
+		double maxLng = latLngRange[3];
+
+		// 先查询落在经纬度范围内的地址
+		List<WmAddress> addresses = wmAddressMapper.selectList(Wrappers.<WmAddress>lambdaQuery()
+			.ge(WmAddress::getLatitude, minLat)
+			.le(WmAddress::getLatitude, maxLat)
+			.ge(WmAddress::getLongitude, minLng)
+			.le(WmAddress::getLongitude, maxLng));
+
+		if (addresses.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		List<Long> addressIds = addresses.stream()
+			.map(WmAddress::getId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.toList());
+
+		if (addressIds.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		// 查询这些地址关联的商家
+		List<WmMerchantUserExt> merchants = wmMerchantUserExtMapper.selectList(Wrappers.<WmMerchantUserExt>lambdaQuery()
+			.in(WmMerchantUserExt::getStoreAddressId, addressIds)
+			.orderByDesc(WmMerchantUserExt::getCreateTime));
+
+		List<WmMerchantDTO> result = toDtoListWithAddress(merchants);
+
+		// 按距离排序（从近到远）
+		final double userLng = longitude.doubleValue();
+		final double userLat = latitude.doubleValue();
+		result.sort((m1, m2) -> {
+			double dist1 = calculateDistance(userLat, userLng, m1);
+			double dist2 = calculateDistance(userLat, userLng, m2);
+			return Double.compare(dist1, dist2);
+		});
+
+		if (includeDishList) {
+			fillDishList(result);
+		}
+		return result;
+	}
+
+	private double calculateDistance(double userLat, double userLng, WmMerchantDTO merchant) {
+		WmAddress address = merchant.getAddress();
+		if (address == null || address.getLatitude() == null || address.getLongitude() == null) {
+			return Double.MAX_VALUE;
+		}
+
+		double storeLat = address.getLatitude().doubleValue();
+		double storeLng = address.getLongitude().doubleValue();
+
+		// 使用Haversine公式计算距离
+		double earthRadiusKm = 6371.0;
+		double dLat = Math.toRadians(storeLat - userLat);
+		double dLng = Math.toRadians(storeLng - userLng);
+
+		double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+				+ Math.cos(Math.toRadians(userLat)) * Math.cos(Math.toRadians(storeLat))
+				* Math.sin(dLng / 2) * Math.sin(dLng / 2);
+		double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+		return earthRadiusKm * c;
 	}
 
 	private List<WmMerchantDTO> toDtoListWithAddress(List<WmMerchantUserExt> merchants) {

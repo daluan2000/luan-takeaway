@@ -7,11 +7,13 @@ import com.luan.takeaway.takeaway.common.api.TakeawayApiConstants;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
 import com.luan.takeaway.takeaway.user.service.WmMerchantService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -75,6 +77,15 @@ public class WmMerchantController {
 			@RequestParam(required = false) String city, @RequestParam(required = false) String district,
 			@RequestParam(required = false, defaultValue = "false") boolean includeDishList) {
 		return R.ok(wmMerchantService.listByRegion(province, city, district, includeDishList));
+	}
+
+	@GetMapping(TakeawayApiConstants.MERCHANT_PATH + "/nearby")
+	@Operation(summary = "按经纬度查询附近商家列表")
+	public R<List<WmMerchantDTO>> nearby(
+			@Parameter(description = "用户经度", required = true) @RequestParam BigDecimal longitude,
+			@Parameter(description = "用户纬度", required = true) @RequestParam BigDecimal latitude,
+			@RequestParam(required = false, defaultValue = "false") boolean includeDishList) {
+		return R.ok(wmMerchantService.listByNearby(longitude, latitude, includeDishList));
 	}
 
 	@PostMapping(TakeawayApiConstants.MERCHANT_PATH + "/{id}/business/{businessStatus}")

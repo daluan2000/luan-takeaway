@@ -361,7 +361,8 @@ INSERT INTO `sys_public_param` (`public_id`, `public_name`, `public_key`, `publi
 (1002, '外卖骑手抢单锁时长(秒)', 'TAKEAWAY_ORDER_DELIVERY_LOCK_SECONDS', '10', '0', '^\\d+$', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '2', '0', '0'),
 (1003, '外卖菜品异步落库DB锁等待(秒)', 'TAKEAWAY_DISH_DB_LOCK_WAIT_TIMEOUT_SECONDS', '3', '0', '^\\d+$', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '2', '0', '0'),
 (1004, '外卖商家自动审核最小延时(秒)', 'TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MIN_SECONDS', '3', '0', '^\\d+$', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '2', '0', '0'),
-(1005, '外卖商家自动审核最大延时(秒)', 'TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS', '10', '0', '^\\d+$', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '2', '0', '0');
+(1005, '外卖商家自动审核最大延时(秒)', 'TAKEAWAY_MERCHANT_AUTO_AUDIT_DELAY_MAX_SECONDS', '10', '0', '^\\d+$', 'admin', 'admin', '2026-03-14 18:00:00', '2026-03-14 18:00:00', '2', '0', '0'),
+(1006, '外卖商家附近距离上限(公里)', 'TAKEAWAY_MERCHANT_NEARBY_DISTANCE_KM', '5', '0', '^\\d+(\\.\\d+)?$', 'admin', 'admin', '2026-03-29 00:00:00', '2026-03-29 00:00:00', '2', '0', '0');
 
 -- --------------------------------------------------------
 

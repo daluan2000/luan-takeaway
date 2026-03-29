@@ -80,7 +80,7 @@
 
 							<el-empty v-if="!recommendedMerchantList.length" description="当前推荐未命中可展示商家" :image-size="90" />
 
-							<el-collapse v-else>
+							<el-collapse v-else @change="handleCollapseChange">
 								<el-collapse-item
 									v-for="merchant in recommendedMerchantList"
 									:key="merchant.id || merchant.userId"
@@ -94,79 +94,86 @@
 										</div>
 									</template>
 
-									<div class="dish-grid">
-										<el-card
-											v-for="dish in getSortedMerchantDishes(merchant.userId)"
-											:key="dish.id || dish.dishName"
-											shadow="hover"
-											class="dish-card"
-											:class="{ 'is-recommended': isRecommendedDish(merchant.userId, dish.id) }"
-										>
-											<div class="dish-image-wrapper">
-												<el-image
-													v-if="dish.dishImage"
-													:src="resolveDishImageSrc(dish.dishImage)"
-													fit="cover"
-													:preview-src-list="[resolveDishImageSrc(dish.dishImage)]"
-													preview-teleported
-													class="dish-image"
-												/>
-												<div v-else class="dish-image-placeholder">图片不存在</div>
-											</div>
-
-											<div class="dish-content">
-												<div class="dish-title-row">
-													<div class="dish-name" :title="dish.dishName || '-'">{{ dish.dishName || '-' }}</div>
-													<el-tooltip
-														v-if="isRecommendedDish(merchant.userId, dish.id)"
-														:content="getRecommendedReason(merchant.userId, dish.id)"
-														placement="top"
-													>
-														<el-tag type="danger" size="small">AI推荐</el-tag>
-													</el-tooltip>
-												</div>
-												<div class="dish-desc" :title="dish.dishDesc || '-'">{{ dish.dishDesc || '-' }}</div>
-												<div class="dish-meta">
-													<span class="dish-price">￥{{ formatMoney(dish.price) }}</span>
-													<span class="dish-stock">库存 {{ Number(dish.stock || 0) }}</span>
-												</div>
-												<el-input-number
-													:model-value="getDishQuantity(merchant.userId, dish.id)"
-													:min="0"
-													:max="Number(dish.stock || 99)"
-													controls-position="right"
-													class="dish-quantity"
-													@update:model-value="updateDishQuantity(merchant.userId, dish.id, $event)"
-												/>
-											</div>
-										</el-card>
-
+									<div v-if="dishLoadingMap[normalizeId(merchant.userId) || '']" class="dish-loading">
+										<el-icon class="is-loading"><Loading /></el-icon>
+										<span>加载菜品中...</span>
 									</div>
 
-									<div class="merchant-actions">
-										<div class="merchant-remark-inline">
-											<span class="merchant-remark-label">订单备注</span>
-											<el-input
-												v-model="remarkMap[normalizeId(merchant.userId) || '']"
-												maxlength="120"
-												show-word-limit
-												clearable
-												placeholder="例如：少辣、不要香菜"
-											/>
+									<template v-else>
+										<div class="dish-grid">
+											<el-card
+												v-for="dish in getSortedMerchantDishes(merchant.userId)"
+												:key="dish.id || dish.dishName"
+												shadow="hover"
+												class="dish-card"
+												:class="{ 'is-recommended': isRecommendedDish(merchant.userId, dish.id) }"
+											>
+												<div class="dish-image-wrapper">
+													<el-image
+														v-if="dish.dishImage"
+														:src="resolveDishImageSrc(dish.dishImage)"
+														fit="cover"
+														:preview-src-list="[resolveDishImageSrc(dish.dishImage)]"
+														preview-teleported
+														class="dish-image"
+													/>
+													<div v-else class="dish-image-placeholder">图片不存在</div>
+												</div>
+
+												<div class="dish-content">
+													<div class="dish-title-row">
+														<div class="dish-name" :title="dish.dishName || '-'">{{ dish.dishName || '-' }}</div>
+														<el-tooltip
+															v-if="isRecommendedDish(merchant.userId, dish.id)"
+															:content="getRecommendedReason(merchant.userId, dish.id)"
+															placement="top"
+														>
+															<el-tag type="danger" size="small">AI推荐</el-tag>
+														</el-tooltip>
+													</div>
+													<div class="dish-desc" :title="dish.dishDesc || '-'">{{ dish.dishDesc || '-' }}</div>
+													<div class="dish-meta">
+														<span class="dish-price">￥{{ formatMoney(dish.price) }}</span>
+														<span class="dish-stock">库存 {{ Number(dish.stock || 0) }}</span>
+													</div>
+													<el-input-number
+														:model-value="getDishQuantity(merchant.userId, dish.id)"
+														:min="0"
+														:max="Number(dish.stock || 99)"
+														controls-position="right"
+														class="dish-quantity"
+														@update:model-value="updateDishQuantity(merchant.userId, dish.id, $event)"
+													/>
+												</div>
+											</el-card>
+
 										</div>
-										<div class="selected-total">
-											已选金额：<span class="selected-total-amount">￥{{ getSelectedTotalAmount(merchant.userId) }}</span>
+
+										<div class="merchant-actions">
+											<div class="merchant-remark-inline">
+												<span class="merchant-remark-label">订单备注</span>
+												<el-input
+													v-model="remarkMap[normalizeId(merchant.userId) || '']"
+													maxlength="120"
+													show-word-limit
+													clearable
+													placeholder="例如：少辣、不要香菜"
+												/>
+											</div>
+											<div class="selected-total">
+												已选金额：<span class="selected-total-amount">￥{{ getSelectedTotalAmount(merchant.userId) }}</span>
+											</div>
+											<el-button
+												v-auth="'wm_customer_order_create'"
+												type="primary"
+												size="small"
+												:loading="submittingMap[normalizeId(merchant.userId) || '']"
+												@click.stop="submitOrder(merchant)"
+											>
+												下单支付
+											</el-button>
 										</div>
-										<el-button
-											v-auth="'wm_customer_order_create'"
-											type="primary"
-											size="small"
-											:loading="submittingMap[normalizeId(merchant.userId) || '']"
-											@click.stop="submitOrder(merchant)"
-										>
-											下单支付
-										</el-button>
-									</div>
+									</template>
 								</el-collapse-item>
 							</el-collapse>
 						</template>
@@ -178,6 +185,7 @@
 </template>
 
 <script setup lang="ts" name="customerAiOrderIndex">
+import { Loading } from '@element-plus/icons-vue';
 import { recommendAiOrder, type AiAssistantRequestPayload } from '/@/api/takeaway/ai';
 import { currentCustomer } from '/@/api/takeaway/customer';
 import { listAddress } from '/@/api/takeaway/address';
@@ -261,9 +269,11 @@ const defaultAddressId = ref<string | undefined>();
 
 const merchantList = ref<MerchantItem[]>([]);
 const dishMap = reactive<Record<string, DishItem[]>>({});
+const dishLoadingMap = reactive<Record<string, boolean>>({});
 const quantityMap = reactive<Record<string, Record<string, number>>>({});
 const remarkMap = reactive<Record<string, string>>({});
 const submittingMap = reactive<Record<string, boolean>>({});
+const expandedMerchants = ref<Set<string>>(new Set());
 
 const decisionPath = ref('');
 const summary = ref('');
@@ -342,9 +352,11 @@ const recommendedRankMap = computed(() => {
 
 const clearDishRelatedState = () => {
 	Object.keys(dishMap).forEach((key) => delete dishMap[key]);
+	Object.keys(dishLoadingMap).forEach((key) => delete dishLoadingMap[key]);
 	Object.keys(quantityMap).forEach((key) => delete quantityMap[key]);
 	Object.keys(remarkMap).forEach((key) => delete remarkMap[key]);
 	Object.keys(submittingMap).forEach((key) => delete submittingMap[key]);
+	expandedMerchants.value.clear();
 };
 
 const clearRecommendationState = () => {
@@ -494,27 +506,6 @@ const loadContext = async () => {
 		const allMerchants: MerchantItem[] = merchantRes?.data || [];
 		const openMerchants = allMerchants.filter((item) => String(item.businessStatus || '') === businessOpenValue.value);
 		merchantList.value = openMerchants;
-
-		await Promise.all(
-			openMerchants.map(async (merchant) => {
-				const merchantUserId = normalizeId(merchant.userId);
-				if (!merchantUserId) return;
-				const dishRes = await pageDish({
-					current: 1,
-					size: 500,
-					merchantUserId,
-				});
-				const records: DishItem[] = dishRes?.data?.records || [];
-				dishMap[merchantUserId] = records.filter((item) => String(item.saleStatus || '') === dishSaleOnValue.value);
-				remarkMap[merchantUserId] = '';
-				const map = ensureMerchantQuantityMap(merchantUserId);
-				if (!map) return;
-				dishMap[merchantUserId].forEach((dish) => {
-					const dishId = normalizeId(dish.id);
-					if (dishId) map[dishId] = 0;
-				});
-			})
-		);
 	} catch (error: any) {
 		useMessage().error(error?.msg || error?.response?.data?.msg || '加载上下文失败');
 	} finally {
@@ -554,6 +545,10 @@ const handleRecommend = async () => {
 			const merchantId = normalizeId(item.merchantUserId);
 			const dishId = normalizeId(item.dishId);
 			if (merchantId && dishId) {
+				// 如果菜品还没加载，先加载商家菜品
+				if (!dishMap[merchantId]) {
+					loadMerchantDishes(merchantId);
+				}
 				const map = ensureMerchantQuantityMap(merchantId);
 				if (map) {
 					map[dishId] = Math.max(1, Number(map[dishId] || 0));
@@ -565,6 +560,61 @@ const handleRecommend = async () => {
 	} finally {
 		recommending.value = false;
 	}
+};
+
+const loadMerchantDishes = async (merchantUserId: string) => {
+	if (dishMap[merchantUserId] || dishLoadingMap[merchantUserId]) {
+		return;
+	}
+	dishLoadingMap[merchantUserId] = true;
+	try {
+		const dishRes = await pageDish({
+			current: 1,
+			size: 500,
+			merchantUserId,
+		});
+		const records: DishItem[] = dishRes?.data?.records || [];
+		dishMap[merchantUserId] = records.filter((item) => String(item.saleStatus || '') === dishSaleOnValue.value);
+		remarkMap[merchantUserId] = '';
+		const map = ensureMerchantQuantityMap(merchantUserId);
+		if (map) {
+			dishMap[merchantUserId].forEach((dish) => {
+				const dishId = normalizeId(dish.id);
+				if (dishId) map[dishId] = 0;
+			});
+		}
+	} catch (error: any) {
+		useMessage().error(`加载菜品失败: ${error?.msg || error?.response?.data?.msg || '未知错误'}`);
+	} finally {
+		dishLoadingMap[merchantUserId] = false;
+	}
+};
+
+const handleMerchantExpand = (merchantId: string, expanded: boolean) => {
+	if (expanded) {
+		expandedMerchants.value.add(merchantId);
+		loadMerchantDishes(merchantId);
+	} else {
+		expandedMerchants.value.delete(merchantId);
+	}
+};
+
+const handleCollapseChange = (names: string | string[]) => {
+	const nameList = Array.isArray(names) ? names : [names];
+	const currentIds = new Set(nameList.filter(Boolean));
+	// 处理新增展开的商家
+	currentIds.forEach((id) => {
+		if (!expandedMerchants.value.has(id)) {
+			expandedMerchants.value.add(id);
+			loadMerchantDishes(id);
+		}
+	});
+	// 处理收起展开的商家
+	expandedMerchants.value.forEach((id) => {
+		if (!currentIds.has(id)) {
+			expandedMerchants.value.delete(id);
+		}
+	});
 };
 
 const submitOrder = async (merchant: MerchantItem) => {
@@ -859,6 +909,20 @@ onMounted(() => {
 	width: 100%;
 }
 
+.dish-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 40px 0;
+	color: var(--el-text-color-secondary);
+	font-size: 14px;
+}
+
+.dish-loading .el-icon {
+	font-size: 20px;
+	color: var(--el-color-primary);
+}
 
 .merchant-remark-inline {
 	display: flex;
