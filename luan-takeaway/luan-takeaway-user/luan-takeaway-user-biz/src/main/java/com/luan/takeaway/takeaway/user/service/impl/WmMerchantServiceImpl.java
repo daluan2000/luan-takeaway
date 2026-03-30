@@ -9,14 +9,13 @@ import com.luan.takeaway.admin.api.util.ParamResolver;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
+import com.luan.takeaway.takeaway.common.call.DishServiceCallFacade;
 import com.luan.takeaway.takeaway.common.cache.RedisSafeCacheService;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.entity.WmAddress;
-import com.luan.takeaway.takeaway.common.entity.WmDish;
 import com.luan.takeaway.takeaway.common.entity.WmMerchantUserExt;
 import com.luan.takeaway.takeaway.common.mapper.WmAddressMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
-import com.luan.takeaway.takeaway.dish.api.RemoteDishService;
 import com.luan.takeaway.takeaway.user.dto.WmMerchantDTO;
 import com.luan.takeaway.takeaway.user.dto.ws.MerchantAuditResultWsMessage;
 import com.luan.takeaway.takeaway.user.message.MerchantAuditResultMqPublisher;
@@ -99,7 +98,7 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 
 	private final RedisSafeCacheService redisSafeCacheService;
 
-	private final RemoteDishService dishApi;
+	private final DishServiceCallFacade dishCall;
 
 	@Override
 	public WmMerchantDTO createMerchant(WmMerchantDTO merchantDTO) {
@@ -565,8 +564,8 @@ public class WmMerchantServiceImpl implements WmMerchantService {
 				continue;
 			}
 			try {
-				R<Page<WmDish>> response = dishApi.servicePage(1, 50, null, merchant.getUserId(),
-						TakeawayStatusConstants.Dish.SALE_ON);
+				R<Page<com.luan.takeaway.takeaway.common.entity.WmDish>> response = dishCall.servicePageDish(1, 50,
+						null, merchant.getUserId(), TakeawayStatusConstants.Dish.SALE_ON);
 				if (response != null && response.getData() != null && response.getData().getRecords() != null) {
 					merchant.setDishList(response.getData().getRecords());
 				}

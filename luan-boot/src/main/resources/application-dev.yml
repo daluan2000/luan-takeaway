@@ -45,6 +45,8 @@ sms:
   config-type: yaml # 配置类型，yaml
 
 takeaway:
+  # 部署模式: single=单体模式(本地调用), cloud=微服务模式(Feign调用)
+  deploy-mode: single
   ws:
     push:
       mq:

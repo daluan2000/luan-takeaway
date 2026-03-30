@@ -4,10 +4,10 @@ import com.luan.takeaway.ai.api.dto.RecommendationItem;
 import com.luan.takeaway.ai.model.IntentMode;
 import com.luan.takeaway.ai.model.IntentResult;
 import com.luan.takeaway.common.core.util.R;
+import com.luan.takeaway.takeaway.common.call.DishServiceCallFacade;
 import com.luan.takeaway.takeaway.common.dto.HybridDishCandidateDTO;
 import com.luan.takeaway.takeaway.common.dto.HybridDishSearchRequest;
 import com.luan.takeaway.takeaway.common.dto.DishKnowledgeDoc;
-import com.luan.takeaway.takeaway.dish.api.RemoteDishService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -75,7 +75,7 @@ public class HybridRecommendationService {
 
 	private final OpenAiIntentRecognizer openAiIntentRecognizer;
 
-	private final RemoteDishService remoteDishService;
+	private final DishServiceCallFacade dishCall;
 
 	/**
 	 * 推荐主入口。
@@ -176,7 +176,7 @@ public class HybridRecommendationService {
 
 		// --- 结构化召回（兜底 + 补充）---
 		HybridDishSearchRequest structRequest = buildStructuredRequest(intent, merchantUserId);
-		R<List<HybridDishCandidateDTO>> structResponse = remoteDishService.searchHybridCandidates(structRequest);
+		R<List<HybridDishCandidateDTO>> structResponse = dishCall.searchHybridCandidates(structRequest);
 		List<HybridDishCandidateDTO> structCandidates = structResponse == null || structResponse.getData() == null
 				? List.of() : structResponse.getData();
 

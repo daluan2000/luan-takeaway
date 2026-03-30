@@ -4,14 +4,14 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luan.takeaway.common.core.util.R;
+import com.luan.takeaway.takeaway.common.call.DeliveryServiceCallFacade;
+import com.luan.takeaway.takeaway.common.call.OrderServiceCallFacade;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.CreateDeliveryOrderRequest;
 import com.luan.takeaway.takeaway.common.dto.PayRequest;
 import com.luan.takeaway.takeaway.common.entity.WmOrder;
 import com.luan.takeaway.takeaway.common.entity.WmOrderPay;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderPayMapper;
-import com.luan.takeaway.takeaway.delivery.api.RemoteDeliveryService;
-import com.luan.takeaway.takeaway.order.api.RemoteOrderService;
 import com.luan.takeaway.takeaway.pay.service.WmOrderPayService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,14 +24,14 @@ import java.util.concurrent.ThreadLocalRandom;
 @AllArgsConstructor
 public class WmOrderPayServiceImpl extends ServiceImpl<WmOrderPayMapper, WmOrderPay> implements WmOrderPayService {
 
-	private final RemoteOrderService orderApi;
+	private final OrderServiceCallFacade orderCall;
 
-	private final RemoteDeliveryService deliveryApi;
+	private final DeliveryServiceCallFacade deliveryCall;
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public boolean mockPay(PayRequest request) {
-		R<WmOrder> orderResp = orderApi.getById(request.getOrderId());
+		R<WmOrder> orderResp = orderCall.getById(request.getOrderId());
 		WmOrder order = unwrap(orderResp, "订单不存在");
 		if (order == null) {
 			throw new IllegalArgumentException("订单不存在");
@@ -40,7 +40,7 @@ public class WmOrderPayServiceImpl extends ServiceImpl<WmOrderPayMapper, WmOrder
 			throw new IllegalStateException("当前订单状态不可支付");
 		}
 
-		R<Boolean> paySuccessResp = orderApi.markPaid(order.getId());
+		R<Boolean> paySuccessResp = orderCall.markPaid(order.getId());
 		Boolean marked = unwrap(paySuccessResp, "更新订单支付状态失败");
 		if (!Boolean.TRUE.equals(marked)) {
 			throw new IllegalStateException("更新订单支付状态失败");
@@ -60,7 +60,7 @@ public class WmOrderPayServiceImpl extends ServiceImpl<WmOrderPayMapper, WmOrder
 		createRequest.setOrderId(order.getId());
 		createRequest.setOrderNo(order.getOrderNo());
 		createRequest.setMerchantUserId(order.getMerchantUserId());
-		R<Boolean> deliveryResp = deliveryApi.createDeliveryOrder(createRequest);
+		R<Boolean> deliveryResp = deliveryCall.createDeliveryOrder(createRequest);
 		Boolean deliveryCreated = unwrap(deliveryResp, "创建配送单失败");
 		if (!Boolean.TRUE.equals(deliveryCreated)) {
 			throw new IllegalStateException("创建配送单失败");

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luan.takeaway.admin.api.util.ParamResolver;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.core.util.RedisUtils;
+import com.luan.takeaway.takeaway.common.call.DishServiceCallFacade;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
 import com.luan.takeaway.takeaway.common.dto.DishPurchaseItemDTO;
@@ -25,7 +26,6 @@ import com.luan.takeaway.takeaway.common.mapper.WmCustomerUserExtMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmMerchantUserExtMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderItemMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmOrderMapper;
-import com.luan.takeaway.takeaway.dish.api.RemoteDishService;
 import com.luan.takeaway.takeaway.order.constant.OrderAutoCancelMqConstants;
 import com.luan.takeaway.takeaway.order.dto.ws.OrderStatusWsMessage;
 import com.luan.takeaway.takeaway.order.message.OrderStatusMqPublisher;
@@ -70,7 +70,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 
 	private final WmDeliveryUserExtMapper wmDeliveryUserExtMapper;
 
-	private final RemoteDishService dishApi;
+	private final DishServiceCallFacade dishCall;
 
 	/**
 	 * RabbitMQ 消息发送模板。
@@ -102,7 +102,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		validateDeliveryAddress(request.getDeliveryAddressId(), request.getCustomerUserId());
 
 		List<Long> dishIds = request.getItems().stream().map(DishPurchaseItemDTO::getDishId).distinct().toList();
-		R<List<WmDish>> dishResp = dishApi.listByIds(request.getMerchantUserId(), dishIds);
+		R<List<WmDish>> dishResp = dishCall.listByIds(request.getMerchantUserId(), dishIds);
 		List<WmDish> dishes = unwrap(dishResp, "查询菜品失败");
 		Map<Long, WmDish> dishMap = new HashMap<>(dishes.size());
 		dishes.forEach(dish -> dishMap.put(dish.getId(), dish));
@@ -138,7 +138,7 @@ public class WmOrderServiceImpl extends ServiceImpl<WmOrderMapper, WmOrder> impl
 		// Dish 服务消费 MQ 后会基于 orderNo 写入消费完成标记，避免重复消息导致重复扣减数据库库存。
 		deductRequest.setOrderNo(order.getOrderNo());
 		deductRequest.setItems(request.getItems());
-		R<Boolean> deductResp = dishApi.deductStock(deductRequest);
+		R<Boolean> deductResp = dishCall.deductStock(deductRequest);
 		Boolean deductSuccess = unwrap(deductResp, "扣减库存失败");
 		if (!Boolean.TRUE.equals(deductSuccess)) {
 			throw new IllegalStateException("扣减库存失败");
