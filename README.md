@@ -345,15 +345,63 @@ http://127.0.0.1:8000/v1
 
 # 7 业务技术实现
 
-## 7.1 Redis 缓存优化
+## 7.1 Redis 缓存优化-热点数据自适应缓存
 
-在商户信息和菜品查询等高频读场景中，系统通过 Redis 缓存降低数据库访问压力。
+在商户信息和菜品查询等高频读场景中，系统通过 `@SmartCache` 注解实现统一的 Redis 缓存策略。
 
-统一封装缓存访问组件 `RedisSafeCacheService`，解决：
+### 核心能力
 
-* 缓存穿透
-* 缓存击穿
-* 缓存雪崩
+| 能力 | 实现方式 | 说明 |
+|------|---------|------|
+| **防穿透** | 空值缓存 | DB 不存在的数据缓存 2 分钟，避免反复打 DB |
+| **防击穿** | 互斥锁 | 热点 key 过期时只允许一个线程回源，重试 3 次 |
+| **防雪崩** | 随机 TTL 抖动 | 缓存过期时间 ±10% 随机偏移，避免大量 key 同时失效 |
+| **热点自适应** | HotKeyManager | 60秒内访问 ≥100 次标记为热点，享受更长 TTL（30分钟 vs 5分钟） |
+
+### 使用方式
+
+```java
+// 查询方法添加 @SmartCache 注解
+@SmartCache(
+    name = "dish:item",
+    key = "#merchantUserId + ':' + #dishId",
+    hotKeyType = HotKeyType.DISH,
+    hotKeyIdExpression = "#dishId",
+    baseTtlSeconds = 300,    // 普通数据 5 分钟
+    hotTtlSeconds = 1800       // 热点数据 30 分钟
+)
+WmDish getByMerchantAndId(Long merchantUserId, Long dishId);
+
+// 写操作方法添加 @SmartCacheEvict 注解清除缓存
+@SmartCacheEvict(name = "dish:item", key = "#entity.id")
+@SmartCacheEvict(name = "dish:list", allEntries = true)
+boolean save(WmDish entity);
+```
+
+### 技术架构
+
+```
+@SmartCache / @SmartCacheEvict 注解
+        ↓
+   SmartCacheAspect（切面拦截）
+        ↓
+SmartCacheService（底层缓存操作）
+        ↓
+HotKeyTtlCalculator（热点 TTL 计算）
+        ↓
+HotKeyManager（热点检测）
+```
+
+### Redis Key 设计
+
+| Key Pattern | 说明 |
+|-------------|------|
+| `dish:item:{merchantUserId}:{dishId}` | 单个菜品缓存 |
+| `dish:list:{page}:{query}` | 菜品分页缓存 |
+| `dish:knowledge:{dishId}` | 菜品知识文档缓存 |
+| `merchant:current:{userId}` | 当前用户商户缓存 |
+| `hot:counter:{type}:{id}` | 热点访问计数器（TTL=60秒） |
+| `hot:set:{type}` | 热点 ID 集合 |
 
 ## 7.2 Redis 分布式锁（骑手抢单）
 
