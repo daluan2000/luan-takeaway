@@ -452,7 +452,7 @@ def _get_signature_dishes_for_merchant(merchant_index: int) -> list[tuple[str, D
     return signature_dishes
 
 
-def generate_merchant_dishes(merchant_index: int, dish_count: int = 20) -> list[DishTemplate]:
+def generate_merchant_dishes(merchant_index: int, dish_count: int | tuple[int, int] = 20) -> list[DishTemplate]:
     """
     为指定商家生成菜品列表。
     包含：
@@ -461,9 +461,16 @@ def generate_merchant_dishes(merchant_index: int, dish_count: int = 20) -> list[
     
     Args:
         merchant_index: 商家索引（用于生成唯一的菜品名称变体）
-        dish_count: 菜品总数，默认20道
+        dish_count: 菜品总数，默认20道。接受单个整数或 (min, max) 元组（元组时随机选取）。
     """
     templates: list[DishTemplate] = []
+    
+    # 解析菜品数量（支持范围随机）
+    if isinstance(dish_count, tuple):
+        min_count, max_count = dish_count
+        actual_count = random.randint(min_count, max_count)
+    else:
+        actual_count = dish_count
     
     # 获取招牌菜（固定5道）
     signature_dishes = _get_signature_dishes_for_merchant(merchant_index)
@@ -500,7 +507,7 @@ def generate_merchant_dishes(merchant_index: int, dish_count: int = 20) -> list[
     
     # 计算剩余需要生成的菜品数量
     signature_count = len(signature_dishes)
-    extra_count = dish_count - signature_count
+    extra_count = actual_count - signature_count
     # 补充随机菜品
     templates.extend(generate_dishes(extra_count))
     

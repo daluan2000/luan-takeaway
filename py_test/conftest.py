@@ -27,6 +27,27 @@ def _env_int(name: str) -> int:
         raise ValueError(f"环境变量 {name} 必须为整数，当前值: {val}")
 
 
+def _env_int_range(name: str) -> tuple[int, int]:
+    """读取范围格式环境变量（支持 "5-10" 或 "10"），返回 (min, max)。"""
+    val = os.getenv(name)
+    if val is None:
+        raise ValueError(f"环境变量 {name} 未设置")
+    val = val.strip()
+    if "-" in val:
+        parts = val.split("-")
+        if len(parts) != 2:
+            raise ValueError(f"环境变量 {name} 格式错误，支持 '5-10' 或 '10'，实际值: {val}")
+        try:
+            return (int(parts[0]), int(parts[1]))
+        except ValueError:
+            raise ValueError(f"环境变量 {name} 范围值必须是整数，实际值: {val}")
+    try:
+        v = int(val)
+        return (v, v)
+    except ValueError:
+        raise ValueError(f"环境变量 {name} 必须是整数或范围格式 '5-10'，实际值: {val}")
+
+
 def _env_float(name: str) -> float | None:
     """读取浮点环境变量，缺失或为空时返回 None。"""
     val = os.getenv(name)
@@ -170,7 +191,7 @@ def pytest_configure(config: pytest.Config) -> None:
     config.seed_merchant_count = config.getoption("--merchant-count", default=None) or _env_int("SEED_MERCHANT_COUNT")
     config.seed_customer_count = config.getoption("--customer-count", default=None) or _env_int("SEED_CUSTOMER_COUNT")
     config.seed_delivery_count = config.getoption("--delivery-count", default=None) or _env_int("SEED_DELIVERY_COUNT")
-    config.seed_dishes_per_merchant = config.getoption("--dishes-per-merchant", default=None) or _env_int("SEED_DISHES_PER_MERCHANT")
+    config.seed_dishes_per_merchant = config.getoption("--dishes-per-merchant", default=None) or _env_int_range("SEED_DISHES_PER_MERCHANT")
 
     # 是否强制重建种子数据（命令行 > .env）
     fresh_arg = config.getoption("--fresh-seed", default=None)
