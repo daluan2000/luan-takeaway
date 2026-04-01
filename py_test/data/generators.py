@@ -4,7 +4,7 @@
 功能：仅生成测试数据并保存到JSON文件，不调用任何API。
 
 使用方式：
-    python -m data.generators --merchants 3 --customers 5 --deliveries 3 --dishes 10
+    python -m data.generators --merchants 3 --customers 5 --deliveries 3 --dishes-min 5 --dishes-max 15 --listing-prob 0.8
 
 输出文件：
     data/batch_users.json      : 批量注册用户数据
@@ -176,12 +176,19 @@ def generate_batch_user_exts(
 
 def generate_batch_dishes(
     merchant_count: int,
-    dishes_per_merchant: int,
+    dishes_per_merchant: int | tuple[int, int],
+    listing_prob: float = 0.8,
 ) -> list[BatchDishDTO]:
-    """生成菜品批量导入数据"""
+    """生成菜品批量导入数据
+    
+    Args:
+        merchant_count: 商家数量
+        dishes_per_merchant: 每个商家的菜品数量，支持整数或(min, max)元组
+        listing_prob: 菜品上架概率，默认0.8（80%%概率上架）
+    """
     dishes = []
     for idx in range(merchant_count):
-        templates = generate_merchant_dishes(idx, dish_count=dishes_per_merchant)
+        templates = generate_merchant_dishes(idx, dish_count=dishes_per_merchant, listing_prob=listing_prob)
         for tpl in templates:
             dishes.append(BatchDishDTO(
                 merchantUserId=0,  # 占位，导入时替换
@@ -225,12 +232,25 @@ def _save_json(data: dict, filepath: Path) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description="批量导入数据生成器")
-    parser.add_argument("--merchants", type=int, default=3, help="商家数量")
-    parser.add_argument("--customers", type=int, default=5, help="客户数量")
-    parser.add_argument("--deliveries", type=int, default=3, help="骑手数量")
-    parser.add_argument("--dishes", type=int, default=10, help="每个商家的菜品数量")
+    parser.add_argument("--merchants", type=int, default=3000, help="商家数量")
+    parser.add_argument("--customers", type=int, default=100, help="客户数量")
+    parser.add_argument("--deliveries", type=int, default=200, help="骑手数量")
+    parser.add_argument("--dishes-min", type=int, default=5, help="每个商家菜品数量下限")
+    parser.add_argument("--dishes-max", type=int, default=10, help="每个商家菜品数量上限")
+    parser.add_argument("--listing-prob", type=float, default=0.8, help="菜品上架概率 (0.0-1.0)")
     parser.add_argument("--output", type=str, default=str(OUTPUT_DIR), help="输出目录")
     args = parser.parse_args()
+    
+    # 解析菜品数量范围
+    dishes_range = (args.dishes_min, args.dishes_max)
+    
+    # 验证参数
+    if args.dishes_min > args.dishes_max:
+        print("错误: --dishes-min 不能大于 --dishes-max")
+        sys.exit(1)
+    if not 0.0 <= args.listing_prob <= 1.0:
+        print("错误: --listing-prob 必须在 0.0-1.0 之间")
+        sys.exit(1)
 
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     prefix = f"batch_{timestamp}"
@@ -241,7 +261,8 @@ def main():
     print(f"  商家: {args.merchants}")
     print(f"  客户: {args.customers}")
     print(f"  骑手: {args.deliveries}")
-    print(f"  菜品/商家: {args.dishes}")
+    print(f"  菜品/商家: {args.dishes_min}-{args.dishes_max} (随机)")
+    print(f"  上架概率: {args.listing_prob * 100:.0f}%")
     print("=" * 50)
 
     # 1. 生成用户数据
@@ -266,7 +287,8 @@ def main():
     print("[3/3] 生成菜品数据...")
     dishes = generate_batch_dishes(
         merchant_count=args.merchants,
-        dishes_per_merchant=args.dishes,
+        dishes_per_merchant=dishes_range,
+        listing_prob=args.listing_prob,
     )
 
     # 保存文件
@@ -277,7 +299,8 @@ def main():
         "dishes": _serialize(dishes),
         "total": len(dishes),
         "merchant_count": args.merchants,
-        "dishes_per_merchant": args.dishes,
+        "dishes_range": f"{args.dishes_min}-{args.dishes_max}",
+        "listing_prob": args.listing_prob,
     }, output_dir / "batch_dishes.json")
 
     print(f"\n总计: {total_users} 个用户, {len(dishes)} 道菜品")

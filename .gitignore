@@ -67,3 +67,5 @@ Servers
 **/__pycache__/*
 **/logs/*
 .pytest_seed_cache/
+
+**/batch*.json

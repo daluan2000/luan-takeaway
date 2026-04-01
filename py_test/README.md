@@ -7,7 +7,6 @@
 ```
 py_test/
 ├── README.md                    # 本文档
-├── conftest.py                  # pytest配置和fixtures
 ├── run_tests.py                 # 测试启动脚本
 ├── config.yaml                  # 配置文件
 ├── .env                         # 环境变量配置
