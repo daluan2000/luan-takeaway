@@ -137,3 +137,14 @@ export function validatePhone(rule: any, value: any, callback: any, isEdit: bool
 		}
 	});
 }
+
+/**
+ * 批量注册用户（通过JSON文件）
+ */
+export const batchRegister = (users: object) => {
+	return request({
+		url: '/admin/user/batch/register',
+		method: 'post',
+		data: users,
+	});
+};

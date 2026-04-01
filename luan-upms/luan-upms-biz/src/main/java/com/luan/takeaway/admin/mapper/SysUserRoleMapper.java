@@ -22,6 +22,10 @@ package com.luan.takeaway.admin.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.luan.takeaway.admin.api.entity.SysUserRole;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Insert;
+
+import java.util.List;
 
 /**
  * <p>
@@ -33,5 +37,18 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
+
+	/**
+	 * 批量插入用户角色关系
+	 * @param userRoles 用户角色关系列表
+	 * @return 插入的行数
+	 */
+	@Insert("<script>" +
+		"INSERT INTO sys_user_role (user_id, role_id) VALUES " +
+		"<foreach collection='userRoles' item='item' separator=','>" +
+		"(#{item.userId}, #{item.roleId})" +
+		"</foreach>" +
+		"</script>")
+	int insertBatch(@Param("userRoles") List<SysUserRole> userRoles);
 
 }

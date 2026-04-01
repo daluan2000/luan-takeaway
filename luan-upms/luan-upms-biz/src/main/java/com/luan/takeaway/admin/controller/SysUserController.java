@@ -36,7 +36,6 @@ import com.luan.takeaway.common.log.annotation.SysLog;
 import com.luan.takeaway.common.security.annotation.HasPermission;
 import com.luan.takeaway.common.security.annotation.Inner;
 import com.luan.takeaway.common.security.util.SecurityUtils;
-import com.pig4cloud.plugin.excel.annotation.RequestExcel;
 import com.pig4cloud.plugin.excel.annotation.ResponseExcel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -45,7 +44,6 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpHeaders;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -200,19 +198,6 @@ public class SysUserController {
 	@Operation(summary = "导出用户数据到Excel表格", description = "导出用户数据到Excel表格")
 	public List<UserExcelVO> exportUsers(UserDTO userDTO) {
 		return userService.listUsers(userDTO);
-	}
-
-	/**
-	 * 导入用户信息
-	 * @param excelVOList 用户Excel数据列表
-	 * @param bindingResult 数据校验结果
-	 * @return 导入结果
-	 */
-	@PostMapping("/import")
-	@HasPermission("sys_user_export")
-	@Operation(summary = "导入用户信息", description = "导入用户信息")
-	public R<?> importUser(@RequestExcel List<UserExcelVO> excelVOList, BindingResult bindingResult) {
-		return userService.importUsers(excelVOList, bindingResult);
 	}
 
 	/**

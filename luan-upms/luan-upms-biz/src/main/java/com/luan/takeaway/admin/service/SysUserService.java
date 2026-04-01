@@ -110,14 +110,6 @@ public interface SysUserService extends IService<SysUser> {
 	List<UserExcelVO> listUsers(UserDTO userDTO);
 
 	/**
-	 * excel 导入用户
-	 * @param excelVOList excel 列表数据
-	 * @param bindingResult 错误数据
-	 * @return ok fail
-	 */
-	R<?> importUsers(List<UserExcelVO> excelVOList, BindingResult bindingResult);
-
-	/**
 	 * 注册用户
 	 * @param userDto 用户信息
 	 * @return success/false

@@ -63,4 +63,11 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
 	 */
 	List<UserVO> listUsers(@Param("query") UserDTO userDTO);
 
+	/**
+	 * 批量查询已存在的用户名
+	 * @param usernames 用户名列表
+	 * @return 已存在的用户名列表
+	 */
+	List<String> selectExistingUsernames(@Param("usernames") List<String> usernames);
+
 }

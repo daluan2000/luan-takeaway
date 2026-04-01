@@ -16,6 +16,7 @@ export default {
 		importUserTip: '用户导入',
 		deleteDisabledTip: 'admin 不允许被删除',
 		noDataScopeTip: '没有数据权限',
+		batchRegisterBtn: '批量注册',
 	},
 	personal: {
 		name: '个人信息',

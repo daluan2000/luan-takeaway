@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * 批量注册结果项
  *
@@ -52,5 +54,11 @@ public class BatchRegisterResultItem {
 	 */
 	@Schema(description = "新创建的用户ID（成功时返回）")
 	private Long userId;
+
+	/**
+	 * 角色ID列表（仅用于内部处理，不返回）
+	 */
+	@Schema(description = "角色ID列表")
+	private List<Long> roleIds;
 
 }

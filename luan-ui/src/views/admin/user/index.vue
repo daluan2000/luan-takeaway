@@ -20,9 +20,23 @@
 							<el-button v-auth="'sys_user_add'" icon="folder-add" type="primary" @click="userDialogRef.openDialog()">
 								{{ $t('common.addBtn') }}
 							</el-button>
-							<el-button plain v-auth="'sys_user_add'" class="ml10" icon="upload-filled" type="primary" @click="excelUploadRef.show()">
-								{{ $t('common.importBtn') }}
+
+							<el-button
+								plain
+								class="ml10"
+								icon="document"
+								type="primary"
+								@click="triggerJsonUpload"
+							>
+								{{ $t('sysuser.batchRegisterBtn') }}
 							</el-button>
+							<input
+								ref="jsonUploadRef"
+								type="file"
+								accept=".json"
+								style="display: none"
+								@change="handleJsonUpload"
+							/>
 
 							<el-button
 								plain
@@ -95,19 +109,11 @@
 		</div>
 
 		<user-form ref="userDialogRef" @refresh="getDataList(false)" />
-
-		<upload-excel
-			ref="excelUploadRef"
-			:title="$t('sysuser.importUserTip')"
-			temp-url="/admin/sys-file/local/file/user.xlsx"
-			url="/admin/user/import"
-			@refreshDataList="getDataList"
-		/>
 	</div>
 </template>
 
 <script lang="ts" name="systemUser" setup>
-import { delObj, pageList, putObj } from '/@/api/admin/user';
+import { delObj, pageList, putObj, batchRegister } from '/@/api/admin/user';
 import { BasicTableProps, useTable } from '/@/hooks/table';
 import { useMessage, useMessageBox } from '/@/hooks/message';
 import { useI18n } from 'vue-i18n';
@@ -119,9 +125,9 @@ const { t } = useI18n();
 
 // 定义变量内容
 const userDialogRef = ref();
-const excelUploadRef = ref();
 const queryRef = ref();
 const showSearch = ref(true);
+const jsonUploadRef = ref();
 
 // 多选rows
 const selectObjs = ref([]) as any;
@@ -182,5 +188,76 @@ const changeSwitch = async (row: object) => {
 	await putObj(row);
 	useMessage().success(t('common.optSuccessText'));
 	getDataList();
+};
+
+// 触发JSON文件选择
+const triggerJsonUpload = () => {
+	jsonUploadRef.value?.click();
+};
+
+// JSON文件上传处理
+const handleJsonUpload = async (event: Event) => {
+	const input = event.target as HTMLInputElement;
+	if (!input.files || !input.files[0]) {
+		return;
+	}
+
+	const file = input.files[0];
+	try {
+		const text = await file.text();
+		const jsonData = JSON.parse(text);
+
+		// 构建请求格式 - 支持两种格式：
+		// 1. 直接的 users 数组: [{username: "xxx", ...}]
+		// 2. 分类型格式: {merchants: [...], customers: [...], deliveries: [...]}
+		let users = [];
+		if (Array.isArray(jsonData)) {
+			users = jsonData;
+		} else if (jsonData.users) {
+			users = jsonData.users;
+		} else {
+			// 尝试合并分类数据
+			const categoryKeys = ['merchants', 'customers', 'deliveries', 'roles'];
+			for (const key of categoryKeys) {
+				if (Array.isArray(jsonData[key])) {
+					users = users.concat(jsonData[key]);
+				}
+			}
+		}
+
+		if (users.length === 0) {
+			useMessage().warning('JSON文件中没有找到用户数据');
+			return;
+		}
+
+		const response: any = await batchRegister({ users });
+
+		// 检查响应状态
+		if (response.code === 0 || response.code === 200) {
+			const result = response.data;
+			let msg = `批量注册完成：共 ${result.total} 个，成功 ${result.successCount} 个，失败 ${result.failCount} 个`;
+			if (result.failCount > 0) {
+				msg += '\n失败详情：\n';
+				result.results
+					.filter((r: any) => !r.success)
+					.forEach((r: any) => {
+						msg += `- ${r.username}: ${r.errorMessage}\n`;
+					});
+				useMessage().error(msg);
+			} else {
+				useMessage().success(msg);
+			}
+			getDataList();
+		} else {
+			useMessage().error(response.msg || '批量注册失败');
+		}
+	} catch (err: any) {
+		console.error('批量注册错误:', err);
+		const errorMsg = err?.response?.data?.msg || err?.message || '请检查JSON格式';
+		useMessage().error('操作失败：' + errorMsg);
+	}
+
+	// 清空input值，允许重复选择同一文件
+	input.value = '';
 };
 </script>

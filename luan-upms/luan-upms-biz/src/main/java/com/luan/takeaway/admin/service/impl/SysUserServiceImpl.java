@@ -49,7 +49,6 @@ import com.luan.takeaway.common.core.util.MsgUtils;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.security.service.PigUser;
 import com.luan.takeaway.common.security.util.SecurityUtils;
-import com.pig4cloud.plugin.excel.vo.ErrorMessage;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -60,10 +59,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -322,82 +321,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	}
 
 	/**
-	 * 导入用户数据
-	 * @param excelVOList Excel数据列表
-	 * @param bindingResult 校验结果
-	 * @return 导入结果，包含成功或失败信息
-	 */
-	@Override
-	public R<?> importUsers(List<UserExcelVO> excelVOList, BindingResult bindingResult) {
-		// 通用校验获取失败的数据
-		List<ErrorMessage> errorMessageList = new ArrayList<>();
-		Object target = bindingResult.getTarget();
-		if (target instanceof List<?> targetList) {
-			targetList.stream().filter(ErrorMessage.class::isInstance).map(ErrorMessage.class::cast)
-				.forEach(errorMessageList::add);
-		}
-		List<SysRole> roleList = sysRoleService.list();
-
-		// 执行数据插入操作 组装 UserDto
-		for (UserExcelVO excel : excelVOList) {
-			// 个性化校验逻辑
-			List<SysUser> userList = this.list();
-
-			Set<String> errorMsg = new HashSet<>();
-			// 校验用户名是否存在
-			if (userList.stream().anyMatch(sysUser -> excel.getUsername().equals(sysUser.getUsername()))) {
-				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_USER_USERNAME_EXISTING, excel.getUsername()));
-			}
-
-			// 判断输入的角色名称列表是否合法
-			List<String> roleNameList = StrUtil.split(excel.getRoleNameList(), StrUtil.COMMA);
-			List<SysRole> roleCollList = roleList.stream()
-				.filter(role -> roleNameList.stream().anyMatch(name -> role.getRoleName().equals(name)))
-				.toList();
-
-			if (roleCollList.size() != roleNameList.size()) {
-				errorMsg.add(MsgUtils.getMessage(ErrorCodes.SYS_ROLE_ROLENAME_INEXISTENCE, excel.getRoleNameList()));
-			}
-
-			// 数据合法情况
-			if (CollUtil.isEmpty(errorMsg)) {
-				insertExcelUser(excel, roleCollList);
-			}
-			else {
-				// 数据不合法情况
-				errorMessageList.add(new ErrorMessage(excel.getLineNum(), errorMsg));
-			}
-
-		}
-
-		if (CollUtil.isNotEmpty(errorMessageList)) {
-			return R.failed(errorMessageList);
-		}
-		return R.ok();
-	}
-
-	/**
-	 * 插入Excel导入的用户信息
-	 * @param excel Excel用户数据对象
-	 * @param roleCollList 角色列表
-	 */
-	private void insertExcelUser(UserExcelVO excel, List<SysRole> roleCollList) {
-		UserDTO userDTO = new UserDTO();
-		userDTO.setUsername(excel.getUsername());
-		userDTO.setPhone(excel.getPhone());
-		userDTO.setNickname(excel.getNickname());
-		userDTO.setName(excel.getName());
-		userDTO.setEmail(excel.getEmail());
-		// 批量导入初始密码为手机号
-		userDTO.setPassword(userDTO.getPhone());
-		// 根据角色名称查询角色ID
-		List<Long> roleIdList = roleCollList.stream().map(SysRole::getRoleId).toList();
-		userDTO.setRole(roleIdList);
-		// 插入用户
-		this.saveUser(userDTO);
-	}
-
-	/**
 	 * 注册用户并赋予角色
 	 * - 若传 roleCode：后端自动解析为 roleId（推荐）
 	 * - 若传 role（List<Long>）：直接使用
@@ -434,13 +357,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	/**
 	 * 批量注册用户
 	 *
-	 * <p>功能说明：遍历请求中的用户列表，逐个创建用户并分配角色。
+	 * <p>功能说明：使用真正的批量插入优化性能，减少数据库交互次数。
 	 * 返回每个用户的注册结果（成功/失败），管理员可根据结果处理失败项。
 	 *
 	 * <p>处理逻辑：
-	 * 1. 遍历用户列表
-	 * 2. 调用 processBatchUser 处理单个用户（检查重复、解析角色、创建用户）
-	 * 3. 统计成功/失败数量并返回汇总结果
+	 * 1. 一次性查询所有已存在的用户名
+	 * 2. 一次性查询所有需要的角色
+	 * 3. 多线程并行加密密码
+	 * 4. 批量插入用户（使用 MyBatis-Plus 的 saveBatch）
+	 * 5. 批量插入用户角色关系
 	 *
 	 * @param request 批量注册请求，包含用户列表
 	 * @return 批量注册结果，包含总数、成功数、失败数和每条结果
@@ -451,8 +376,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 	@Transactional(rollbackFor = Exception.class)
 	public BatchRegisterResult batchRegister(BatchRegisterUserRequest request) {
 		List<BatchRegisterResultItem> resultItems = new ArrayList<>();
-		int successCount = 0;
-		int failCount = 0;
 
 		List<BatchRegisterUserDTO> users = request.getUsers();
 		if (users == null || users.isEmpty()) {
@@ -464,16 +387,169 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 				.build();
 		}
 
+		// 1. 收集所有需要校验的用户名
+		List<String> usernames = users.stream()
+			.map(BatchRegisterUserDTO::getUsername)
+			.filter(StrUtil::isNotBlank)
+			.toList();
+
+		// 2. 一次性查询所有已存在的用户名
+		List<String> existingUsernames = baseMapper.selectExistingUsernames(usernames);
+		Set<String> existingSet = new HashSet<>(existingUsernames);
+
+		// 3. 收集所有角色编码并一次性查询
+		Set<String> roleCodes = users.stream()
+			.map(BatchRegisterUserDTO::getRoleCode)
+			.filter(StrUtil::isNotBlank)
+			.collect(Collectors.toSet());
+
+		Map<String, SysRole> roleMap = new HashMap<>();
+		if (!roleCodes.isEmpty()) {
+			List<SysRole> roles = sysRoleService.list(
+				Wrappers.<SysRole>lambdaQuery().in(SysRole::getRoleCode, roleCodes));
+			roles.forEach(role -> roleMap.put(role.getRoleCode(), role));
+		}
+
+		// 获取默认角色
+		String defaultRoleCode = ParamResolver.getStr("USER_DEFAULT_ROLE");
+		SysRole defaultRole = null;
+		if (StrUtil.isNotBlank(defaultRoleCode)) {
+			defaultRole = roleMap.computeIfAbsent(defaultRoleCode,
+				code -> sysRoleService.getOne(
+					Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, code)));
+		}
+
+		// 4. 收集待处理的用户数据
+		List<BatchRegisterUserDTO> usersToProcess = new ArrayList<>();
 		for (BatchRegisterUserDTO userDto : users) {
-			BatchRegisterResultItem item = processBatchUser(userDto);
-			resultItems.add(item);
-			if (item.isSuccess()) {
-				successCount++;
+			// 校验用户名
+			if (StrUtil.isBlank(userDto.getUsername())) {
+				resultItems.add(BatchRegisterResultItem.builder()
+					.username(userDto.getUsername())
+					.success(false)
+					.errorMessage("用户名不能为空")
+					.build());
+				continue;
 			}
-			else {
-				failCount++;
+
+			if (existingSet.contains(userDto.getUsername())) {
+				resultItems.add(BatchRegisterResultItem.builder()
+					.username(userDto.getUsername())
+					.success(false)
+					.errorMessage("用户名已存在")
+					.build());
+				continue;
+			}
+
+			// 解析角色
+			List<Long> roleIds;
+			if (StrUtil.isNotBlank(userDto.getRoleCode())) {
+				SysRole role = roleMap.get(userDto.getRoleCode());
+				if (role == null) {
+					resultItems.add(BatchRegisterResultItem.builder()
+						.username(userDto.getUsername())
+						.success(false)
+						.errorMessage("角色编码不存在: " + userDto.getRoleCode())
+						.build());
+					continue;
+				}
+				roleIds = CollUtil.toList(role.getRoleId());
+			} else {
+				if (defaultRole == null) {
+					resultItems.add(BatchRegisterResultItem.builder()
+						.username(userDto.getUsername())
+						.success(false)
+						.errorMessage("默认角色不存在")
+						.build());
+					continue;
+				}
+				roleIds = CollUtil.toList(defaultRole.getRoleId());
+			}
+
+			usersToProcess.add(userDto);
+			resultItems.add(BatchRegisterResultItem.builder()
+				.username(userDto.getUsername())
+				.success(true)
+				.roleIds(roleIds)
+				.build());
+		}
+
+		// 5. 多线程并行加密密码
+		int threadCount = Runtime.getRuntime().availableProcessors();
+		List<String> encryptedPasswords = new ArrayList<>(Collections.nCopies(usersToProcess.size(), ""));
+		try {
+			ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+			List<Future<?>> futures = new ArrayList<>();
+
+			for (int i = 0; i < usersToProcess.size(); i++) {
+				final int index = i;
+				final String password = usersToProcess.get(i).getPassword();
+				futures.add(executor.submit(() -> {
+					encryptedPasswords.set(index, ENCODER.encode(password));
+				}));
+			}
+
+			for (Future<?> future : futures) {
+				future.get();
+			}
+			executor.shutdown();
+		} catch (Exception e) {
+			log.error("密码加密失败", e);
+		}
+
+		// 6. 构建用户实体并批量插入
+		List<SysUser> usersToInsert = new ArrayList<>();
+		Map<String, List<Long>> usernameToRoleIds = new LinkedHashMap<>();
+
+		for (int i = 0; i < usersToProcess.size(); i++) {
+			BatchRegisterUserDTO userDto = usersToProcess.get(i);
+			SysUser sysUser = new SysUser();
+			sysUser.setUsername(userDto.getUsername());
+			sysUser.setPassword(encryptedPasswords.get(i));
+			sysUser.setNickname(userDto.getNickname());
+			sysUser.setName(userDto.getName());
+			sysUser.setPhone(userDto.getPhone());
+			sysUser.setEmail(userDto.getEmail());
+			sysUser.setDelFlag(CommonConstants.STATUS_NORMAL);
+			sysUser.setCreateBy(userDto.getUsername());
+
+			usersToInsert.add(sysUser);
+
+			// 获取角色ID
+			List<Long> roleIds = resultItems.stream()
+				.filter(r -> r.isSuccess() && userDto.getUsername().equals(r.getUsername()))
+				.findFirst()
+				.map(BatchRegisterResultItem::getRoleIds)
+				.orElse(new ArrayList<>());
+			usernameToRoleIds.put(userDto.getUsername(), roleIds);
+		}
+
+		// 7. 批量插入用户
+		if (!usersToInsert.isEmpty()) {
+			saveBatch(usersToInsert);
+
+			// 8. 批量插入用户角色关系
+			List<SysUserRole> userRolesToInsert = new ArrayList<>();
+			for (SysUser user : usersToInsert) {
+				List<Long> roleIds = usernameToRoleIds.get(user.getUsername());
+				if (roleIds != null) {
+					for (Long roleId : roleIds) {
+						SysUserRole userRole = new SysUserRole();
+						userRole.setUserId(user.getUserId());
+						userRole.setRoleId(roleId);
+						userRolesToInsert.add(userRole);
+					}
+				}
+			}
+
+			if (!userRolesToInsert.isEmpty()) {
+				sysUserRoleMapper.insertBatch(userRolesToInsert);
 			}
 		}
+
+		// 9. 统计结果
+		int successCount = (int) resultItems.stream().filter(BatchRegisterResultItem::isSuccess).count();
+		int failCount = (int) resultItems.stream().filter(item -> !item.isSuccess()).count();
 
 		return BatchRegisterResult.builder()
 			.total(users.size())
@@ -481,95 +557,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 			.failCount(failCount)
 			.results(resultItems)
 			.build();
-	}
-
-	/**
-	 * 处理单个用户批量注册
-	 *
-	 * <p>功能说明：处理单个用户的注册逻辑，包括数据校验、角色解析、用户创建。
-	 *
-	 * <p>处理步骤：
-	 * 1. 检查用户名是否已存在
-	 * 2. 根据 roleCode 解析角色 ID（若为空则使用系统默认角色）
-	 * 3. 构建 UserDTO 并调用 saveUser 创建用户
-	 * 4. 返回注册结果（成功返回用户ID，失败返回错误信息）
-	 *
-	 * @param userDto 单个用户注册信息
-	 * @return 单条注册结果，包含用户名、成功状态、用户ID或错误信息
-	 * @see BatchRegisterUserDTO
-	 * @see BatchRegisterResultItem
-	 */
-	private BatchRegisterResultItem processBatchUser(BatchRegisterUserDTO userDto) {
-		try {
-			// 判断用户名是否存在
-			SysUser existUser = this.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, userDto.getUsername()));
-			if (existUser != null) {
-				return BatchRegisterResultItem.builder()
-					.username(userDto.getUsername())
-					.success(false)
-					.errorMessage("用户名已存在")
-					.build();
-			}
-
-			// 解析角色编码
-			List<Long> roleIds;
-			if (StrUtil.isNotBlank(userDto.getRoleCode())) {
-				SysRole role = sysRoleService
-					.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, userDto.getRoleCode()));
-				if (role == null) {
-					return BatchRegisterResultItem.builder()
-						.username(userDto.getUsername())
-						.success(false)
-						.errorMessage("角色编码不存在: " + userDto.getRoleCode())
-						.build();
-				}
-				roleIds = CollUtil.toList(role.getRoleId());
-			}
-			else {
-				// 获取默认角色
-				String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
-				SysRole defaultSysRole = sysRoleService
-					.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, defaultRole));
-				if (defaultSysRole == null) {
-					return BatchRegisterResultItem.builder()
-						.username(userDto.getUsername())
-						.success(false)
-						.errorMessage("默认角色不存在")
-						.build();
-				}
-				roleIds = CollUtil.toList(defaultSysRole.getRoleId());
-			}
-
-			// 构建 UserDTO
-			UserDTO user = new UserDTO();
-			user.setUsername(userDto.getUsername());
-			user.setPassword(userDto.getPassword());
-			user.setNickname(userDto.getNickname());
-			user.setName(userDto.getName());
-			user.setPhone(userDto.getPhone());
-			user.setEmail(userDto.getEmail());
-			user.setRole(roleIds);
-
-			// 保存用户
-			saveUser(user);
-
-			// 获取新创建的用户ID
-			SysUser newUser = this.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, userDto.getUsername()));
-
-			return BatchRegisterResultItem.builder()
-				.username(userDto.getUsername())
-				.success(true)
-				.userId(newUser != null ? newUser.getUserId() : null)
-				.build();
-		}
-		catch (Exception e) {
-			log.error("批量注册用户失败: {}", userDto.getUsername(), e);
-			return BatchRegisterResultItem.builder()
-				.username(userDto.getUsername())
-				.success(false)
-				.errorMessage("注册失败: " + e.getMessage())
-				.build();
-		}
 	}
 
 
