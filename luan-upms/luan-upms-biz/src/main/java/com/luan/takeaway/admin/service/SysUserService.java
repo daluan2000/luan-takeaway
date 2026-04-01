@@ -25,6 +25,8 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.luan.takeaway.admin.api.dto.RegisterUserDTO;
 import com.luan.takeaway.admin.api.dto.UserDTO;
 import com.luan.takeaway.admin.api.dto.UserInfo;
+import com.luan.takeaway.admin.api.dto.BatchRegisterUserRequest;
+import com.luan.takeaway.admin.api.dto.BatchRegisterResult;
 import com.luan.takeaway.admin.api.entity.SysUser;
 import com.luan.takeaway.admin.api.vo.UserExcelVO;
 import com.luan.takeaway.admin.api.vo.UserVO;
@@ -121,6 +123,21 @@ public interface SysUserService extends IService<SysUser> {
 	 * @return success/false
 	 */
 	R<Boolean> registerUser(RegisterUserDTO userDto);
+
+	/**
+	 * 批量注册用户
+	 *
+	 * <p>功能说明：管理员批量注册系统用户，支持客户、商家、骑手三种角色。
+	 *
+	 * <p>处理逻辑：
+	 * 1. 遍历用户列表，逐个创建用户
+	 * 2. 根据 roleCode 解析角色 ID（若为空则使用系统默认角色）
+	 * 3. 返回每个用户的注册结果（成功/失败）
+	 *
+	 * @param request 批量注册请求
+	 * @return 批量注册结果
+	 */
+	BatchRegisterResult batchRegister(BatchRegisterUserRequest request);
 
 	/**
 	 * 锁定用户

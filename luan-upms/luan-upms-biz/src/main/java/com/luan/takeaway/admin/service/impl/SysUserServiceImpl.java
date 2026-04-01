@@ -28,6 +28,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.luan.takeaway.admin.api.dto.RegisterUserDTO;
 import com.luan.takeaway.admin.api.dto.UserDTO;
 import com.luan.takeaway.admin.api.dto.UserInfo;
+import com.luan.takeaway.admin.api.dto.BatchRegisterUserRequest;
+import com.luan.takeaway.admin.api.dto.BatchRegisterUserDTO;
+import com.luan.takeaway.admin.api.dto.BatchRegisterResult;
+import com.luan.takeaway.admin.api.dto.BatchRegisterResultItem;
 import com.luan.takeaway.admin.api.entity.SysMenu;
 import com.luan.takeaway.admin.api.entity.SysRole;
 import com.luan.takeaway.admin.api.entity.SysUser;
@@ -425,6 +429,147 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 		}
 
 		return R.ok(saveUser(user));
+	}
+
+	/**
+	 * 批量注册用户
+	 *
+	 * <p>功能说明：遍历请求中的用户列表，逐个创建用户并分配角色。
+	 * 返回每个用户的注册结果（成功/失败），管理员可根据结果处理失败项。
+	 *
+	 * <p>处理逻辑：
+	 * 1. 遍历用户列表
+	 * 2. 调用 processBatchUser 处理单个用户（检查重复、解析角色、创建用户）
+	 * 3. 统计成功/失败数量并返回汇总结果
+	 *
+	 * @param request 批量注册请求，包含用户列表
+	 * @return 批量注册结果，包含总数、成功数、失败数和每条结果
+	 * @see BatchRegisterUserRequest
+	 * @see BatchRegisterResult
+	 */
+	@Override
+	@Transactional(rollbackFor = Exception.class)
+	public BatchRegisterResult batchRegister(BatchRegisterUserRequest request) {
+		List<BatchRegisterResultItem> resultItems = new ArrayList<>();
+		int successCount = 0;
+		int failCount = 0;
+
+		List<BatchRegisterUserDTO> users = request.getUsers();
+		if (users == null || users.isEmpty()) {
+			return BatchRegisterResult.builder()
+				.total(0)
+				.successCount(0)
+				.failCount(0)
+				.results(resultItems)
+				.build();
+		}
+
+		for (BatchRegisterUserDTO userDto : users) {
+			BatchRegisterResultItem item = processBatchUser(userDto);
+			resultItems.add(item);
+			if (item.isSuccess()) {
+				successCount++;
+			}
+			else {
+				failCount++;
+			}
+		}
+
+		return BatchRegisterResult.builder()
+			.total(users.size())
+			.successCount(successCount)
+			.failCount(failCount)
+			.results(resultItems)
+			.build();
+	}
+
+	/**
+	 * 处理单个用户批量注册
+	 *
+	 * <p>功能说明：处理单个用户的注册逻辑，包括数据校验、角色解析、用户创建。
+	 *
+	 * <p>处理步骤：
+	 * 1. 检查用户名是否已存在
+	 * 2. 根据 roleCode 解析角色 ID（若为空则使用系统默认角色）
+	 * 3. 构建 UserDTO 并调用 saveUser 创建用户
+	 * 4. 返回注册结果（成功返回用户ID，失败返回错误信息）
+	 *
+	 * @param userDto 单个用户注册信息
+	 * @return 单条注册结果，包含用户名、成功状态、用户ID或错误信息
+	 * @see BatchRegisterUserDTO
+	 * @see BatchRegisterResultItem
+	 */
+	private BatchRegisterResultItem processBatchUser(BatchRegisterUserDTO userDto) {
+		try {
+			// 判断用户名是否存在
+			SysUser existUser = this.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, userDto.getUsername()));
+			if (existUser != null) {
+				return BatchRegisterResultItem.builder()
+					.username(userDto.getUsername())
+					.success(false)
+					.errorMessage("用户名已存在")
+					.build();
+			}
+
+			// 解析角色编码
+			List<Long> roleIds;
+			if (StrUtil.isNotBlank(userDto.getRoleCode())) {
+				SysRole role = sysRoleService
+					.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, userDto.getRoleCode()));
+				if (role == null) {
+					return BatchRegisterResultItem.builder()
+						.username(userDto.getUsername())
+						.success(false)
+						.errorMessage("角色编码不存在: " + userDto.getRoleCode())
+						.build();
+				}
+				roleIds = CollUtil.toList(role.getRoleId());
+			}
+			else {
+				// 获取默认角色
+				String defaultRole = ParamResolver.getStr("USER_DEFAULT_ROLE");
+				SysRole defaultSysRole = sysRoleService
+					.getOne(Wrappers.<SysRole>lambdaQuery().eq(SysRole::getRoleCode, defaultRole));
+				if (defaultSysRole == null) {
+					return BatchRegisterResultItem.builder()
+						.username(userDto.getUsername())
+						.success(false)
+						.errorMessage("默认角色不存在")
+						.build();
+				}
+				roleIds = CollUtil.toList(defaultSysRole.getRoleId());
+			}
+
+			// 构建 UserDTO
+			UserDTO user = new UserDTO();
+			user.setUsername(userDto.getUsername());
+			user.setPassword(userDto.getPassword());
+			user.setNickname(userDto.getNickname());
+			user.setName(userDto.getName());
+			user.setPhone(userDto.getPhone());
+			user.setEmail(userDto.getEmail());
+			user.setRole(roleIds);
+
+			// 保存用户
+			saveUser(user);
+
+			// 获取新创建的用户ID
+			SysUser newUser = this.getOne(Wrappers.<SysUser>lambdaQuery().eq(SysUser::getUsername, userDto.getUsername()));
+
+			return BatchRegisterResultItem.builder()
+				.username(userDto.getUsername())
+				.success(true)
+				.userId(newUser != null ? newUser.getUserId() : null)
+				.build();
+		}
+		catch (Exception e) {
+			log.error("批量注册用户失败: {}", userDto.getUsername(), e);
+			return BatchRegisterResultItem.builder()
+				.username(userDto.getUsername())
+				.success(false)
+				.errorMessage("注册失败: " + e.getMessage())
+				.build();
+		}
 	}
 
 

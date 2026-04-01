@@ -4,11 +4,14 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luan.takeaway.common.core.cache.SmartCache;
 import com.luan.takeaway.common.core.cache.HotKeyType;
+import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
 import com.luan.takeaway.takeaway.common.dto.HybridDishCandidateDTO;
 import com.luan.takeaway.takeaway.common.dto.HybridDishSearchRequest;
 import com.luan.takeaway.takeaway.common.dto.DishKnowledgeDoc;
 import com.luan.takeaway.takeaway.common.entity.WmDish;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishRequest;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishResult;
 
 import java.util.List;
 import java.util.Map;
@@ -122,5 +125,31 @@ public interface WmDishService extends IService<WmDish> {
 	 * 同步生成知识文档。
 	 */
 	DishKnowledgeDoc generateKnowledgeDocSync(WmDish dish);
+
+	/**
+	 * 批量导入菜品（管理员模式）
+	 *
+	 * <p>功能说明：管理员批量导入菜品，支持指定商家。
+	 * 每个菜品可以单独指定商家（dish.merchantUserId），也可以使用请求级别的 merchantUserId。
+	 *
+	 * @param request 批量导入请求
+	 * @return 批量导入结果
+	 * @see BatchDishRequest
+	 * @see BatchDishResult
+	 */
+	BatchDishResult batchImport(BatchDishRequest request);
+
+	/**
+	 * 批量导入菜品（商家模式）
+	 *
+	 * <p>功能说明：商家批量导入自己的菜品，自动使用当前登录商家的 userId。
+	 * 请求中的 merchantUserId 会被忽略，统一使用当前登录用户的ID。
+	 *
+	 * @param request 批量导入请求
+	 * @return 批量导入结果
+	 * @see BatchDishRequest
+	 * @see BatchDishResult
+	 */
+	BatchDishResult merchantBatchImport(BatchDishRequest request);
 
 }

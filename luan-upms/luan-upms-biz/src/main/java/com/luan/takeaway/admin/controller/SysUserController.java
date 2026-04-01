@@ -24,6 +24,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luan.takeaway.admin.api.dto.UserDTO;
 import com.luan.takeaway.admin.api.dto.UserInfo;
+import com.luan.takeaway.admin.api.dto.BatchRegisterUserRequest;
+import com.luan.takeaway.admin.api.dto.BatchRegisterResult;
 import com.luan.takeaway.admin.api.entity.SysUser;
 import com.luan.takeaway.admin.api.vo.UserExcelVO;
 import com.luan.takeaway.admin.api.vo.UserVO;
@@ -246,6 +248,28 @@ public class SysUserController {
 	@Operation(summary = "检查密码是否符合要求", description = "检查密码是否符合要求")
 	public R<?> check(String password) {
 		return userService.checkPassword(password);
+	}
+
+	/**
+	 * 批量注册用户
+	 *
+	 * <p>功能说明：管理员批量注册系统用户，支持一次性创建多个用户并分配角色。
+	 * 返回每个用户的注册结果，管理员可根据返回的失败原因处理异常数据。
+	 *
+	 * <p>权限控制：需拥有 sys_user_batch_register 权限
+	 * <p>接口地址：POST /user/batch/register
+	 *
+	 * @param request 批量注册请求，包含用户列表
+	 * @return 批量注册结果，包含总数、成功数、失败数及每条明细
+	 * @see BatchRegisterUserRequest
+	 * @see BatchRegisterResult
+	 */
+	@SysLog("批量注册用户")
+	@PostMapping("/batch/register")
+	@HasPermission("sys_user_batch_register")
+	@Operation(summary = "批量注册用户", description = "批量注册用户")
+	public R<BatchRegisterResult> batchRegister(@RequestBody BatchRegisterUserRequest request) {
+		return R.ok(userService.batchRegister(request));
 	}
 
 }

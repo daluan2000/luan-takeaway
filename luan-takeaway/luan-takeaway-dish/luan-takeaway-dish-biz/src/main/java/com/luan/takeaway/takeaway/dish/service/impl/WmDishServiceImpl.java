@@ -10,6 +10,8 @@ import com.luan.takeaway.admin.api.util.ParamResolver;
 import com.luan.takeaway.ai.api.feign.RemoteAiAssistantService;
 import com.luan.takeaway.common.core.cache.SmartCacheEvict;
 import com.luan.takeaway.common.core.util.R;
+import com.luan.takeaway.common.security.service.PigUser;
+import com.luan.takeaway.common.security.util.SecurityUtils;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
 import com.luan.takeaway.takeaway.common.dto.DeductStockRequest;
 import com.luan.takeaway.takeaway.common.dto.DishKnowledgeGenerateEvent;
@@ -23,6 +25,10 @@ import com.luan.takeaway.takeaway.common.mapper.WmDishMapper;
 import com.luan.takeaway.takeaway.common.mapper.WmDishKnowledgeDocMapper;
 import com.luan.takeaway.takeaway.dish.constant.DishStockMqConstants;
 import com.luan.takeaway.takeaway.dish.mq.dto.DishStockDeductEvent;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishDTO;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishRequest;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishResult;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishResultItem;
 import com.luan.takeaway.takeaway.dish.service.WmDishService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -641,6 +647,207 @@ public class WmDishServiceImpl extends ServiceImpl<WmDishMapper, WmDish> impleme
 			return 120;
 		}
 		return resolved.intValue();
+	}
+
+	/**
+	 * 批量导入菜品（管理员模式）
+	 *
+	 * <p>功能说明：遍历菜品列表，逐个创建菜品记录。
+	 * 每个菜品可单独指定商家（dto.merchantUserId），否则使用请求级别的 merchantUserId。
+	 *
+	 * @param request 批量导入请求
+	 * @return 批量导入结果
+	 */
+	@Override
+	public BatchDishResult batchImport(BatchDishRequest request) {
+		List<BatchDishResultItem> resultItems = new ArrayList<>();
+		int successCount = 0;
+		int failCount = 0;
+
+		List<BatchDishDTO> dishes = request.getDishes();
+		if (dishes == null || dishes.isEmpty()) {
+			return BatchDishResult.builder()
+				.total(0)
+				.successCount(0)
+				.failCount(0)
+				.results(resultItems)
+				.build();
+		}
+
+		// 获取请求中的商家ID（管理员模式）
+		Long merchantUserId = request.getMerchantUserId();
+
+		for (BatchDishDTO dishDto : dishes) {
+			BatchDishResultItem resultItem = processBatchDish(dishDto, merchantUserId);
+			resultItems.add(resultItem);
+			if (resultItem.isSuccess()) {
+				successCount++;
+			}
+			else {
+				failCount++;
+			}
+		}
+
+		return BatchDishResult.builder()
+			.total(dishes.size())
+			.successCount(successCount)
+			.failCount(failCount)
+			.results(resultItems)
+			.build();
+	}
+
+	/**
+	 * 处理单个菜品导入
+	 *
+	 * <p>功能说明：校验菜品参数，构建菜品实体并保存到数据库。
+	 *
+	 * <p>处理步骤：
+	 * 1. 确定商家ID：优先使用 dto.merchantUserId，其次使用 merchantUserIdOverride
+	 * 2. 参数校验：商家ID、菜品名称、价格、库存必填
+	 * 3. 构建 WmDish 实体，设置默认销售状态为上架
+	 * 4. 调用 save 保存菜品
+	 * 5. 若 autoGenerateKnowledge 为 true，调用 AI 服务生成知识文档
+	 * 6. 返回导入结果
+	 *
+	 * @param dto 菜品DTO
+	 * @param merchantUserIdOverride 管理员指定的商家ID（可为null）
+	 * @return 导入结果项
+	 */
+	private BatchDishResultItem processBatchDish(BatchDishDTO dto, Long merchantUserIdOverride) {
+		// 确定商家ID：优先使用菜品DTO自己的merchantUserId，如果没有则使用管理员指定的merchantUserId
+		Long effectiveMerchantUserId = dto.getMerchantUserId() != null ? dto.getMerchantUserId() : merchantUserIdOverride;
+
+		// 参数校验
+		if (effectiveMerchantUserId == null) {
+			return BatchDishResultItem.builder()
+				.dishName(dto.getDishName())
+				.merchantUserId(null)
+				.success(false)
+				.errorMessage("商家用户ID不能为空")
+				.build();
+		}
+
+		if (!StringUtils.hasText(dto.getDishName())) {
+			return BatchDishResultItem.builder()
+				.dishName(dto.getDishName())
+				.merchantUserId(effectiveMerchantUserId)
+				.success(false)
+				.errorMessage("菜品名称不能为空")
+				.build();
+		}
+
+		if (dto.getPrice() == null) {
+			return BatchDishResultItem.builder()
+				.dishName(dto.getDishName())
+				.merchantUserId(effectiveMerchantUserId)
+				.success(false)
+				.errorMessage("价格不能为空")
+				.build();
+		}
+
+		if (dto.getStock() == null) {
+			return BatchDishResultItem.builder()
+				.dishName(dto.getDishName())
+				.merchantUserId(effectiveMerchantUserId)
+				.success(false)
+				.errorMessage("库存不能为空")
+				.build();
+		}
+
+		try {
+			// 构建菜品实体
+			WmDish dish = new WmDish();
+			dish.setMerchantUserId(effectiveMerchantUserId);
+			dish.setDishImage(dto.getDishImage());
+			dish.setDishName(dto.getDishName());
+			dish.setDishDesc(dto.getDishDesc());
+			dish.setPrice(dto.getPrice());
+			dish.setStock(dto.getStock());
+
+			// 设置销售状态，默认上架
+			if (StringUtils.hasText(dto.getSaleStatus())) {
+				dish.setSaleStatus(dto.getSaleStatus());
+			}
+			else {
+				dish.setSaleStatus(TakeawayStatusConstants.Dish.SALE_ON);
+			}
+
+			// 保存菜品
+			boolean saved = save(dish);
+			if (!saved || dish.getId() == null) {
+				return BatchDishResultItem.builder()
+					.dishName(dto.getDishName())
+					.merchantUserId(effectiveMerchantUserId)
+					.success(false)
+					.errorMessage("保存菜品失败")
+					.build();
+			}
+
+			// 如果需要自动生成知识文档
+			if (Boolean.TRUE.equals(dto.getAutoGenerateKnowledge())) {
+				try {
+					generateKnowledgeDocSync(dish);
+				}
+				catch (Exception e) {
+					log.warn("自动生成知识文档失败, dishId={}", dish.getId(), e);
+				}
+			}
+
+			return BatchDishResultItem.builder()
+				.dishName(dto.getDishName())
+				.merchantUserId(effectiveMerchantUserId)
+				.success(true)
+				.dishId(dish.getId())
+				.build();
+		}
+		catch (Exception e) {
+			log.error("批量导入菜品失败: {}", dto.getDishName(), e);
+			return BatchDishResultItem.builder()
+				.dishName(dto.getDishName())
+				.merchantUserId(effectiveMerchantUserId)
+				.success(false)
+				.errorMessage("导入失败: " + e.getMessage())
+				.build();
+		}
+	}
+
+	/**
+	 * 批量导入菜品（商家模式）
+	 *
+	 * <p>功能说明：商家批量导入自己的菜品，自动使用当前登录商家的 userId。
+	 * 请求中的 merchantUserId 会被忽略，统一使用当前登录用户的ID。
+	 *
+	 * <p>处理步骤：
+	 * 1. 获取当前登录用户ID作为商家ID
+	 * 2. 将菜品列表中每个菜品的 merchantUserId 设置为当前商家ID
+	 * 3. 调用 batchImport 执行批量导入
+	 *
+	 * @param request 批量导入请求
+	 * @return 批量导入结果
+	 */
+	@Override
+	public BatchDishResult merchantBatchImport(BatchDishRequest request) {
+		// 获取当前登录商家用户ID
+		PigUser currentUser = SecurityUtils.getUser();
+		if (currentUser == null || currentUser.getId() == null) {
+			throw new IllegalStateException("当前登录用户不存在");
+		}
+		Long merchantUserId = currentUser.getId();
+
+		// 强制将菜品列表中的 merchantUserId 设置为当前商家的ID
+		List<BatchDishDTO> dishes = request.getDishes();
+		if (dishes != null) {
+			for (BatchDishDTO dish : dishes) {
+				dish.setMerchantUserId(merchantUserId);
+			}
+		}
+
+		// 调用批量导入
+		BatchDishRequest merchantRequest = new BatchDishRequest();
+		merchantRequest.setMerchantUserId(merchantUserId);
+		merchantRequest.setDishes(dishes);
+
+		return batchImport(merchantRequest);
 	}
 
 }

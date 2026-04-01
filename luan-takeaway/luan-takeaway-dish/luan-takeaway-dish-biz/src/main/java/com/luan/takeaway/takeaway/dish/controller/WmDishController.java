@@ -3,6 +3,7 @@ package com.luan.takeaway.takeaway.dish.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.luan.takeaway.common.core.util.R;
 import com.luan.takeaway.common.log.annotation.SysLog;
+import com.luan.takeaway.common.security.annotation.HasPermission;
 import com.luan.takeaway.common.security.annotation.Inner;
 import com.luan.takeaway.takeaway.common.api.TakeawayApiConstants;
 import com.luan.takeaway.takeaway.common.constant.TakeawayStatusConstants;
@@ -12,6 +13,8 @@ import com.luan.takeaway.takeaway.common.dto.HybridDishCandidateDTO;
 import com.luan.takeaway.takeaway.common.dto.HybridDishSearchRequest;
 import com.luan.takeaway.takeaway.common.dto.DishKnowledgeDoc;
 import com.luan.takeaway.takeaway.common.entity.WmDish;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishRequest;
+import com.luan.takeaway.takeaway.dish.dto.BatchDishResult;
 import com.luan.takeaway.takeaway.dish.dto.DishUpsertRequest;
 import com.luan.takeaway.takeaway.dish.service.WmDishService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -166,6 +169,50 @@ public class WmDishController {
 			throw new IllegalArgumentException("请求参数不完整");
 		}
 		return R.ok(wmDishService.upsertKnowledgeDoc(request.getDishId(), request.getKnowledgeDoc()));
+	}
+
+	/**
+	 * 管理员批量导入菜品
+	 *
+	 * <p>功能说明：管理员批量导入菜品，支持指定商家或批量为同一商家导入。
+	 * 每个菜品可单独指定商家（dishes[].merchantUserId），也可以使用请求级别的 merchantUserId。
+	 *
+	 * <p>权限控制：需拥有 wm_dish_batch_import 权限
+	 * <p>接口地址：POST /takeaway/dish/batch/import
+	 *
+	 * @param request 批量导入请求
+	 * @return 批量导入结果
+	 * @see BatchDishRequest
+	 * @see BatchDishResult
+	 */
+	@PostMapping(TakeawayApiConstants.DISH_PATH + "/batch/import")
+	@SysLog("批量导入菜品")
+	@HasPermission("wm_dish_batch_import")
+	@Operation(summary = "管理员批量导入菜品", description = "管理员批量导入菜品，可指定商家用户ID")
+	public R<BatchDishResult> batchImport(@RequestBody BatchDishRequest request) {
+		return R.ok(wmDishService.batchImport(request));
+	}
+
+	/**
+	 * 商家批量导入菜品
+	 *
+	 * <p>功能说明：商家批量导入自己的菜品，自动使用当前登录商家的 userId。
+	 * 请求中的 merchantUserId 会被忽略，统一使用当前登录用户的ID。
+	 *
+	 * <p>权限控制：需拥有 wm_merchant_dish_batch_import 权限
+	 * <p>接口地址：POST /takeaway/dish/merchant/batch/import
+	 *
+	 * @param request 批量导入请求
+	 * @return 批量导入结果
+	 * @see BatchDishRequest
+	 * @see BatchDishResult
+	 */
+	@PostMapping(TakeawayApiConstants.DISH_PATH + "/merchant/batch/import")
+	@SysLog("商家批量导入菜品")
+	@HasPermission("wm_merchant_dish_batch_import")
+	@Operation(summary = "商家批量导入菜品", description = "商家批量导入自己的菜品，自动使用当前登录商家的用户ID")
+	public R<BatchDishResult> merchantBatchImport(@RequestBody BatchDishRequest request) {
+		return R.ok(wmDishService.merchantBatchImport(request));
 	}
 
 	private WmDish toDish(DishUpsertRequest request) {
